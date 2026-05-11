@@ -146,7 +146,7 @@ object MockDataGenerator {
 
     // Games NOT on Steam - use alternative image sources
     private val alternativeImages = mapOf(
-        9 to "https://cdn2.unrealengine.com/egs-alanwake2-remedyentertainment-s2-1200x1600-a3a56e20e276.jpg"
+        9 to "https://gaming-cdn.com/images/products/14178/616x353/alan-wake-2-pc-game-epic-games-cover.jpg"
     )
 
     private val freeGameSteamIds = mapOf(
