@@ -12,7 +12,8 @@ object MockDataGenerator {
         val id: Int,
         val name: String,
         val description: String,
-        val tags: List<String> = emptyList()
+        val tags: List<String> = emptyList(),
+        val platforms: List<String> = listOf("Steam", "Epic Games", "GOG", "G2A", "Eneba")
     )
 
     private val popularGames = listOf(
@@ -21,22 +22,22 @@ object MockDataGenerator {
         GameInfo(3, "The Witcher 3: Wild Hunt", "An open world action role-playing game set in a fantasy universe.", listOf("RPG", "Open World", "Action", "Adventure")),
         GameInfo(4, "Cyberpunk 2077", "An open world action-adventure RPG set in the megalopolis of Night City.", listOf("RPG", "FPS", "Open World", "Action")),
         GameInfo(5, "Red Dead Redemption 2", "An epic tale of outlaw life in America's heartland.", listOf("Action", "Adventure", "Open World", "TPS")),
-        GameInfo(6, "God of War Ragnarök", "Kratos and Atreus embark on a mythic journey for answers.", listOf("Action", "Adventure")),
-        GameInfo(7, "Starfield", "An epic space-faring RPG by Bethesda Game Studios.", listOf("RPG", "Open World", "Action", "Adventure")),
-        GameInfo(8, "Diablo IV", "A genre-defining action-RPG experience with endless evil to slaughter.", listOf("Action", "RPG", "Co-op")),
-        GameInfo(9, "Alan Wake 2", "A survival horror game with a mind-bending story.", listOf("Horror", "Survival", "Action", "Adventure")),
+        GameInfo(6, "God of War Ragnarök", "Kratos and Atreus embark on a mythic journey for answers.", listOf("Action", "Adventure"), listOf("Steam", "Epic Games", "G2A", "Eneba")),
+        GameInfo(7, "Starfield", "An epic space-faring RPG by Bethesda Game Studios.", listOf("RPG", "Open World", "Action", "Adventure"), listOf("Steam", "G2A", "Eneba")),
+        GameInfo(8, "Diablo IV", "A genre-defining action-RPG experience with endless evil to slaughter.", listOf("Action", "RPG", "Co-op"), listOf("Steam", "Battle.net", "G2A", "Eneba")),
+        GameInfo(9, "Alan Wake 2", "A survival horror game with a mind-bending story.", listOf("Horror", "Survival", "Action", "Adventure"), listOf("Epic Games", "G2A", "Eneba")),
         GameInfo(10, "Hogwarts Legacy", "An open-world action RPG set in the Wizarding World of Harry Potter.", listOf("RPG", "Open World", "Action", "Adventure")),
         GameInfo(11, "Resident Evil 4 Remake", "A reimagining of the 2005 survival horror classic.", listOf("Horror", "Survival", "Action", "TPS")),
         GameInfo(12, "Death Stranding", "An action game by Kojima Productions connecting isolated cities.", listOf("Action", "Adventure", "Open World")),
         GameInfo(13, "Street Fighter 6", "The next evolution of the legendary fighting game series.", listOf("Fighting", "Action")),
         GameInfo(14, "Tekken 8", "The King of Iron Fist Tournament returns with next-gen visuals.", listOf("Fighting", "Action")),
-        GameInfo(15, "Ghost of Tsushima", "An open-world samurai action-adventure game.", listOf("Action", "Adventure", "Open World")),
-        GameInfo(16, "The Last of Us Part I", "A remake of the post-apocalyptic action-adventure game.", listOf("Action", "Adventure", "Horror", "Survival")),
-        GameInfo(17, "Spider-Man Remastered", "Be the Marvel superhero Spider-Man in a new open-world adventure.", listOf("Action", "Adventure", "Open World")),
-        GameInfo(18, "Horizon Zero Dawn", "Explore a vibrant world populated by mysterious machines.", listOf("Action", "RPG", "Open World", "Adventure")),
+        GameInfo(15, "Ghost of Tsushima", "An open-world samurai action-adventure game.", listOf("Action", "Adventure", "Open World"), listOf("Steam", "Epic Games", "G2A", "Eneba")),
+        GameInfo(16, "The Last of Us Part I", "A remake of the post-apocalyptic action-adventure game.", listOf("Action", "Adventure", "Horror", "Survival"), listOf("Steam", "Epic Games", "G2A", "Eneba")),
+        GameInfo(17, "Spider-Man Remastered", "Be the Marvel superhero Spider-Man in a new open-world adventure.", listOf("Action", "Adventure", "Open World"), listOf("Steam", "Epic Games", "G2A", "Eneba")),
+        GameInfo(18, "Horizon Zero Dawn", "Explore a vibrant world populated by mysterious machines.", listOf("Action", "RPG", "Open World", "Adventure"), listOf("Steam", "Epic Games", "GOG", "G2A", "Eneba")),
         GameInfo(19, "Dead Space Remake", "A sci-fi survival horror classic rebuilt from the ground up.", listOf("Horror", "Survival", "Action", "TPS")),
         GameInfo(20, "Like a Dragon: Infinite Wealth", "A globe-trotting action-adventure RPG.", listOf("RPG", "Action", "Adventure")),
-        GameInfo(21, "Final Fantasy VII Rebirth", "The next chapter in the FFVII remake trilogy.", listOf("RPG", "Action", "Adventure")),
+        GameInfo(21, "Final Fantasy VII Rebirth", "The next chapter in the FFVII remake trilogy.", listOf("RPG", "Action", "Adventure"), listOf("Steam", "Epic Games", "G2A", "Eneba")),
         GameInfo(22, "Persona 5 Royal", "Don the mask and join the Phantom Thieves of Hearts.", listOf("RPG", "Adventure")),
         GameInfo(23, "Metaphor: ReFantazio", "A fantasy RPG from the creators of Persona.", listOf("RPG", "Strategy", "Adventure")),
         GameInfo(24, "Palworld", "A creature-collecting open-world survival crafting game.", listOf("Survival", "Open World", "Co-op", "Action")),
@@ -49,15 +50,15 @@ object MockDataGenerator {
         GameInfo(31, "Monster Hunter: World", "Hunt massive monsters in a living, breathing ecosystem.", listOf("Action", "RPG", "Co-op")),
         GameInfo(32, "Dark Souls III", "An action RPG set in a dark fantasy world.", listOf("Action", "RPG", "Souls-like")),
         GameInfo(33, "Armored Core VI", "Mech combat action from FromSoftware.", listOf("Action", "Simulation")),
-        GameInfo(34, "Jedi: Survivor", "Continue Cal Kestis' journey in this action RPG.", listOf("Action", "Adventure", "RPG")),
-        GameInfo(35, "EA Sports FC 25", "The latest football simulation game.", listOf("Sports", "Simulation")),
-        GameInfo(36, "Madden NFL 25", "The premier American football simulation.", listOf("Sports", "Simulation")),
+        GameInfo(34, "Jedi: Survivor", "Continue Cal Kestis' journey in this action RPG.", listOf("Action", "Adventure", "RPG"), listOf("Steam", "Epic Games", "EA Play", "G2A", "Eneba")),
+        GameInfo(35, "EA Sports FC 25", "The latest football simulation game.", listOf("Sports", "Simulation"), listOf("Steam", "Epic Games", "EA Play", "G2A", "Eneba")),
+        GameInfo(36, "Madden NFL 25", "The premier American football simulation.", listOf("Sports", "Simulation"), listOf("Steam", "EA Play", "G2A", "Eneba")),
         GameInfo(37, "NBA 2K25", "The definitive basketball simulation experience.", listOf("Sports", "Simulation")),
-        GameInfo(38, "F1 24", "Experience the thrill of Formula 1 racing.", listOf("Racing", "Simulation", "Sports")),
+        GameInfo(38, "F1 24", "Experience the thrill of Formula 1 racing.", listOf("Racing", "Simulation", "Sports"), listOf("Steam", "Epic Games", "EA Play", "G2A", "Eneba")),
         GameInfo(39, "WWE 2K24", "Step into the squared circle in this wrestling game.", listOf("Sports", "Fighting")),
-        GameInfo(40, "The Crew Motorfest", "A festival open-world racing game.", listOf("Racing", "Open World")),
-        GameInfo(41, "Need for Speed Unbound", "Street racing with artistic visual style.", listOf("Racing", "Action")),
-        GameInfo(42, "Forza Motorsport", "Premium racing simulation with stunning visuals.", listOf("Racing", "Simulation")),
+        GameInfo(40, "The Crew Motorfest", "A festival open-world racing game.", listOf("Racing", "Open World"), listOf("Steam", "Epic Games", "Ubisoft+", "G2A", "Eneba")),
+        GameInfo(41, "Need for Speed Unbound", "Street racing with artistic visual style.", listOf("Racing", "Action"), listOf("Steam", "Epic Games", "EA Play", "G2A", "Eneba")),
+        GameInfo(42, "Forza Motorsport", "Premium racing simulation with stunning visuals.", listOf("Racing", "Simulation"), listOf("Steam", "G2A", "Eneba")),
         GameInfo(43, "Ghostwire: Tokyo", "Save Tokyo from supernatural threats in first person.", listOf("Action", "FPS", "Horror")),
         GameInfo(44, "Control Ultimate Edition", "A supernatural action-adventure game by Remedy.", listOf("Action", "Adventure", "TPS")),
         GameInfo(45, "The Callisto Protocol", "A survival horror game set on Jupiter's moon.", listOf("Horror", "Survival", "Action")),
@@ -145,7 +146,7 @@ object MockDataGenerator {
 
     // Games NOT on Steam - use alternative image sources
     private val alternativeImages = mapOf(
-        9 to "https://image.api.playstation.com/vulcan/ap/rnd/202308/1519/2facfd7a3a68245e38e4e0ea3802c75f52d614210e5b2295.png"
+        9 to "https://cdn2.unrealengine.com/egs-alanwake2-remedyentertainment-s2-1200x1600-a3a56e20e276.jpg"
     )
 
     private val freeGameSteamIds = mapOf(
@@ -260,7 +261,7 @@ object MockDataGenerator {
     }
 
     fun generateGames(): List<Game> = popularGames.map { info ->
-        val basePrices = mapOf(
+        val allPrices = mapOf(
             "Steam" to (29.99f + (info.id % 40) * 0.5f),
             "Epic Games" to (29.99f + (info.id % 40) * 0.5f - 2f).coerceAtLeast(9.99f),
             "GOG" to (27.99f + (info.id % 40) * 0.5f),
@@ -270,6 +271,8 @@ object MockDataGenerator {
             "G2A" to (19.99f + (info.id % 30) * 0.4f),
             "Eneba" to (17.99f + (info.id % 25) * 0.4f)
         )
+        // Only include prices for platforms where the game is actually available
+        val filteredPrices = allPrices.filter { it.key in info.platforms }
         Game(
             id = info.id,
             name = info.name,
@@ -277,10 +280,11 @@ object MockDataGenerator {
             releaseDate = "2024-${String.format("%02d", (info.id % 12) + 1)}-${String.format("%02d", (info.id % 28) + 1)}",
             imageUrl = steamImg(info.id),
             rating = 7.0 + (info.id % 30) * 0.1,
-            currentPrices = basePrices,
+            currentPrices = filteredPrices,
             historicalDiscount = 10 + (info.id % 80),
             tags = info.tags,
-            dlcs = generateDLCsForGame(info.id)
+            dlcs = generateDLCsForGame(info.id),
+            availablePlatforms = info.platforms
         )
     }
 

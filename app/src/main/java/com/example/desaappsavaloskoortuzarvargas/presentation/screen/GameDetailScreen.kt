@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,9 +25,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,12 +51,23 @@ fun GameDetailScreen(
     onBackClick: () -> Unit,
     onFavoriteClick: (Game) -> Unit
 ) {
+    val realPrices by viewModel.realPrices.collectAsState()
+    val isLoadingPrices by viewModel.isLoadingPrices.collectAsState()
+
+    // Load real prices when entering the screen
+    LaunchedEffect(game.id) {
+        viewModel.loadRealPrices(game.name)
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         // Top bar
         TopAppBar(
             title = { Text(game.name) },
             navigationIcon = {
-                IconButton(onClick = onBackClick) {
+                IconButton(onClick = {
+                    viewModel.clearRealPrices()
+                    onBackClick()
+                }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
             },
@@ -108,6 +124,33 @@ fun GameDetailScreen(
                 }
             }
 
+            // Available platforms
+            if (game.availablePlatforms.isNotEmpty()) {
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Available on", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            game.availablePlatforms.forEach { platform ->
+                                Text(
+                                    text = platform,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier
+                                        .background(
+                                            color = MaterialTheme.colorScheme.secondaryContainer,
+                                            shape = RoundedCornerShape(6.dp)
+                                        )
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Release Date", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -138,22 +181,83 @@ fun GameDetailScreen(
                 }
             }
 
+            // Real prices from CheapShark API
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Current Prices", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    game.currentPrices.entries.forEach { entry ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(entry.key, style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                text = if (entry.value > 0) "$${"%.2f".format(entry.value)}" else "N/A",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Prices (Live from CheapShark)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        if (isLoadingPrices) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        }
+                    }
+
+                    if (realPrices.isNotEmpty()) {
+                        realPrices.sortedBy { it.currentPrice }.forEach { price ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                elevation = CardDefaults.cardElevation(1.dp),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(price.storeName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                        if (price.savings > 0) {
+                                            Text(
+                                                text = "${"%.0f".format(price.savings)}% off",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color.Green
+                                            )
+                                        }
+                                    }
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            text = if (price.currentPrice > 0) "$${"%.2f".format(price.currentPrice)}" else "FREE",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (price.currentPrice > 0) MaterialTheme.colorScheme.primary else Color.Green
+                                        )
+                                        if (price.retailPrice > price.currentPrice) {
+                                            Text(
+                                                text = "$${"%.2f".format(price.retailPrice)}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (!isLoadingPrices) {
+                        Text(
+                            "No live data available — showing cached prices",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
+                        )
+                        // Fallback to mock prices (only available platforms)
+                        game.currentPrices.entries.forEach { entry ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(entry.key, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    text = if (entry.value > 0) "$${"%.2f".format(entry.value)}" else "N/A",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
@@ -198,7 +302,13 @@ fun GameDetailScreen(
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
-                                dlc.currentPrices.entries.take(3).forEach { (platform, price) ->
+                                // Only show DLC prices for platforms where the game is available
+                                val dlcAvailablePrices = if (game.availablePlatforms.isNotEmpty()) {
+                                    dlc.currentPrices.filter { it.key in game.availablePlatforms }
+                                } else {
+                                    dlc.currentPrices
+                                }
+                                dlcAvailablePrices.entries.take(3).forEach { (platform, price) ->
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween

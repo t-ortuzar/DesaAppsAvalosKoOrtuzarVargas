@@ -3,7 +3,7 @@ package com.example.desaappsavaloskoortuzarvargas.domain.model
 data class UserSettings(
     val userName: String = "Player",
     val email: String = "",
-    val country: String = "Argentina",
+    val country: String = "🇦🇷 Argentina",
     val globalNotificationsEnabled: Boolean = true,
     val gameNotificationPrefs: Map<Int, GameNotificationPref> = emptyMap()
 )
@@ -31,8 +31,8 @@ enum class NotificationType {
 }
 
 val SUPPORTED_COUNTRIES = listOf(
-    "Argentina", "Brasil", "Chile", "Colombia", "México",
-    "Estados Unidos", "España", "Uruguay", "Perú", "Paraguay"
+    "🇦🇷 Argentina", "🇧🇷 Brasil", "🇨🇱 Chile", "🇨🇴 Colombia", "🇲🇽 México",
+    "🇺🇸 Estados Unidos", "🇪🇸 España", "🇺🇾 Uruguay", "🇵🇪 Perú", "🇵🇾 Paraguay"
 )
 
 val ALL_TAGS = listOf(

@@ -2,6 +2,8 @@ package com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.desaappsavaloskoortuzarvargas.data.api.CheapSharkService
+import com.example.desaappsavaloskoortuzarvargas.data.api.GamePrice
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.AddToFavoritesUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetAllGamesUseCase
@@ -24,7 +26,8 @@ class GamesViewModel(
     private val removeFromFavoritesUseCase: RemoveFromFavoritesUseCase,
     private val getFavoritesUseCase: GetFavoritesUseCase,
     private val getPriceHistoryUseCase: GetPriceHistoryUseCase,
-    private val getGamesByTagUseCase: GetGamesByTagUseCase
+    private val getGamesByTagUseCase: GetGamesByTagUseCase,
+    private val cheapSharkService: CheapSharkService? = null
 ) : ViewModel() {
 
     private val _allGames = MutableStateFlow<List<Game>>(emptyList())
@@ -47,6 +50,13 @@ class GamesViewModel(
 
     private val _showDLCs = MutableStateFlow(false)
     val showDLCs: StateFlow<Boolean> = _showDLCs.asStateFlow()
+
+    // CheapShark real prices for the currently viewed game
+    private val _realPrices = MutableStateFlow<List<GamePrice>>(emptyList())
+    val realPrices: StateFlow<List<GamePrice>> = _realPrices.asStateFlow()
+
+    private val _isLoadingPrices = MutableStateFlow(false)
+    val isLoadingPrices: StateFlow<Boolean> = _isLoadingPrices.asStateFlow()
 
     init {
         loadAllGames()
@@ -122,6 +132,32 @@ class GamesViewModel(
 
     fun toggleShowDLCs() {
         _showDLCs.value = !_showDLCs.value
+    }
+
+    /**
+     * Load real prices from CheapShark API for a game
+     */
+    fun loadRealPrices(gameName: String) {
+        val service = cheapSharkService ?: return
+        viewModelScope.launch {
+            _isLoadingPrices.value = true
+            _realPrices.value = emptyList()
+            try {
+                val searchResults = service.searchGame(gameName)
+                if (searchResults.isNotEmpty()) {
+                    val cheapSharkId = searchResults.first().gameID
+                    val prices = service.getGameDeals(cheapSharkId)
+                    _realPrices.value = prices
+                }
+            } catch (_: Exception) {
+                // Silently fail, mock prices will be shown
+            }
+            _isLoadingPrices.value = false
+        }
+    }
+
+    fun clearRealPrices() {
+        _realPrices.value = emptyList()
     }
 
     fun toggleFavorite(game: Game) {

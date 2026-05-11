@@ -14,7 +14,8 @@ data class Game(
     val isFavorite: Boolean = false,
     val historicalDiscount: Int = 0,
     val tags: List<String> = emptyList(),
-    val dlcs: List<DLC> = emptyList()
+    val dlcs: List<DLC> = emptyList(),
+    val availablePlatforms: List<String> = emptyList()
 )
 
 @Serializable

@@ -65,6 +65,7 @@ fun MainScreen() {
     val newsRepository = ServiceLocator.newsRepository
     val discountRepository = ServiceLocator.discountRepository
     val userSettingsRepository = ServiceLocator.userSettingsRepository
+    val cheapSharkService = ServiceLocator.cheapSharkService
 
     val gamesViewModel = remember {
         GamesViewModel(
@@ -75,7 +76,8 @@ fun MainScreen() {
             RemoveFromFavoritesUseCase(gameRepository),
             GetFavoritesUseCase(gameRepository),
             GetPriceHistoryUseCase(gameRepository),
-            GetGamesByTagUseCase(gameRepository)
+            GetGamesByTagUseCase(gameRepository),
+            cheapSharkService
         )
     }
 
