@@ -40,19 +40,29 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.desaappsavaloskoortuzarvargas.data.api.StoreRegionAvailability
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
+import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
+import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameDetailScreen(
     game: Game,
     viewModel: GamesViewModel,
+    settingsViewModel: SettingsViewModel,
     onBackClick: () -> Unit,
     onFavoriteClick: (Game) -> Unit
 ) {
     val realPrices by viewModel.realPrices.collectAsState()
     val isLoadingPrices by viewModel.isLoadingPrices.collectAsState()
+    val userSettings by settingsViewModel.userSettings.collectAsState()
+
+    // Filter prices by stores available in user's region
+    val regionFilteredPrices = realPrices.filter { price ->
+        StoreRegionAvailability.isAvailableInRegion(price.storeName, userSettings.countryCode)
+    }
 
     // Load real prices when entering the screen
     LaunchedEffect(game.id) {
@@ -189,14 +199,21 @@ fun GameDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Prices (Live from CheapShark)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Prices", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         if (isLoadingPrices) {
                             CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         }
                     }
 
-                    if (realPrices.isNotEmpty()) {
-                        realPrices.sortedBy { it.currentPrice }.forEach { price ->
+                    // Region indicator
+                    Text(
+                        text = "${countryCodeToFlag(userSettings.countryCode)} ${userSettings.country} — Stores available in your region",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (regionFilteredPrices.isNotEmpty()) {
+                        regionFilteredPrices.sortedBy { it.currentPrice }.forEach { price ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 elevation = CardDefaults.cardElevation(1.dp),
@@ -221,14 +238,14 @@ fun GameDetailScreen(
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
-                                            text = if (price.currentPrice > 0) "$${"%.2f".format(price.currentPrice)}" else "FREE",
+                                            text = if (price.currentPrice > 0) "US$${"%.2f".format(price.currentPrice)}" else "FREE",
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = if (price.currentPrice > 0) MaterialTheme.colorScheme.primary else Color.Green
                                         )
                                         if (price.retailPrice > price.currentPrice) {
                                             Text(
-                                                text = "$${"%.2f".format(price.retailPrice)}",
+                                                text = "US$${"%.2f".format(price.retailPrice)}",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = Color.Gray
                                             )

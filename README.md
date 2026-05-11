@@ -5,14 +5,17 @@ Una aplicación Android moderna para trackear descuentos de videojuegos en múlt
 ## 🎮 Características Principales
 
 ### 1. **Catálogo de Juegos**
-- Visualiza un catálogo de 100 juegos populares sin F2P
+- Visualiza un catálogo de 100 juegos populares (sin F2P)
+- Imágenes reales de cada juego vía **Steam CDN** (`cdn.akamai.steamstatic.com`) con fallback a CDNs alternativos (ej. `gaming-cdn.com` para exclusivos de Epic)
 - Cada juego muestra:
-  - Portada/Imagen del juego
+  - Portada/Imagen real del juego
   - Título y descripción
   - Calificación (rating)
+  - Tags del juego (Action, RPG, Horror, etc.)
   - Descuento histórico más grande
   - Precios actuales en diferentes plataformas
 - Busca juegos por nombre
+- Filtra por tags
 - Marca juegos como favoritos
 
 ### 2. **Sección de Noticias**
@@ -38,6 +41,42 @@ Una aplicación Android moderna para trackear descuentos de videojuegos en múlt
   - Plataforma
   - Indicador de mínimo histórico
 
+### 4. **Configuración (Settings)**
+- Nombre de usuario y email editables
+- **Selector de país/región** con banderas emoji generadas dinámicamente (Unicode Regional Indicators)
+  - Argentina 🇦🇷 (por defecto), Brasil 🇧🇷, Chile 🇨🇱, Colombia 🇨🇴, México 🇲🇽, Estados Unidos 🇺🇸, España 🇪🇸, Uruguay 🇺🇾, Perú 🇵🇪, Paraguay 🇵🇾
+- Notificaciones globales y por juego
+- Preferencias de notificación granulares:
+  - Ofertas
+  - Noticias
+  - Mínimos históricos
+
+### 5. **Detalle de Juego**
+- Portada a tamaño completo
+- Información completa del juego
+- **DLCs & Expansiones**: Cards compactas (solo texto, sin imagen) mostrando nombre, descripción y precio
+- Precios en todas las plataformas disponibles
+- Botón de favoritos
+
+### 6. **Notificaciones In-App**
+- Campana de notificaciones en el header
+- Badge con contador de no leídas
+- Tipos: descuentos, mínimos históricos, noticias, juegos gratis
+- Panel deslizable con historial de notificaciones
+
+## 🌐 Integración con APIs
+
+### **CheapShark API**
+- Búsqueda de juegos y deals reales
+- Top deals actuales
+- Precios reales de tiendas digitales
+- **Nota**: Los precios provienen de tiendas de EE.UU. (CheapShark no soporta pricing regional nativamente). El selector de país permite personalizar la experiencia pero los precios mostrados son en USD de tiendas norteamericanas.
+
+### **Steam CDN**
+- Imágenes de portada: `https://cdn.akamai.steamstatic.com/steam/apps/{STEAM_APP_ID}/header.jpg`
+- IDs de Steam verificados manualmente para los 100 juegos
+- Fallback a CDNs alternativos para juegos no disponibles en Steam (ej. Alan Wake 2 → `gaming-cdn.com`)
+
 ## 🏗️ Arquitectura (Clean Architecture)
 
 La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
@@ -49,17 +88,19 @@ La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
   - `DiscountCard`: Tarjeta para mostrar descuento
   
 - **Screens**: Pantallas principales
-  - `GamesScreen`: Catálogo de juegos
+  - `GamesScreen`: Catálogo de juegos con búsqueda y filtros por tag
   - `NewsScreen`: Sección de noticias
-  - `OffersScreen`: Sección de ofertas/descuentos
-  - `GameDetailScreen`: Detalle de un juego
+  - `OffersScreen`: Sección de ofertas/descuentos (4 tabs)
+  - `GameDetailScreen`: Detalle de un juego con DLCs compactos
   - `NewsDetailScreen`: Detalle de una noticia
-  - `MainScreen`: Pantalla principal con navegación inferior
+  - `SettingsScreen`: Configuración de usuario, país y notificaciones
+  - `MainScreen`: Pantalla principal con navegación inferior (4 tabs)
   
 - **ViewModels**: Lógica de presentación
-  - `GamesViewModel`: Gestiona estado de juegos
+  - `GamesViewModel`: Gestiona estado de juegos y favoritos
   - `NewsViewModel`: Gestiona estado de noticias
   - `OffersViewModel`: Gestiona estado de descuentos
+  - `SettingsViewModel`: Gestiona configuración de usuario y notificaciones
 
 ### **Capa de Dominio (Domain Layer)**
 - **Models**: Entidades de dominio
@@ -68,19 +109,29 @@ La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
   - `DiscountedGame`: Representa un juego en descuento
   - `PriceHistory`: Historial de precios
   - `Platform`: Información de plataforma
+  - `UserSettings`: Configuración del usuario (nombre, email, país, countryCode, notificaciones)
+  - `CountryInfo`: Info de país (name, code, steamCc, currency)
+  - `InAppNotification`: Notificación in-app
+  - `GameNotificationPref`: Preferencias de notificación por juego
   
 - **Repositories (Interfaces)**: Contratos para acceso a datos
   - `GameRepository`
   - `NewsRepository`
   - `DiscountRepository`
+  - `UserSettingsRepository`
   
 - **Use Cases**: Casos de uso de negocio
   - `GetAllGamesUseCase`
   - `AddToFavoritesUseCase`
   - `GetCurrentDiscountsUseCase`
+  - `UpdateCountryUseCase`
+  - `UpdateNotificationPrefsUseCase`
   - etc.
 
 ### **Capa de Datos (Data Layer)**
+- **API**: Servicios externos
+  - `CheapSharkService`: Cliente HTTP para CheapShark API (búsqueda, deals, precios)
+  
 - **Database (Room)**: Base de datos local
   - Entidades: `GameEntity`, `NewsEntity`, `DiscountEntity`, `FavoriteEntity`, `PriceHistoryEntity`
   - DAOs: Acceso a datos
@@ -90,13 +141,23 @@ La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
   - `GameRepositoryImpl`
   - `NewsRepositoryImpl`
   - `DiscountRepositoryImpl`
+  - `UserSettingsRepositoryImpl`
   
 - **Mock Data**: Generador de datos de demostración
-  - 100 juegos populares
+  - 100 juegos populares con Steam App IDs verificados
+  - DLCs y expansiones para juegos principales
   - 50+ descuentos
   - 20+ juegos gratis
   - Historial de precios
   - Noticias relacionadas
+  - Sistema de tags (27 tags disponibles)
+
+## 🎨 Diseño
+
+- **Tema oscuro** por defecto
+- **Material Design 3**
+- Navegación inferior con 4 tabs: Ofertas, Catálogo, Noticias, Configuración
+- Banderas de país generadas con Unicode Regional Indicator Symbols (sin dependencia de imágenes)
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -104,16 +165,18 @@ La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
 - **Jetpack Compose**: UI Framework
 - **Hilt**: Inyección de dependencias
 - **Room**: Base de datos local
-- **Retrofit**: Cliente HTTP (preparado para API)
+- **HttpURLConnection**: Cliente HTTP para CheapShark API
 - **Kotlinx Serialization**: Serialización JSON
-- **Coil**: Carga de imágenes desde URL
-- **Material Design 3**: Diseño UI
+- **Coil**: Carga de imágenes desde URL (Steam CDN, gaming-cdn.com)
+- **Material Design 3**: Diseño UI con tema oscuro
 
 ## 📁 Estructura del Proyecto
 
 ```
 app/src/main/java/com/example/desaappsavaloskoortuzarvargas/
 ├── data/
+│   ├── api/
+│   │   └── CheapSharkService.kt
 │   ├── db/
 │   │   ├── AppDatabase.kt
 │   │   ├── DatabaseInitializer.kt
@@ -125,13 +188,13 @@ app/src/main/java/com/example/desaappsavaloskoortuzarvargas/
 │   │   └── Mappers.kt
 │   └── repository/  (Implementaciones)
 ├── domain/
-│   ├── model/  (Entidades de dominio)
+│   ├── model/  (Entidades de dominio + CountryInfo, UserSettings, Tags)
 │   ├── repository/  (Interfaces)
 │   └── usecase/  (Use cases)
 ├── presentation/
 │   ├── component/  (Composables reutilizables)
-│   ├── screen/  (Pantallas principales)
-│   └── viewmodel/  (ViewModels)
+│   ├── screen/  (7 pantallas: Games, Offers, News, Settings, GameDetail, NewsDetail, Main)
+│   └── viewmodel/  (4 ViewModels)
 ├── di/
 │   └── Modules.kt  (Configuración Hilt)
 ├── MainActivity.kt
@@ -143,10 +206,12 @@ app/src/main/java/com/example/desaappsavaloskoortuzarvargas/
 ### **Pantalla de Catálogo (Catalog)**
 - Lista de 100 juegos más populares
 - Barra de búsqueda
+- Filtro por tags (Action, RPG, Horror, Open World, etc.)
 - Cada tarjeta muestra:
-  - Portada del juego
-  - Titulo
+  - Portada real del juego (Steam CDN)
+  - Título
   - Rating ⭐
+  - Tags del juego
   - 2 primeras plataformas con precios
   - Botón de favoritos ❤️
 - Click en tarjeta → Ver detalle
@@ -155,7 +220,7 @@ app/src/main/java/com/example/desaappsavaloskoortuzarvargas/
 - Filtros por tipo de noticia
 - Cada noticia muestra:
   - Miniatura de imagen
-  - Titulo de noticia
+  - Título de noticia
   - Resumen del contenido
   - Plataforma y fecha
 - Click en noticia → Ver detalle completo
@@ -173,20 +238,28 @@ app/src/main/java/com/example/desaappsavaloskoortuzarvargas/
   - Precio actual en verde
   - Indicador de mínimo histórico ⭐
 
+### **Pantalla de Configuración (Settings)**
+- Edición de perfil (nombre, email)
+- Selector de país con banderas emoji 🇦🇷🇧🇷🇨🇱🇨🇴🇲🇽🇺🇸🇪🇸🇺🇾🇵🇪🇵🇾
+- Toggle de notificaciones globales
+- Configuración de notificaciones por juego favorito
+
 ### **Detalle de Juego**
 - Portada a tamaño completo
 - Información completa:
   - Fecha de lanzamiento
   - Rating detallado
+  - Tags
   - Descripción completa
   - Precios en todas las plataformas
   - Descuento histórico
+- **DLCs & Expansiones**: Sección colapsable con cards compactas (texto only)
 - Botón de favoritos en header
 
 ### **Navegación Inferior (Bottom Navigation)**
-- 3 tabs principales
+- 4 tabs principales: Ofertas, Catálogo, Noticias, Settings
 - Icons y labels
-- Navegación rápida entre secciones
+- Campana de notificaciones con badge
 
 ## 📊 Datos de Demo
 
@@ -224,6 +297,20 @@ Algunos ejemplos:
 - G2A
 - Eneba
 
+### **Países Soportados**
+| País | Código | Bandera |
+|------|--------|---------|
+| Argentina | AR | 🇦🇷 |
+| Brasil | BR | 🇧🇷 |
+| Chile | CL | 🇨🇱 |
+| Colombia | CO | 🇨🇴 |
+| México | MX | 🇲🇽 |
+| Estados Unidos | US | 🇺🇸 |
+| España | ES | 🇪🇸 |
+| Uruguay | UY | 🇺🇾 |
+| Perú | PE | 🇵🇪 |
+| Paraguay | PY | 🇵🇾 |
+
 ## 🔧 Cómo Ejecutar
 
 1. Clona el repositorio
@@ -256,10 +343,16 @@ implementation(libs.kotlinx.serialization.json)
 
 ## 🚀 Próximas Mejoras Potenciales
 
-- [ ] Integración con API real de Steam/Epic
-- [ ] Notificaciones en tiempo real
+- [x] Imágenes reales de juegos vía Steam CDN
+- [x] Integración con CheapShark API (precios reales)
+- [x] Sistema de tags para juegos
+- [x] DLCs y expansiones en detalle de juego
+- [x] Notificaciones in-app
+- [x] Selector de país con banderas emoji
+- [x] Tema oscuro
+- [ ] Pricing regional real (IsThereAnyDeal API o Steam API con parámetro `cc`)
+- [ ] Notificaciones push en tiempo real
 - [ ] Sincronización con la nube
-- [ ] Modo oscuro
 - [ ] Múltiples idiomas
 - [ ] Historial de precios en gráficos
 - [ ] Comparador de precios entre plataformas
@@ -273,13 +366,15 @@ implementation(libs.kotlinx.serialization.json)
 - **MVVM + StateFlow**: Patrón reactivo con Compose
 - **Room + Mock Data**: Los datos se regeneran en cada instalación (para demo)
 - **Modular**: Fácil de escalar y agregar nuevas funcionalidades
+- **Steam App IDs verificados**: Cada juego tiene su ID real de Steam para mostrar la imagen correcta
+- **Banderas Unicode**: Las banderas se generan con Regional Indicator Symbols, sin necesidad de assets de imágenes
+- **CheapShark API**: Precios reales de tiendas digitales (región US). Para pricing regional se requeriría IsThereAnyDeal API o Steam Store API con parámetro `cc`
 
-## 👨‍💻 Autor
+## 👨‍💻 Equipo
 
-Proyecto de demostración de Clean Architecture con Jetpack Compose y Kotlin.
+Avalos, Ko, Ortuzar, Vargas
 
 ---
 
-**Versión**: 1.0
-**Última actualización**: 2024
-
+**Versión**: 2.0
+**Última actualización**: Mayo 2026

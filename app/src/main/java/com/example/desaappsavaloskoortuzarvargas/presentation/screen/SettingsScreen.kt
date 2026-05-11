@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.GameNotificationPref
 import com.example.desaappsavaloskoortuzarvargas.domain.model.SUPPORTED_COUNTRIES
+import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
 
@@ -173,7 +174,7 @@ fun SettingsScreen(
                         onClick = { showCountryDropdown = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("🌍 ${userSettings.country}")
+                        Text("${countryCodeToFlag(userSettings.countryCode)} ${userSettings.country}")
                     }
                     DropdownMenu(
                         expanded = showCountryDropdown,
@@ -181,9 +182,9 @@ fun SettingsScreen(
                     ) {
                         SUPPORTED_COUNTRIES.forEach { country ->
                             DropdownMenuItem(
-                                text = { Text(country) },
+                                text = { Text("${countryCodeToFlag(country.code)} ${country.name}") },
                                 onClick = {
-                                    settingsViewModel.updateCountry(country)
+                                    settingsViewModel.updateCountry(country.name, country.code)
                                     showCountryDropdown = false
                                 }
                             )

@@ -65,6 +65,39 @@ data class GamePrice(
     val dealUrl: String
 )
 
+/**
+ * Stores that are globally accessible or available in specific regions.
+ * Stores NOT listed for a region are filtered out from results.
+ * "global" stores are accessible from anywhere.
+ */
+object StoreRegionAvailability {
+    // Stores accessible globally (digital keys, no region lock on purchase)
+    private val globalStores = setOf(
+        "Steam", "GOG", "Humble Store", "Fanatical", "IndieGala",
+        "GreenManGaming", "Epic Games", "DreamGame", "GameBillet", "2Game"
+    )
+
+    // Stores with restricted regional availability
+    private val regionRestricted = mapOf(
+        "Origin (EA)" to setOf("US", "ES", "MX", "BR", "AR", "CL", "CO", "UY", "PE", "PY"),
+        "Uplay (Ubisoft)" to setOf("US", "ES", "MX", "BR", "AR", "CL", "CO", "UY", "PE", "PY"),
+        "Blizzard" to setOf("US", "ES", "MX", "BR", "AR", "CL", "CO", "UY", "PE", "PY"),
+        "GamersGate" to setOf("US", "ES"),
+        "Gamesplanet" to setOf("US", "ES"),
+        "WinGameStore" to setOf("US"),
+        "Gamesload" to setOf("US", "ES"),
+        "DLGamer" to setOf("US", "ES", "MX", "BR"),
+        "Noctre" to setOf("US", "ES"),
+        "Voidu" to setOf("US", "ES")
+    )
+
+    fun isAvailableInRegion(storeName: String, countryCode: String): Boolean {
+        if (storeName in globalStores) return true
+        val allowedCountries = regionRestricted[storeName]
+        return allowedCountries?.contains(countryCode) ?: true
+    }
+}
+
 class CheapSharkService {
 
     private val json = Json { ignoreUnknownKeys = true }

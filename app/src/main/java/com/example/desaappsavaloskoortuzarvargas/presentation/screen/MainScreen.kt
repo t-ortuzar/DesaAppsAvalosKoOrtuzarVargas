@@ -124,6 +124,7 @@ fun MainScreen() {
             GameDetailScreen(
                 game = selectedGame!!,
                 viewModel = gamesViewModel,
+                settingsViewModel = settingsViewModel,
                 onBackClick = { selectedGame = null },
                 onFavoriteClick = { game ->
                     gamesViewModel.toggleFavorite(game)

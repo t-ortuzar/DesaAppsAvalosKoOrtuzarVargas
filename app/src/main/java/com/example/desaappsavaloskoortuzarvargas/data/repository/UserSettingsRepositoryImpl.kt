@@ -24,8 +24,8 @@ class UserSettingsRepositoryImpl : UserSettingsRepository {
         userSettings = userSettings.copy(email = email)
     }
 
-    override suspend fun updateCountry(country: String) {
-        userSettings = userSettings.copy(country = country)
+    override suspend fun updateCountry(country: String, countryCode: String) {
+        userSettings = userSettings.copy(country = country, countryCode = countryCode)
     }
 
     override suspend fun setGlobalNotifications(enabled: Boolean) {

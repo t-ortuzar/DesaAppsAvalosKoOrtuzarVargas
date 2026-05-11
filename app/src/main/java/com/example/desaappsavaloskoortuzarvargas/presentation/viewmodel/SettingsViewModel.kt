@@ -69,9 +69,9 @@ class SettingsViewModel(
         }
     }
 
-    fun updateCountry(country: String) {
+    fun updateCountry(country: String, countryCode: String = "AR") {
         viewModelScope.launch {
-            updateCountryUseCase(country)
+            updateCountryUseCase(country, countryCode)
             _userSettings.value = getUserSettingsUseCase()
         }
     }

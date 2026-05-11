@@ -8,7 +8,7 @@ interface UserSettingsRepository {
     suspend fun getUserSettings(): UserSettings
     suspend fun updateUserName(name: String)
     suspend fun updateEmail(email: String)
-    suspend fun updateCountry(country: String)
+    suspend fun updateCountry(country: String, countryCode: String = "AR")
     suspend fun setGlobalNotifications(enabled: Boolean)
     suspend fun updateGameNotificationPref(pref: GameNotificationPref)
     suspend fun getGameNotificationPref(gameId: Int): GameNotificationPref?
