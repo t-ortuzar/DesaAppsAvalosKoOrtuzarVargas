@@ -266,42 +266,30 @@ fun GameDetailScreen(
             // DLCs section
             if (game.dlcs.isNotEmpty()) {
                 item {
-                    Text("DLCs & Expansions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("DLCs & Expansions (${game.dlcs.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 game.dlcs.forEach { dlc ->
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    AsyncImage(
-                                        model = dlc.imageUrl,
-                                        contentDescription = dlc.name,
-                                        modifier = Modifier
-                                            .height(60.dp)
-                                            .clip(RoundedCornerShape(4.dp)),
-                                        contentScale = ContentScale.Crop
+                                Text(
+                                    text = dlc.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                if (dlc.description.isNotEmpty()) {
+                                    Text(
+                                        text = dlc.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray,
+                                        maxLines = 2
                                     )
-                                    Column(modifier = Modifier.padding(start = 12.dp)) {
-                                        Text(
-                                            text = dlc.name,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Text(
-                                            text = dlc.description,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.Gray
-                                        )
-                                    }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                                 // Only show DLC prices for platforms where the game is available
                                 val dlcAvailablePrices = if (game.availablePlatforms.isNotEmpty()) {
                                     dlc.currentPrices.filter { it.key in game.availablePlatforms }
