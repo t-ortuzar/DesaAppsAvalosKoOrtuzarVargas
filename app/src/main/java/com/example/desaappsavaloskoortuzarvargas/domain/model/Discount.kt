@@ -12,7 +12,10 @@ data class DiscountedGame(
     val currentPrice: Float,
     val discountPercentage: Int,
     val isFree: Boolean = false,
+    val isF2P: Boolean = false,
+    val isTemporarilyFree: Boolean = false,
     val endDate: String? = null,
-    val isHistoricalLowest: Boolean = false
+    val isHistoricalLowest: Boolean = false,
+    val tags: List<String> = emptyList()
 )
 

@@ -12,7 +12,21 @@ data class Game(
     val rating: Double,
     val currentPrices: Map<String, Float>,
     val isFavorite: Boolean = false,
-    val historicalDiscount: Int = 0 // Porcentaje del descuento histórico más grande
+    val historicalDiscount: Int = 0,
+    val tags: List<String> = emptyList(),
+    val dlcs: List<DLC> = emptyList()
+)
+
+@Serializable
+data class DLC(
+    val id: Int,
+    val name: String,
+    val gameId: Int,
+    val imageUrl: String,
+    val currentPrices: Map<String, Float>,
+    val historicalDiscount: Int = 0,
+    val releaseDate: String = "",
+    val description: String = ""
 )
 
 @Serializable
@@ -20,7 +34,7 @@ data class PriceHistory(
     val gameId: Int,
     val platform: String,
     val price: Float,
-    val discount: Int, // Porcentaje de descuento
+    val discount: Int,
     val date: String,
     val isHistoricalLowest: Boolean = false
 )
@@ -37,4 +51,3 @@ data class UserFavorite(
     val gameName: String,
     val addedDate: String
 )
-

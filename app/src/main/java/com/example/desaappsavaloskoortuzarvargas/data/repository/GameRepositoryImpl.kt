@@ -21,7 +21,15 @@ class GameRepositoryImpl : GameRepository {
     } catch (e: Exception) { Result.failure(e) }
 
     override suspend fun searchGames(query: String): Result<List<Game>> = try {
-        val filtered = allGames.filter { it.name.contains(query, ignoreCase = true) }
+        val filtered = allGames.filter {
+            it.name.contains(query, ignoreCase = true) ||
+            it.tags.any { tag -> tag.contains(query, ignoreCase = true) }
+        }
+        Result.success(filtered.map { it.copy(isFavorite = it.id in favoriteIds) })
+    } catch (e: Exception) { Result.failure(e) }
+
+    override suspend fun getGamesByTag(tag: String): Result<List<Game>> = try {
+        val filtered = allGames.filter { it.tags.contains(tag) }
         Result.success(filtered.map { it.copy(isFavorite = it.id in favoriteIds) })
     } catch (e: Exception) { Result.failure(e) }
 

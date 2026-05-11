@@ -1,7 +1,9 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,12 +11,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,6 +32,7 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.NewsView
 fun NewsScreen(
     viewModel: NewsViewModel,
     onNewsSelected: (News) -> Unit,
+    onGameClicked: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val allNews by viewModel.allNews.collectAsState()
@@ -33,10 +40,14 @@ fun NewsScreen(
     val filterType by viewModel.filterType.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+
     val displayedNews = when (filterType) {
         NewsViewModel.FilterType.ALL -> allNews
         NewsViewModel.FilterType.FAVORITES -> favoritesNews
         NewsViewModel.FilterType.BY_GAME -> favoritesNews
+    }.let { news ->
+        if (selectedCategory != null) news.filter { it.category == selectedCategory } else news
     }
 
     Column(
@@ -44,26 +55,48 @@ fun NewsScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Filter buttons
-        Column(
+        // Source filter
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
+            FilterChip(
                 onClick = { viewModel.resetFilter() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("All News")
-            }
-            Button(
+                label = { Text("All") },
+                selected = filterType == NewsViewModel.FilterType.ALL
+            )
+            FilterChip(
                 onClick = { viewModel.loadFavoritesNews() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Favorites News")
+                label = { Text("Favorites") },
+                selected = filterType == NewsViewModel.FilterType.FAVORITES
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Category filter
+        val categories = listOf("discount" to "Discounts", "update" to "Updates", "event" to "Events")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            FilterChip(
+                onClick = { selectedCategory = null },
+                label = { Text("All Categories") },
+                selected = selectedCategory == null
+            )
+            categories.forEach { (cat, label) ->
+                FilterChip(
+                    onClick = { selectedCategory = if (selectedCategory == cat) null else cat },
+                    label = { Text(label) },
+                    selected = selectedCategory == cat
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         when {
             isLoading -> {
@@ -71,23 +104,17 @@ fun NewsScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                ) { CircularProgressIndicator() }
             }
             displayedNews.isEmpty() -> {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) {
-                    Text("No news found")
-                }
+                ) { Text("No news found") }
             }
             else -> {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(displayedNews) { news ->
                         NewsCard(
                             news = news,
@@ -99,5 +126,3 @@ fun NewsScreen(
         }
     }
 }
-
-

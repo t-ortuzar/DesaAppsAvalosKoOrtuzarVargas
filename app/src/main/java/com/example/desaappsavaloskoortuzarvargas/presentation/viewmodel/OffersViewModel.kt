@@ -39,11 +39,26 @@ class OffersViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _filterType = MutableStateFlow<FilterType>(FilterType.ALL)
+    private val _filterType = MutableStateFlow(FilterType.ALL)
     val filterType: StateFlow<FilterType> = _filterType.asStateFlow()
+
+    // F2P filter: show all free, only temp free, or only F2P
+    private val _freeFilter = MutableStateFlow(FreeFilter.TEMP_FREE_ONLY)
+    val freeFilter: StateFlow<FreeFilter> = _freeFilter.asStateFlow()
+
+    // Platform filter
+    private val _selectedPlatform = MutableStateFlow<String?>(null)
+    val selectedPlatform: StateFlow<String?> = _selectedPlatform.asStateFlow()
+
+    // All free games unfiltered
+    private var allFreeGamesCache = emptyList<DiscountedGame>()
 
     enum class FilterType {
         ALL, FAVORITES, HISTORICAL_LOW, FREE
+    }
+
+    enum class FreeFilter {
+        ALL, TEMP_FREE_ONLY, F2P_ONLY
     }
 
     init {
@@ -56,7 +71,7 @@ class OffersViewModel(
             _isLoading.value = true
             _error.value = null
             getCurrentDiscountsUseCase().onSuccess { discounts ->
-                _currentDiscounts.value = discounts.sortedByDescending { it.discountPercentage }
+                _currentDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
                 _filterType.value = FilterType.ALL
             }.onFailure { exception ->
                 _error.value = exception.message
@@ -72,7 +87,7 @@ class OffersViewModel(
             getFavoritesUseCase().onSuccess { favorites ->
                 val favoriteIds = favorites.map { it.id }
                 getFavoriteDiscountsUseCase(favoriteIds).onSuccess { discounts ->
-                    _favoriteDiscounts.value = discounts.sortedByDescending { it.discountPercentage }
+                    _favoriteDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
                     _filterType.value = FilterType.FAVORITES
                 }.onFailure { exception ->
                     _error.value = exception.message
@@ -89,7 +104,7 @@ class OffersViewModel(
             _isLoading.value = true
             _error.value = null
             getHistoricalLowDiscountsUseCase().onSuccess { discounts ->
-                _historicalLowDiscounts.value = discounts.sortedByDescending { it.discountPercentage }
+                _historicalLowDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
                 _filterType.value = FilterType.HISTORICAL_LOW
             }.onFailure { exception ->
                 _error.value = exception.message
@@ -103,10 +118,8 @@ class OffersViewModel(
             _isLoading.value = true
             _error.value = null
             getFreeGamesUseCase().onSuccess { freeGames ->
-                _freeGames.value = freeGames
-                if (_filterType.value == FilterType.FREE) {
-                    _currentDiscounts.value = freeGames
-                }
+                allFreeGamesCache = freeGames
+                applyFreeFilter()
             }.onFailure { exception ->
                 _error.value = exception.message
             }
@@ -116,7 +129,37 @@ class OffersViewModel(
 
     fun showFreeGames() {
         _filterType.value = FilterType.FREE
-        _currentDiscounts.value = _freeGames.value
+        applyFreeFilter()
+    }
+
+    fun setFreeFilter(filter: FreeFilter) {
+        _freeFilter.value = filter
+        applyFreeFilter()
+    }
+
+    private fun applyFreeFilter() {
+        val filtered = when (_freeFilter.value) {
+            FreeFilter.ALL -> allFreeGamesCache
+            FreeFilter.TEMP_FREE_ONLY -> allFreeGamesCache.filter { it.isTemporarilyFree }
+            FreeFilter.F2P_ONLY -> allFreeGamesCache.filter { it.isF2P }
+        }
+        _freeGames.value = applyPlatformFilter(filtered)
+    }
+
+    fun setPlatformFilter(platform: String?) {
+        _selectedPlatform.value = platform
+        // Re-apply current tab
+        when (_filterType.value) {
+            FilterType.ALL -> loadCurrentDiscounts()
+            FilterType.FAVORITES -> loadFavoriteDiscounts()
+            FilterType.HISTORICAL_LOW -> loadHistoricalLowDiscounts()
+            FilterType.FREE -> applyFreeFilter()
+        }
+    }
+
+    private fun applyPlatformFilter(list: List<DiscountedGame>): List<DiscountedGame> {
+        val platform = _selectedPlatform.value ?: return list
+        return list.filter { it.platform == platform }
     }
 
     fun resetFilter() {

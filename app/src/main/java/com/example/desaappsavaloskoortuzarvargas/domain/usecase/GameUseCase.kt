@@ -15,6 +15,10 @@ class SearchGamesUseCase(private val gameRepository: GameRepository) {
     suspend operator fun invoke(query: String): Result<List<Game>> = gameRepository.searchGames(query)
 }
 
+class GetGamesByTagUseCase(private val gameRepository: GameRepository) {
+    suspend operator fun invoke(tag: String): Result<List<Game>> = gameRepository.getGamesByTag(tag)
+}
+
 class AddToFavoritesUseCase(private val gameRepository: GameRepository) {
     suspend operator fun invoke(game: Game): Result<Unit> = gameRepository.addToFavorites(game)
 }

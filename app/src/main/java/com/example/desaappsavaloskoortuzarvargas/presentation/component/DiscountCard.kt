@@ -76,27 +76,52 @@ fun DiscountCard(
                         )
                     }
 
-                    // Discount badge
-                    if (discount.isFree) {
-                        Text(
-                            text = "FREE",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier
-                                .background(Color.Green, shape = RoundedCornerShape(4.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "-${discount.discountPercentage}%",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier
-                                .background(Color.Red, shape = RoundedCornerShape(4.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                    // Badge
+                    when {
+                        discount.isF2P -> {
+                            Text(
+                                text = "F2P",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .background(Color(0xFF2196F3), shape = RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        discount.isTemporarilyFree -> {
+                            Text(
+                                text = "FREE!",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .background(Color(0xFF4CAF50), shape = RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        discount.isFree -> {
+                            Text(
+                                text = "FREE",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .background(Color.Green, shape = RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        else -> {
+                            Text(
+                                text = "-${discount.discountPercentage}%",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .background(Color.Red, shape = RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
 
@@ -107,30 +132,63 @@ fun DiscountCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    if (discount.isFree) {
-                        Text(
-                            text = "FREE",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Green
-                        )
-                    } else {
-                        Column {
+                    when {
+                        discount.isF2P -> {
                             Text(
-                                text = "${"%.2f".format(discount.originalPrice)}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Gray
+                                text = "Free to Play",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2196F3)
                             )
+                        }
+                        discount.isTemporarilyFree -> {
+                            Column {
+                                Text(
+                                    text = "Was: $${"%.2f".format(discount.originalPrice)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = "FREE NOW",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF4CAF50)
+                                )
+                                if (discount.endDate != null) {
+                                    Text(
+                                        text = "Until: ${discount.endDate}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(0xFFFF9800)
+                                    )
+                                }
+                            }
+                        }
+                        discount.isFree -> {
                             Text(
-                                text = "${"%.2f".format(discount.currentPrice)}",
+                                text = "FREE",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Green
                             )
                         }
+                        else -> {
+                            Column {
+                                Text(
+                                    text = "$${"%.2f".format(discount.originalPrice)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = "$${"%.2f".format(discount.currentPrice)}",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Green
+                                )
+                            }
+                        }
                     }
 
-                    if (discount.isHistoricalLowest) {
+                    if (discount.isHistoricalLowest && !discount.isF2P) {
                         Text(
                             text = "★ Historical Low",
                             style = MaterialTheme.typography.labelSmall,
@@ -143,4 +201,3 @@ fun DiscountCard(
         }
     }
 }
-

@@ -8,10 +8,10 @@ interface GameRepository {
     suspend fun getAllGames(): Result<List<Game>>
     suspend fun getGameById(id: Int): Result<Game>
     suspend fun searchGames(query: String): Result<List<Game>>
+    suspend fun getGamesByTag(tag: String): Result<List<Game>>
     suspend fun getPriceHistory(gameId: Int): Result<List<PriceHistory>>
     suspend fun addToFavorites(game: Game): Result<Unit>
     suspend fun removeFromFavorites(gameId: Int): Result<Unit>
     suspend fun getFavorites(): Result<List<Game>>
     suspend fun isFavorite(gameId: Int): Result<Boolean>
 }
-

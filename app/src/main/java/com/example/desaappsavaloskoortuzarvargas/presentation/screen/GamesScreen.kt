@@ -1,7 +1,9 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,12 +11,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.TextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,7 +40,12 @@ fun GamesScreen(
 ) {
     val allGames by viewModel.allGames.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val selectedTag by viewModel.selectedTag.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
+
+    // Popular tags to show as filters
+    val popularTags = listOf("Action", "RPG", "FPS", "Open World", "Horror", "Survival",
+        "Co-op", "Indie", "Puzzle", "Racing", "Sports", "Souls-like", "Roguelike", "Strategy")
 
     Column(
         modifier = modifier
@@ -51,17 +60,41 @@ fun GamesScreen(
                 viewModel.searchGames(query)
             },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Search games...") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search"
-                )
-            },
+            placeholder = { Text("Search games or tags...") },
+            leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "Search") },
             singleLine = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Tag filter chips
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            FilterChip(
+                onClick = { viewModel.clearTagFilter(); searchQuery = "" },
+                label = { Text("All") },
+                selected = selectedTag == null
+            )
+            popularTags.forEach { tag ->
+                FilterChip(
+                    onClick = {
+                        if (selectedTag == tag) {
+                            viewModel.clearTagFilter()
+                        } else {
+                            viewModel.filterByTag(tag)
+                        }
+                    },
+                    label = { Text(tag) },
+                    selected = selectedTag == tag
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         when {
             isLoading -> {
@@ -69,23 +102,17 @@ fun GamesScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                ) { CircularProgressIndicator() }
             }
             allGames.isEmpty() -> {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) {
-                    Text("No games found")
-                }
+                ) { Text("No games found") }
             }
             else -> {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(allGames) { game ->
                         GameCard(
                             game = game,
@@ -98,5 +125,3 @@ fun GamesScreen(
         }
     }
 }
-
-

@@ -1,7 +1,9 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,8 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -38,18 +41,19 @@ fun OffersScreen(
     val historicalLowDiscounts by viewModel.historicalLowDiscounts.collectAsState()
     val freeGames by viewModel.freeGames.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val filterType by viewModel.filterType.collectAsState()
+    val freeFilter by viewModel.freeFilter.collectAsState()
+    val selectedPlatform by viewModel.selectedPlatform.collectAsState()
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
 
-    val tabs = listOf("All Discounts", "Favorite\nDiscounts", "Historical\nLow", "Free")
+    val tabs = listOf("Discounts", "Favorites", "Hist. Low", "Free")
+    val platforms = listOf("Steam", "Epic Games", "GOG", "EA Play", "Ubisoft+", "Battle.net", "G2A", "Eneba")
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Tab row
         TabRow(selectedTabIndex = selectedTabIndex) {
             tabs.forEachIndexed { index, title ->
                 Tab(
@@ -68,7 +72,59 @@ fun OffersScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Platform filter chips
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            FilterChip(
+                onClick = { viewModel.setPlatformFilter(null) },
+                label = { Text("All") },
+                selected = selectedPlatform == null
+            )
+            platforms.forEach { platform ->
+                FilterChip(
+                    onClick = {
+                        viewModel.setPlatformFilter(
+                            if (selectedPlatform == platform) null else platform
+                        )
+                    },
+                    label = { Text(platform) },
+                    selected = selectedPlatform == platform
+                )
+            }
+        }
+
+        // Free tab sub-filter: F2P vs Temporarily Free
+        if (selectedTabIndex == 3) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                FilterChip(
+                    onClick = { viewModel.setFreeFilter(OffersViewModel.FreeFilter.TEMP_FREE_ONLY) },
+                    label = { Text("Temp. Free") },
+                    selected = freeFilter == OffersViewModel.FreeFilter.TEMP_FREE_ONLY
+                )
+                FilterChip(
+                    onClick = { viewModel.setFreeFilter(OffersViewModel.FreeFilter.F2P_ONLY) },
+                    label = { Text("F2P") },
+                    selected = freeFilter == OffersViewModel.FreeFilter.F2P_ONLY
+                )
+                FilterChip(
+                    onClick = { viewModel.setFreeFilter(OffersViewModel.FreeFilter.ALL) },
+                    label = { Text("All Free") },
+                    selected = freeFilter == OffersViewModel.FreeFilter.ALL
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         val displayedDiscounts = when (selectedTabIndex) {
             0 -> currentDiscounts
@@ -84,23 +140,17 @@ fun OffersScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                ) { CircularProgressIndicator() }
             }
             displayedDiscounts.isEmpty() -> {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) {
-                    Text("No discounts available")
-                }
+                ) { Text("No discounts available") }
             }
             else -> {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(displayedDiscounts) { discount ->
                         DiscountCard(
                             discount = discount,
@@ -112,5 +162,3 @@ fun OffersScreen(
         }
     }
 }
-
-
