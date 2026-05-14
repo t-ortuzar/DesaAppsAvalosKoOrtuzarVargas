@@ -6,25 +6,31 @@ plugins {
 
 android {
     namespace = "com.example.desaappsavaloskoortuzarvargas"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.desaappsavaloskoortuzarvargas"
-        minSdk = 30
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../gamedeals-release.jks")
+            storePassword = "gamedeals123"
+            keyAlias = "gamedeals"
+            keyPassword = "gamedeals123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
