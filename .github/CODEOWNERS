@@ -1,0 +1,12 @@
+# Code Owners para DesaAppsAvalosKoOrtuzarVargas
+#
+# Cada PR que toque archivos cubiertos por estas reglas requerirá la
+# aprobación de los usuarios listados, siempre que en la branch protection
+# rule del repositorio esté habilitada la opción
+# "Require review from Code Owners".
+#
+# Documentación oficial:
+# https://docs.github.com/es/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+
+# Dueño por defecto de TODO el repositorio: se requiere su aprobación en cada PR.
+*       @t-ortuzar
