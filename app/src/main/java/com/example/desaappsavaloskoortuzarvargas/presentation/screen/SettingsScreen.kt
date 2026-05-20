@@ -38,14 +38,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.GameNotificationPref
+import com.example.desaappsavaloskoortuzarvargas.domain.model.NotificationType
 import com.example.desaappsavaloskoortuzarvargas.domain.model.SUPPORTED_COUNTRIES
 import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
+import android.app.Activity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.os.LocaleListCompat
 
 @Composable
 fun SettingsScreen(
@@ -58,12 +65,17 @@ fun SettingsScreen(
     val unreadCount by settingsViewModel.unreadCount.collectAsState()
     val favorites by gamesViewModel.favorites.collectAsState()
 
+    val context = LocalContext.current
+
     var editingName by remember { mutableStateOf(false) }
     var editingEmail by remember { mutableStateOf(false) }
     var tempName by remember { mutableStateOf(userSettings.userName) }
     var tempEmail by remember { mutableStateOf(userSettings.email) }
     var showCountryDropdown by remember { mutableStateOf(false) }
+    var showLanguageDropdown by remember { mutableStateOf(false) }
     var showNotifPrefs by remember { mutableStateOf<Game?>(null) }
+    var showLanguageConfirm by remember { mutableStateOf(false) }
+    var pendingLanguageCode by remember { mutableStateOf<String?>(null) }
 
     // Load favorites on first composition
     remember { gamesViewModel.loadFavorites(); true }
@@ -76,7 +88,7 @@ fun SettingsScreen(
     ) {
         // Profile section
         item {
-            Text("Profile", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.label_profile), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
 
         item {
@@ -93,7 +105,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Username", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                            Text(stringResource(R.string.label_username), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             if (editingName) {
                                 OutlinedTextField(
                                     value = tempName,
@@ -113,7 +125,7 @@ fun SettingsScreen(
                             }
                             editingName = !editingName
                         }) {
-                            Text(if (editingName) "Save" else "Edit")
+                            Text(if (editingName) stringResource(R.string.action_save) else stringResource(R.string.action_edit))
                         }
                     }
 
@@ -126,7 +138,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Email", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                            Text(stringResource(R.string.label_email), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             if (editingEmail) {
                                 OutlinedTextField(
                                     value = tempEmail,
@@ -136,7 +148,7 @@ fun SettingsScreen(
                                 )
                             } else {
                                 Text(
-                                    text = if (userSettings.email.isEmpty()) "Not set" else userSettings.email,
+                                    text = if (userSettings.email.isEmpty()) stringResource(R.string.label_not_set) else userSettings.email,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = if (userSettings.email.isEmpty()) Color.Gray else Color.Unspecified
                                 )
@@ -150,7 +162,7 @@ fun SettingsScreen(
                             }
                             editingEmail = !editingEmail
                         }) {
-                            Text(if (editingEmail) "Save" else "Edit")
+                            Text(if (editingEmail) stringResource(R.string.action_save) else stringResource(R.string.action_edit))
                         }
                     }
                 }
@@ -159,7 +171,7 @@ fun SettingsScreen(
 
         // Country selection
         item {
-            Text("Region", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.label_region), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
 
         item {
@@ -169,7 +181,7 @@ fun SettingsScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Country (affects prices)", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text(stringResource(R.string.label_country_affects_prices), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     OutlinedButton(
                         onClick = { showCountryDropdown = true },
                         modifier = Modifier.fillMaxWidth()
@@ -194,9 +206,49 @@ fun SettingsScreen(
             }
         }
 
+        // Language selection
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(2.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(stringResource(R.string.label_language), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    val languageOptions = listOf(
+                        "en" to stringResource(R.string.language_english),
+                        "es" to stringResource(R.string.language_spanish)
+                    )
+                    val currentLanguageLabel = languageOptions.firstOrNull { it.first == userSettings.languageCode }?.second
+                        ?: languageOptions.first().second
+                    OutlinedButton(
+                        onClick = { showLanguageDropdown = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(currentLanguageLabel)
+                    }
+                    DropdownMenu(
+                        expanded = showLanguageDropdown,
+                        onDismissRequest = { showLanguageDropdown = false }
+                    ) {
+                        languageOptions.forEach { (code, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    pendingLanguageCode = code
+                                    showLanguageConfirm = true
+                                    showLanguageDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Notifications section
         item {
-            Text("Notifications", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.label_notifications), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
 
         item {
@@ -211,7 +263,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Enable Notifications", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.label_enable_notifications), style = MaterialTheme.typography.bodyMedium)
                         Switch(
                             checked = userSettings.globalNotificationsEnabled,
                             onCheckedChange = { settingsViewModel.setGlobalNotifications(it) }
@@ -230,7 +282,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Alerts ($unreadCount unread)",
+                        stringResource(R.string.label_alerts_unread, unreadCount),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -252,8 +304,30 @@ fun SettingsScreen(
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text(notification.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        Text(notification.message, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        val title = when (notification.type) {
+                            NotificationType.HISTORICAL_LOW -> stringResource(R.string.notif_title_historical_low)
+                            NotificationType.DISCOUNT -> stringResource(R.string.notif_title_discount)
+                            NotificationType.NEWS -> stringResource(R.string.nav_news)
+                            NotificationType.FREE_GAME -> stringResource(R.string.offers_tab_free)
+                        }
+                        val message = when (notification.type) {
+                            NotificationType.HISTORICAL_LOW -> stringResource(
+                                R.string.notif_message_historical_low,
+                                notification.gameName,
+                                notification.discountPercentage,
+                                notification.platform
+                            )
+                            NotificationType.DISCOUNT -> stringResource(
+                                R.string.notif_message_discount,
+                                notification.gameName,
+                                notification.discountPercentage,
+                                notification.platform
+                            )
+                            NotificationType.NEWS -> notification.gameName
+                            NotificationType.FREE_GAME -> notification.gameName
+                        }
+                        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(message, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
                 }
             }
@@ -261,12 +335,12 @@ fun SettingsScreen(
 
         // Favorites management
         item {
-            Text("Favorites (${favorites.size})", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.label_favorites_count, favorites.size), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
 
         if (favorites.isEmpty()) {
             item {
-                Text("No favorites yet. Add games from the catalog!", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                Text(stringResource(R.string.label_no_favorites), style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
             }
         }
 
@@ -294,12 +368,16 @@ fun SettingsScreen(
 
                     // Per-game notification settings
                     IconButton(onClick = { showNotifPrefs = game }) {
-                        Icon(Icons.Filled.Notifications, "Notification prefs", tint = MaterialTheme.colorScheme.primary)
+                        Icon(
+                            Icons.Filled.Notifications,
+                            stringResource(R.string.label_notification_prefs),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
 
                     // Remove from favorites
                     IconButton(onClick = { gamesViewModel.toggleFavorite(game) }) {
-                        Icon(Icons.Filled.Delete, "Remove", tint = Color.Red)
+                        Icon(Icons.Filled.Delete, stringResource(R.string.action_remove), tint = Color.Red)
                     }
                 }
             }
@@ -319,7 +397,7 @@ fun SettingsScreen(
 
         AlertDialog(
             onDismissRequest = { showNotifPrefs = null },
-            title = { Text("Notifications: ${game.name}") },
+            title = { Text(stringResource(R.string.label_notifications_for_game, game.name)) },
             text = {
                 Column {
                     Row(
@@ -327,7 +405,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Offers")
+                        Text(stringResource(R.string.label_offers))
                         Switch(checked = notifyOffers, onCheckedChange = { notifyOffers = it })
                     }
                     Row(
@@ -335,7 +413,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("News")
+                        Text(stringResource(R.string.label_news))
                         Switch(checked = notifyNews, onCheckedChange = { notifyNews = it })
                     }
                     Row(
@@ -343,7 +421,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Historical Low")
+                        Text(stringResource(R.string.label_historical_low))
                         Switch(checked = notifyHistorical, onCheckedChange = { notifyHistorical = it })
                     }
                 }
@@ -361,15 +439,47 @@ fun SettingsScreen(
                     )
                     showNotifPrefs = null
                 }) {
-                    Text("Save")
+                    Text(stringResource(R.string.action_save))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showNotifPrefs = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    if (showLanguageConfirm && pendingLanguageCode != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showLanguageConfirm = false
+                pendingLanguageCode = null
+            },
+            title = { Text(stringResource(R.string.label_language)) },
+            text = { Text(stringResource(R.string.language_restart_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val languageCode = pendingLanguageCode ?: return@TextButton
+                    settingsViewModel.updateLanguage(languageCode)
+                    AppCompatDelegate.setApplicationLocales(
+                        LocaleListCompat.forLanguageTags(languageCode)
+                    )
+                    showLanguageConfirm = false
+                    pendingLanguageCode = null
+                    (context as? Activity)?.recreate()
+                }) {
+                    Text(stringResource(R.string.action_apply_changes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showLanguageConfirm = false
+                    pendingLanguageCode = null
+                }) {
+                    Text(stringResource(R.string.action_no_apply))
                 }
             }
         )
     }
 }
-

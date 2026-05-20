@@ -29,10 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 
 @Composable
@@ -89,7 +91,7 @@ fun GameCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Star,
-                                contentDescription = "Rating",
+                                contentDescription = stringResource(R.string.content_desc_rating),
                                 tint = Color.Yellow,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -107,7 +109,7 @@ fun GameCard(
                     ) {
                         Icon(
                             imageVector = if (game.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = "Favorite",
+                            contentDescription = stringResource(R.string.content_desc_favorite),
                             tint = if (game.isFavorite) Color.Red else Color.Gray,
                             modifier = Modifier.size(24.dp)
                         )
@@ -140,7 +142,7 @@ fun GameCard(
                 if (game.historicalDiscount > 0) {
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Historical discount: ${game.historicalDiscount}%",
+                        text = stringResource(R.string.game_historical_discount_short, game.historicalDiscount),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Green,
                         fontWeight = FontWeight.Bold
@@ -150,7 +152,7 @@ fun GameCard(
                 // DLC count
                 if (game.dlcs.isNotEmpty()) {
                     Text(
-                        text = "${game.dlcs.size} DLC(s) available",
+                        text = stringResource(R.string.game_dlcs_available, game.dlcs.size),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Bold
@@ -164,7 +166,7 @@ fun GameCard(
                 prices.forEach { (platform, price) ->
                     if (price > 0) {
                         Text(
-                            text = "$platform: $${"%.2f".format(price)}",
+                            text = stringResource(R.string.game_price_platform, platform, price),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -210,7 +212,7 @@ fun GameCardSmall(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "★ ${"%.1f".format(game.rating)}",
+                    text = stringResource(R.string.game_rating_star, game.rating),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )

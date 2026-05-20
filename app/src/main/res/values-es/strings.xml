@@ -1,0 +1,99 @@
+<resources>
+    <string name="app_name">DesaAppsAvalosKoOrtuzarVargas</string>
+
+    <string name="nav_offers">Ofertas</string>
+    <string name="nav_catalog">Catalogo</string>
+    <string name="nav_news">Noticias</string>
+    <string name="nav_settings">Configuracion</string>
+
+    <string name="action_search">Buscar</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_remove">Quitar</string>
+    <string name="label_back">Volver</string>
+
+    <string name="label_all">Todos</string>
+    <string name="label_favorites">Favoritos</string>
+    <string name="label_profile">Perfil</string>
+    <string name="label_username">Nombre de usuario</string>
+    <string name="label_email">Correo</string>
+    <string name="label_not_set">Sin definir</string>
+    <string name="label_region">Region</string>
+    <string name="label_country_affects_prices">Pais (afecta precios)</string>
+    <string name="label_language">Idioma</string>
+    <string name="language_english">Ingles - EN</string>
+    <string name="language_spanish">Español - ES</string>
+    <string name="label_notifications">Notificaciones</string>
+    <string name="label_enable_notifications">Activar notificaciones</string>
+    <string name="label_alerts_unread">Alertas (%1$d sin leer)</string>
+    <string name="label_favorites_count">Favoritos (%1$d)</string>
+    <string name="label_no_favorites">Sin favoritos. Agrega juegos del catalogo.</string>
+    <string name="label_notification_prefs">Preferencias de notificacion</string>
+    <string name="label_notifications_for_game">Notificaciones: %1$s</string>
+    <string name="label_offers">Ofertas</string>
+    <string name="label_news">Noticias</string>
+    <string name="label_historical_low">Minimo historico</string>
+
+    <string name="games_search_placeholder">Buscar juegos o etiquetas...</string>
+    <string name="games_no_results">No se encontraron juegos</string>
+
+    <string name="news_filter_all_categories">Todas las categorias</string>
+    <string name="news_category_discounts">Descuentos</string>
+    <string name="news_category_updates">Actualizaciones</string>
+    <string name="news_category_events">Eventos</string>
+    <string name="news_no_results">No se encontraron noticias</string>
+    <string name="news_category_format">Categoria: %1$s</string>
+
+    <string name="offers_tab_discounts">Descuentos</string>
+    <string name="offers_tab_favorites">Favoritos</string>
+    <string name="offers_tab_hist_low">Min. historico</string>
+    <string name="offers_tab_free">Gratis</string>
+    <string name="offers_filter_temp_free">Gratis temporal</string>
+    <string name="offers_filter_f2p">F2P</string>
+    <string name="offers_filter_all_free">Todo gratis</string>
+    <string name="offers_no_discounts">No hay descuentos disponibles</string>
+
+    <string name="game_available_on">Disponible en</string>
+    <string name="game_release_date">Fecha de lanzamiento</string>
+    <string name="game_rating_label">Calificacion</string>
+    <string name="game_rating_format">%1$.1f / 10</string>
+    <string name="game_historical_discount">Descuento historico</string>
+    <string name="game_description">Descripcion</string>
+    <string name="game_prices">Precios</string>
+    <string name="game_prices_region">%1$s %2$s - Tiendas disponibles en tu region</string>
+    <string name="game_off_percent">%1$d%% de descuento</string>
+    <string name="game_price_usd">US$%1$.2f</string>
+    <string name="game_price_usd_simple">$%1$.2f</string>
+    <string name="game_free">GRATIS</string>
+    <string name="game_not_available">N/D</string>
+    <string name="game_no_live_data">Sin datos en vivo - mostrando precios guardados</string>
+    <string name="game_dlcs_expansions">DLCs y expansiones (%1$d)</string>
+    <string name="game_dlc_hist_discount">Desc. historico: %1$d%%</string>
+
+    <string name="content_desc_rating">Calificacion</string>
+    <string name="content_desc_favorite">Favorito</string>
+    <string name="game_historical_discount_short">Descuento historico: %1$d%%</string>
+    <string name="game_dlcs_available">%1$d DLC(s) disponibles</string>
+    <string name="game_price_platform">%1$s: $%2$.2f</string>
+    <string name="game_rating_star">★ %1$.1f</string>
+
+    <string name="badge_f2p">F2P</string>
+    <string name="badge_free">GRATIS</string>
+    <string name="badge_free_exclaim">GRATIS!</string>
+    <string name="discount_badge_percent">-%1$d%%</string>
+    <string name="price_free_to_play">Gratis para jugar</string>
+    <string name="price_was">Antes: $%1$.2f</string>
+    <string name="price_free_now">GRATIS AHORA</string>
+    <string name="price_until">Hasta: %1$s</string>
+    <string name="historical_low_label">★ Minimo historico</string>
+
+    <string name="notif_title_historical_low">Minimo historico!</string>
+    <string name="notif_title_discount">Alerta de descuento</string>
+    <string name="notif_message_historical_low">%1$s esta en su menor precio: -%2$d%% en %3$s!</string>
+    <string name="notif_message_discount">%1$s tiene %2$d%% de descuento en %3$s!</string>
+
+    <string name="language_restart_message">Para aplicar los cambios es necesario reiniciar la app. ¿Confirma que quiere reiniciar?</string>
+    <string name="action_apply_changes">Aplicar cambios</string>
+    <string name="action_no_apply">No aplicar</string>
+</resources>

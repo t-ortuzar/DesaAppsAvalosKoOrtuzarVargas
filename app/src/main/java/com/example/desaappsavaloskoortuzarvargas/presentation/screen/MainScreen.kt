@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import com.example.desaappsavaloskoortuzarvargas.di.ServiceLocator
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
@@ -49,11 +50,13 @@ import com.example.desaappsavaloskoortuzarvargas.domain.usecase.SetGlobalNotific
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateCountryUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateEmailUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateGameNotificationPrefUseCase
+import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateLanguageUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateUserNameUseCase
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.NewsViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.OffersViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
+import com.example.desaappsavaloskoortuzarvargas.R
 
 @Composable
 fun MainScreen() {
@@ -106,6 +109,7 @@ fun MainScreen() {
             UpdateUserNameUseCase(userSettingsRepository),
             UpdateEmailUseCase(userSettingsRepository),
             UpdateCountryUseCase(userSettingsRepository),
+            UpdateLanguageUseCase(userSettingsRepository),
             SetGlobalNotificationsUseCase(userSettingsRepository),
             UpdateGameNotificationPrefUseCase(userSettingsRepository),
             GetInAppNotificationsUseCase(userSettingsRepository),
@@ -147,20 +151,35 @@ fun MainScreen() {
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.LocalOffer, contentDescription = "Offers") },
-                    label = { Text("Offers") },
+                    icon = {
+                        Icon(
+                            Icons.Filled.LocalOffer,
+                            contentDescription = stringResource(R.string.nav_offers)
+                        )
+                    },
+                    label = { Text(stringResource(R.string.nav_offers)) },
                     selected = currentTab == 0,
                     onClick = { currentTab = 0 }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.VideogameAsset, contentDescription = "Catalog") },
-                    label = { Text("Catalog") },
+                    icon = {
+                        Icon(
+                            Icons.Filled.VideogameAsset,
+                            contentDescription = stringResource(R.string.nav_catalog)
+                        )
+                    },
+                    label = { Text(stringResource(R.string.nav_catalog)) },
                     selected = currentTab == 1,
                     onClick = { currentTab = 1 }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Newspaper, contentDescription = "News") },
-                    label = { Text("News") },
+                    icon = {
+                        Icon(
+                            Icons.Filled.Newspaper,
+                            contentDescription = stringResource(R.string.nav_news)
+                        )
+                    },
+                    label = { Text(stringResource(R.string.nav_news)) },
                     selected = currentTab == 2,
                     onClick = { currentTab = 2 }
                 )
@@ -173,10 +192,13 @@ fun MainScreen() {
                                 }
                             }
                         ) {
-                            Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                            Icon(
+                                Icons.Filled.Settings,
+                                contentDescription = stringResource(R.string.nav_settings)
+                            )
                         }
                     },
-                    label = { Text("Settings") },
+                    label = { Text(stringResource(R.string.nav_settings)) },
                     selected = currentTab == 3,
                     onClick = {
                         currentTab = 3

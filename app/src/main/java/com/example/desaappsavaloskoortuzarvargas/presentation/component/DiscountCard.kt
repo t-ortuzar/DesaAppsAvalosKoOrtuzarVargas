@@ -20,10 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.DiscountedGame
 
 @Composable
@@ -80,7 +82,7 @@ fun DiscountCard(
                     when {
                         discount.isF2P -> {
                             Text(
-                                text = "F2P",
+                                text = stringResource(R.string.badge_f2p),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -91,7 +93,7 @@ fun DiscountCard(
                         }
                         discount.isTemporarilyFree -> {
                             Text(
-                                text = "FREE!",
+                                text = stringResource(R.string.badge_free_exclaim),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -102,7 +104,7 @@ fun DiscountCard(
                         }
                         discount.isFree -> {
                             Text(
-                                text = "FREE",
+                                text = stringResource(R.string.badge_free),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -113,7 +115,7 @@ fun DiscountCard(
                         }
                         else -> {
                             Text(
-                                text = "-${discount.discountPercentage}%",
+                                text = stringResource(R.string.discount_badge_percent, discount.discountPercentage),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
@@ -135,7 +137,7 @@ fun DiscountCard(
                     when {
                         discount.isF2P -> {
                             Text(
-                                text = "Free to Play",
+                                text = stringResource(R.string.price_free_to_play),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF2196F3)
@@ -144,19 +146,19 @@ fun DiscountCard(
                         discount.isTemporarilyFree -> {
                             Column {
                                 Text(
-                                    text = "Was: $${"%.2f".format(discount.originalPrice)}",
+                                    text = stringResource(R.string.price_was, discount.originalPrice),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.Gray
                                 )
                                 Text(
-                                    text = "FREE NOW",
+                                    text = stringResource(R.string.price_free_now),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF4CAF50)
                                 )
                                 if (discount.endDate != null) {
                                     Text(
-                                        text = "Until: ${discount.endDate}",
+                                        text = stringResource(R.string.price_until, discount.endDate),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color(0xFFFF9800)
                                     )
@@ -165,7 +167,7 @@ fun DiscountCard(
                         }
                         discount.isFree -> {
                             Text(
-                                text = "FREE",
+                                text = stringResource(R.string.badge_free),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Green
@@ -174,12 +176,12 @@ fun DiscountCard(
                         else -> {
                             Column {
                                 Text(
-                                    text = "$${"%.2f".format(discount.originalPrice)}",
+                                    text = stringResource(R.string.game_price_usd_simple, discount.originalPrice),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.Gray
                                 )
                                 Text(
-                                    text = "$${"%.2f".format(discount.currentPrice)}",
+                                    text = stringResource(R.string.game_price_usd_simple, discount.currentPrice),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Green
@@ -190,7 +192,7 @@ fun DiscountCard(
 
                     if (discount.isHistoricalLowest && !discount.isF2P) {
                         Text(
-                            text = "★ Historical Low",
+                            text = stringResource(R.string.historical_low_label),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFFFD700)
