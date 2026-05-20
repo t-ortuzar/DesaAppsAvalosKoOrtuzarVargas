@@ -1,34 +1,65 @@
 package com.example.desaappsavaloskoortuzarvargas.data.repository
 
-import com.example.desaappsavaloskoortuzarvargas.data.mock.MockDataGenerator
+import android.content.Context
+import androidx.datastore.preferences.core.edit
+import com.example.desaappsavaloskoortuzarvargas.data.local.SettingsKeys
+import com.example.desaappsavaloskoortuzarvargas.data.local.settingsDataStore
 import com.example.desaappsavaloskoortuzarvargas.domain.model.GameNotificationPref
 import com.example.desaappsavaloskoortuzarvargas.domain.model.InAppNotification
 import com.example.desaappsavaloskoortuzarvargas.domain.model.NotificationType
 import com.example.desaappsavaloskoortuzarvargas.domain.model.UserSettings
 import com.example.desaappsavaloskoortuzarvargas.domain.repository.UserSettingsRepository
+import com.example.desaappsavaloskoortuzarvargas.data.mock.MockDataGenerator
+import kotlinx.coroutines.flow.first
 
-class UserSettingsRepositoryImpl : UserSettingsRepository {
+class UserSettingsRepositoryImpl(
+    private val context: Context
+) : UserSettingsRepository {
 
     private var userSettings = UserSettings()
     private val notifications = mutableListOf<InAppNotification>()
     private val gamePrefs = mutableMapOf<Int, GameNotificationPref>()
     private var nextNotifId = 1
 
-    override suspend fun getUserSettings(): UserSettings = userSettings
+    override suspend fun getUserSettings(): UserSettings {
+        val prefs = context.settingsDataStore.data.first()
+        userSettings = UserSettings(
+            userName = prefs[SettingsKeys.USER_NAME] ?: "Player",
+            email = prefs[SettingsKeys.EMAIL] ?: "",
+            country = prefs[SettingsKeys.COUNTRY] ?: "Argentina",
+            countryCode = prefs[SettingsKeys.COUNTRY_CODE] ?: "AR",
+            languageCode = prefs[SettingsKeys.LANGUAGE_CODE] ?: "en",
+            globalNotificationsEnabled = prefs[SettingsKeys.GLOBAL_NOTIFICATIONS] ?: true,
+            gameNotificationPrefs = gamePrefs.toMap()
+        )
+        return userSettings
+    }
 
     override suspend fun updateUserName(name: String) {
+        context.settingsDataStore.edit { it[SettingsKeys.USER_NAME] = name }
         userSettings = userSettings.copy(userName = name)
     }
 
     override suspend fun updateEmail(email: String) {
+        context.settingsDataStore.edit { it[SettingsKeys.EMAIL] = email }
         userSettings = userSettings.copy(email = email)
     }
 
     override suspend fun updateCountry(country: String, countryCode: String) {
+        context.settingsDataStore.edit {
+            it[SettingsKeys.COUNTRY] = country
+            it[SettingsKeys.COUNTRY_CODE] = countryCode
+        }
         userSettings = userSettings.copy(country = country, countryCode = countryCode)
     }
 
+    override suspend fun updateLanguage(languageCode: String) {
+        context.settingsDataStore.edit { it[SettingsKeys.LANGUAGE_CODE] = languageCode }
+        userSettings = userSettings.copy(languageCode = languageCode)
+    }
+
     override suspend fun setGlobalNotifications(enabled: Boolean) {
+        context.settingsDataStore.edit { it[SettingsKeys.GLOBAL_NOTIFICATIONS] = enabled }
         userSettings = userSettings.copy(globalNotificationsEnabled = enabled)
     }
 
@@ -70,24 +101,25 @@ class UserSettingsRepositoryImpl : UserSettingsRepository {
                 notifications.add(
                     InAppNotification(
                         id = nextNotifId++,
-                        title = "🔥 Historical Low!",
-                        message = "${discount.gameName} is at its lowest price ever: -${discount.discountPercentage}% on ${discount.platform}!",
                         gameId = discount.gameId,
-                        type = NotificationType.HISTORICAL_LOW
+                        type = NotificationType.HISTORICAL_LOW,
+                        gameName = discount.gameName,
+                        discountPercentage = discount.discountPercentage,
+                        platform = discount.platform
                     )
                 )
             } else if (pref?.notifyOffers != false) {
                 notifications.add(
                     InAppNotification(
                         id = nextNotifId++,
-                        title = "💰 Discount Alert",
-                        message = "${discount.gameName} is ${discount.discountPercentage}% off on ${discount.platform}!",
                         gameId = discount.gameId,
-                        type = NotificationType.DISCOUNT
+                        type = NotificationType.DISCOUNT,
+                        gameName = discount.gameName,
+                        discountPercentage = discount.discountPercentage,
+                        platform = discount.platform
                     )
                 )
             }
         }
     }
 }
-

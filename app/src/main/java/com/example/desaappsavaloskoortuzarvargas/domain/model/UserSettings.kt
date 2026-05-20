@@ -5,6 +5,7 @@ data class UserSettings(
     val email: String = "",
     val country: String = "Argentina",
     val countryCode: String = "AR",
+    val languageCode: String = "en",
     val globalNotificationsEnabled: Boolean = true,
     val gameNotificationPrefs: Map<Int, GameNotificationPref> = emptyMap()
 )
@@ -19,10 +20,11 @@ data class GameNotificationPref(
 
 data class InAppNotification(
     val id: Int,
-    val title: String,
-    val message: String,
     val gameId: Int?,
     val type: NotificationType,
+    val gameName: String = "",
+    val discountPercentage: Int = 0,
+    val platform: String = "",
     val timestamp: Long = System.currentTimeMillis(),
     val isRead: Boolean = false
 )

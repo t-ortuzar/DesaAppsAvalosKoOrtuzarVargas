@@ -15,6 +15,7 @@ import com.example.desaappsavaloskoortuzarvargas.domain.usecase.SetGlobalNotific
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateCountryUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateEmailUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateGameNotificationPrefUseCase
+import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateLanguageUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateUserNameUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,7 @@ class SettingsViewModel(
     private val updateUserNameUseCase: UpdateUserNameUseCase,
     private val updateEmailUseCase: UpdateEmailUseCase,
     private val updateCountryUseCase: UpdateCountryUseCase,
+    private val updateLanguageUseCase: UpdateLanguageUseCase,
     private val setGlobalNotificationsUseCase: SetGlobalNotificationsUseCase,
     private val updateGameNotificationPrefUseCase: UpdateGameNotificationPrefUseCase,
     private val getInAppNotificationsUseCase: GetInAppNotificationsUseCase,
@@ -72,6 +74,13 @@ class SettingsViewModel(
     fun updateCountry(country: String, countryCode: String = "AR") {
         viewModelScope.launch {
             updateCountryUseCase(country, countryCode)
+            _userSettings.value = getUserSettingsUseCase()
+        }
+    }
+
+    fun updateLanguage(languageCode: String) {
+        viewModelScope.launch {
+            updateLanguageUseCase(languageCode)
             _userSettings.value = getUserSettingsUseCase()
         }
     }

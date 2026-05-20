@@ -19,11 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.example.desaappsavaloskoortuzarvargas.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +42,7 @@ fun NewsDetailScreen(
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+                        contentDescription = stringResource(R.string.label_back)
                     )
                 }
             }
@@ -90,7 +92,15 @@ fun NewsDetailScreen(
                     )
 
                     Text(
-                        text = "Category: ${news.category.uppercase()}",
+                        text = stringResource(
+                            R.string.news_category_format,
+                            when (news.category.lowercase()) {
+                                "discount" -> stringResource(R.string.news_category_discounts)
+                                "update" -> stringResource(R.string.news_category_updates)
+                                "event" -> stringResource(R.string.news_category_events)
+                                else -> news.category.uppercase()
+                            }
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary

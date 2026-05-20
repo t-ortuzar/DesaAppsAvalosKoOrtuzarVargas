@@ -23,7 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.NewsCard
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.NewsViewModel
@@ -62,12 +64,12 @@ fun NewsScreen(
         ) {
             FilterChip(
                 onClick = { viewModel.resetFilter() },
-                label = { Text("All") },
+                label = { Text(stringResource(R.string.label_all)) },
                 selected = filterType == NewsViewModel.FilterType.ALL
             )
             FilterChip(
                 onClick = { viewModel.loadFavoritesNews() },
-                label = { Text("Favorites") },
+                label = { Text(stringResource(R.string.label_favorites)) },
                 selected = filterType == NewsViewModel.FilterType.FAVORITES
             )
         }
@@ -75,7 +77,11 @@ fun NewsScreen(
         Spacer(modifier = Modifier.height(6.dp))
 
         // Category filter
-        val categories = listOf("discount" to "Discounts", "update" to "Updates", "event" to "Events")
+        val categories = listOf(
+            "discount" to stringResource(R.string.news_category_discounts),
+            "update" to stringResource(R.string.news_category_updates),
+            "event" to stringResource(R.string.news_category_events)
+        )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,7 +90,7 @@ fun NewsScreen(
         ) {
             FilterChip(
                 onClick = { selectedCategory = null },
-                label = { Text("All Categories") },
+                label = { Text(stringResource(R.string.news_filter_all_categories)) },
                 selected = selectedCategory == null
             )
             categories.forEach { (cat, label) ->
@@ -111,7 +117,7 @@ fun NewsScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) { Text("No news found") }
+                ) { Text(stringResource(R.string.news_no_results)) }
             }
             else -> {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {

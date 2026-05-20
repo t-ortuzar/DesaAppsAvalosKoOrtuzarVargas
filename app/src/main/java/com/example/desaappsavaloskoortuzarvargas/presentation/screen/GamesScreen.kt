@@ -27,7 +27,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.GameCard
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
@@ -60,8 +62,13 @@ fun GamesScreen(
                 viewModel.searchGames(query)
             },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Search games or tags...") },
-            leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = "Search") },
+            placeholder = { Text(stringResource(R.string.games_search_placeholder)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = stringResource(R.string.action_search)
+                )
+            },
             singleLine = true
         )
 
@@ -76,7 +83,7 @@ fun GamesScreen(
         ) {
             FilterChip(
                 onClick = { viewModel.clearTagFilter(); searchQuery = "" },
-                label = { Text("All") },
+                label = { Text(stringResource(R.string.label_all)) },
                 selected = selectedTag == null
             )
             popularTags.forEach { tag ->
@@ -109,7 +116,7 @@ fun GamesScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) { Text("No games found") }
+                ) { Text(stringResource(R.string.games_no_results)) }
             }
             else -> {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -37,14 +37,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.desaappsavaloskoortuzarvargas.data.api.StoreRegionAvailability
+import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,14 +81,17 @@ fun GameDetailScreen(
                     viewModel.clearRealPrices()
                     onBackClick()
                 }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.label_back)
+                    )
                 }
             },
             actions = {
                 IconButton(onClick = { onFavoriteClick(game) }) {
                     Icon(
                         imageVector = if (game.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = "Favorite",
+                        contentDescription = stringResource(R.string.content_desc_favorite),
                         tint = if (game.isFavorite) Color.Red else Color.Gray
                     )
                 }
@@ -138,7 +144,7 @@ fun GameDetailScreen(
             if (game.availablePlatforms.isNotEmpty()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Available on", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.game_available_on), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Row(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -163,22 +169,22 @@ fun GameDetailScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Release Date", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.game_release_date), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(game.releaseDate, style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Rating", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("${"%.1f".format(game.rating)} / 10", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.game_rating_label), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.game_rating_format, game.rating), style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
             item {
                 if (game.historicalDiscount > 0) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Historical Discount", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.game_historical_discount), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text("${game.historicalDiscount}%", style = MaterialTheme.typography.bodyMedium, color = Color.Green)
                     }
                 }
@@ -186,7 +192,7 @@ fun GameDetailScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Description", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.game_description), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(game.description, style = MaterialTheme.typography.bodyMedium)
                 }
             }
@@ -199,7 +205,7 @@ fun GameDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Prices", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.game_prices), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         if (isLoadingPrices) {
                             CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         }
@@ -207,7 +213,11 @@ fun GameDetailScreen(
 
                     // Region indicator
                     Text(
-                        text = "${countryCodeToFlag(userSettings.countryCode)} ${userSettings.country} — Stores available in your region",
+                        text = stringResource(
+                            R.string.game_prices_region,
+                            countryCodeToFlag(userSettings.countryCode),
+                            userSettings.country
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -230,7 +240,10 @@ fun GameDetailScreen(
                                         Text(price.storeName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                                         if (price.savings > 0) {
                                             Text(
-                                                text = "${"%.0f".format(price.savings)}% off",
+                                                text = stringResource(
+                                                    R.string.game_off_percent,
+                                                    price.savings.roundToInt()
+                                                ),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = Color.Green
                                             )
@@ -238,14 +251,18 @@ fun GameDetailScreen(
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
-                                            text = if (price.currentPrice > 0) "US$${"%.2f".format(price.currentPrice)}" else "FREE",
+                                            text = if (price.currentPrice > 0) {
+                                                stringResource(R.string.game_price_usd, price.currentPrice)
+                                            } else {
+                                                stringResource(R.string.game_free)
+                                            },
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = if (price.currentPrice > 0) MaterialTheme.colorScheme.primary else Color.Green
                                         )
                                         if (price.retailPrice > price.currentPrice) {
                                             Text(
-                                                text = "US$${"%.2f".format(price.retailPrice)}",
+                                                text = stringResource(R.string.game_price_usd, price.retailPrice),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = Color.Gray
                                             )
@@ -256,7 +273,7 @@ fun GameDetailScreen(
                         }
                     } else if (!isLoadingPrices) {
                         Text(
-                            "No live data available — showing cached prices",
+                            stringResource(R.string.game_no_live_data),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.Gray
                         )
@@ -269,7 +286,11 @@ fun GameDetailScreen(
                             ) {
                                 Text(entry.key, style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    text = if (entry.value > 0) "$${"%.2f".format(entry.value)}" else "N/A",
+                                    text = if (entry.value > 0) {
+                                        stringResource(R.string.game_price_usd_simple, entry.value)
+                                    } else {
+                                        stringResource(R.string.game_not_available)
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -283,7 +304,11 @@ fun GameDetailScreen(
             // DLCs section
             if (game.dlcs.isNotEmpty()) {
                 item {
-                    Text("DLCs & Expansions (${game.dlcs.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.game_dlcs_expansions, game.dlcs.size),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 game.dlcs.forEach { dlc ->
                     item {
@@ -320,7 +345,7 @@ fun GameDetailScreen(
                                     ) {
                                         Text(platform, style = MaterialTheme.typography.labelSmall)
                                         Text(
-                                            "$${"%.2f".format(price)}",
+                                            stringResource(R.string.game_price_usd_simple, price),
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary
@@ -329,7 +354,10 @@ fun GameDetailScreen(
                                 }
                                 if (dlc.historicalDiscount > 0) {
                                     Text(
-                                        text = "Hist. discount: ${dlc.historicalDiscount}%",
+                                        text = stringResource(
+                                            R.string.game_dlc_hist_discount,
+                                            dlc.historicalDiscount
+                                        ),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Color.Green,
                                         fontWeight = FontWeight.Bold

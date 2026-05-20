@@ -9,11 +9,14 @@ import com.example.desaappsavaloskoortuzarvargas.domain.repository.DiscountRepos
 import com.example.desaappsavaloskoortuzarvargas.domain.repository.GameRepository
 import com.example.desaappsavaloskoortuzarvargas.domain.repository.NewsRepository
 import com.example.desaappsavaloskoortuzarvargas.domain.repository.UserSettingsRepository
+import com.example.desaappsavaloskoortuzarvargas.GameTrackerApp
 
 object ServiceLocator {
     val cheapSharkService: CheapSharkService by lazy { CheapSharkService() }
     val gameRepository: GameRepository by lazy { GameRepositoryImpl() }
     val newsRepository: NewsRepository by lazy { NewsRepositoryImpl() }
     val discountRepository: DiscountRepository by lazy { DiscountRepositoryImpl() }
-    val userSettingsRepository: UserSettingsRepository by lazy { UserSettingsRepositoryImpl() }
+    val userSettingsRepository: UserSettingsRepository by lazy {
+        UserSettingsRepositoryImpl(GameTrackerApp.appContext)
+    }
 }

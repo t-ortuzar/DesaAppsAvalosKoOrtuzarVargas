@@ -21,6 +21,10 @@ class UpdateCountryUseCase(private val repo: UserSettingsRepository) {
     suspend operator fun invoke(country: String, countryCode: String = "AR") = repo.updateCountry(country, countryCode)
 }
 
+class UpdateLanguageUseCase(private val repo: UserSettingsRepository) {
+    suspend operator fun invoke(languageCode: String) = repo.updateLanguage(languageCode)
+}
+
 class SetGlobalNotificationsUseCase(private val repo: UserSettingsRepository) {
     suspend operator fun invoke(enabled: Boolean) = repo.setGlobalNotifications(enabled)
 }
