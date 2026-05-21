@@ -2,9 +2,10 @@
     <string name="app_name">DesaAppsAvalosKoOrtuzarVargas</string>
 
     <string name="nav_offers">Ofertas</string>
-    <string name="nav_catalog">Catálogo</string>
+    <string name="nav_catalog">Explorar</string>
     <string name="nav_news">Noticias</string>
-    <string name="nav_settings">Configuración</string>
+    <string name="nav_settings">Ajustes</string>
+    <string name="nav_favorites">Favoritos</string>
 
     <string name="action_search">Buscar</string>
     <string name="action_save">Guardar</string>
@@ -52,12 +53,23 @@
     <string name="offers_filter_temp_free">Gratis temporal</string>
     <string name="offers_filter_f2p">F2P</string>
     <string name="offers_filter_all_free">Todo gratis</string>
-    <string name="offers_no_discounts">No hay descuentos disponibles</string>
+    <string name="offers_no_discounts">Ninguno de los juegos de tu catálogo tiene descuentos activos en este momento. ¡Volvé más tarde!</string>
 
-    <string name="game_available_on">Disponible en</string>
+    <string name="offers_tab_price_drops">Bajó el precio</string>
+    <string name="offers_no_price_drops">No se detectaron bajas permanentes de precio todavía. Rastreamos los cambios de precio base con el tiempo.</string>
+    <string name="badge_price_drop">💰 Bajó el precio</string>
+    <string name="price_new_base">Nuevo precio: $%1$.2f</string>
+    <string name="offer_ended">Oferta finalizada</string>
+    <string name="offer_countdown_hours">%1$dh %2$dm restantes</string>
+    <string name="offer_countdown_date">Hasta el %1$s</string>
+    <string name="offer_on_sale">En oferta</string>
+
+    <string name="game_available_on_header">Disponible en</string>
     <string name="game_release_date">Fecha de lanzamiento</string>
-    <string name="game_rating_label">Calificación</string>
+    <string name="game_rating_label">Calificación Metacritic</string>
     <string name="game_rating_format">%1$.1f / 10</string>
+    <string name="game_rating_star">★ %1$.1f</string>
+    <string name="game_rating_source">Metacritic</string>
     <string name="game_historical_discount">Descuento histórico</string>
     <string name="game_description">Descripción</string>
     <string name="game_prices">Precios</string>
@@ -76,7 +88,8 @@
     <string name="game_historical_discount_short">Descuento histórico: %1$d%%</string>
     <string name="game_dlcs_available">%1$d DLC(s) disponibles</string>
     <string name="game_price_platform">%1$s: $%2$.2f</string>
-    <string name="game_rating_star">★ %1$.1f</string>
+    <string name="game_available_on">🆓 Disponible en %1$s</string>
+    <string name="game_free_to_play_label">Free to Play</string>
 
     <string name="badge_f2p">F2P</string>
     <string name="badge_free">GRATIS</string>
@@ -96,4 +109,32 @@
     <string name="language_restart_message">Para aplicar los cambios es necesario reiniciar la app. ¿Confirma que quiere reiniciar?</string>
     <string name="action_apply_changes">Aplicar cambios</string>
     <string name="action_no_apply">No aplicar</string>
+
+    <string name="offline_banner">Estás sin conexión. Los precios pueden estar desactualizados.</string>
+    <string name="prices_from_cache">⚠ Precios cargados desde caché (pueden estar desactualizados)</string>
+    <string name="label_coming_soon">próximamente</string>
+    <string name="dolar_tarjeta_rate">💳 Precio estimado con tarjeta argentina (cotización: $%1$s)</string>
+    <string name="ars_price_disclaimer">Incluye IVA y percepciones. El precio final puede variar según tu tarjeta.</string>
+    <string name="favorites_empty">No tenés favoritos aún. ¡Explorá juegos y agregalos a tu lista!</string>
+    <string name="favorites_header">Tus Juegos</string>
+
+    <!-- Precios regionales -->
+    <string name="prices_argentina_header">Precios en Argentina</string>
+    <string name="prices_argentina_subtitle">Precios reales obtenidos de cada tienda para Argentina</string>
+    <string name="steam_ar_regional_label">Precio regional (fijado por el publisher para Argentina)</string>
+    <string name="steam_ar_tax_note">💳 Este es el precio base. Con impuestos de tarjeta (IVA + Ganancias) el costo final puede ser mayor.</string>
+    <string name="steam_us_reference_label">Precio en EE.UU. (solo de referencia)</string>
+    <string name="international_prices_header">Otras tiendas (precios internacionales)</string>
+    <string name="international_prices_disclaimer">Estos son precios de EE.UU./globales en USD. El precio real en tu región puede ser diferente.</string>
+
+    <!-- Toggle de moneda y precios de referencia -->
+    <string name="currency_display_label">Moneda de visualización</string>
+    <string name="game_prices_header">Precios</string>
+    <string name="game_prices_subtitle">Precios en vivo de tiendas y referencia del catálogo</string>
+    <string name="game_reference_prices">Precios en otras tiendas</string>
+    <string name="game_reference_prices_note">Precios de referencia del catálogo (USD). Los precios reales pueden variar.</string>
+    <string name="game_price_ars_approx">≈ %1$s</string>
+    <string name="price_regional_label">Precio regional (Argentina)</string>
+    <string name="price_currency_label">Precio en %1$s</string>
+    <string name="price_ref_label">(ref.)</string>
 </resources>

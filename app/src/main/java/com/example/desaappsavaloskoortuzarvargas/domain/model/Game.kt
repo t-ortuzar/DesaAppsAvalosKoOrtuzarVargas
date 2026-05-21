@@ -15,7 +15,8 @@ data class Game(
     val historicalDiscount: Int = 0,
     val tags: List<String> = emptyList(),
     val dlcs: List<DLC> = emptyList(),
-    val availablePlatforms: List<String> = emptyList()
+    val availablePlatforms: List<String> = emptyList(),
+    val steamAppId: Int = 0  // 0 = not on Steam
 )
 
 @Serializable

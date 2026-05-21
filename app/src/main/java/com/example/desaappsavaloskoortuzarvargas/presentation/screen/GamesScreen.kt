@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -38,7 +40,8 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesVie
 fun GamesScreen(
     viewModel: GamesViewModel,
     onGameSelected: (Game) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    listState: LazyListState = rememberLazyListState()
 ) {
     val allGames by viewModel.allGames.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -101,7 +104,10 @@ fun GamesScreen(
             items = allGames,
             emptyMessage = stringResource(R.string.games_no_results)
         ) { games ->
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            LazyColumn(
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 items(games) { game ->
                     GameCard(
                         game = game,

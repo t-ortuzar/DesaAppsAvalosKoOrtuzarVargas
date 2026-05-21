@@ -8,5 +8,6 @@ interface DiscountRepository {
     suspend fun getHistoricalLowDiscounts(): Result<List<DiscountedGame>>
     suspend fun getFreeGames(): Result<List<DiscountedGame>>
     suspend fun getDiscountsByPlatform(platform: String): Result<List<DiscountedGame>>
+    suspend fun getPriceDrops(): Result<List<DiscountedGame>>
 }
 

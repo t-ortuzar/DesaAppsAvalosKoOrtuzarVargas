@@ -8,12 +8,13 @@ import com.example.desaappsavaloskoortuzarvargas.domain.model.GameNotificationPr
 import com.example.desaappsavaloskoortuzarvargas.domain.model.InAppNotification
 import com.example.desaappsavaloskoortuzarvargas.domain.model.NotificationType
 import com.example.desaappsavaloskoortuzarvargas.domain.model.UserSettings
+import com.example.desaappsavaloskoortuzarvargas.domain.repository.DiscountRepository
 import com.example.desaappsavaloskoortuzarvargas.domain.repository.UserSettingsRepository
-import com.example.desaappsavaloskoortuzarvargas.data.mock.MockDataGenerator
 import kotlinx.coroutines.flow.first
 
 class UserSettingsRepositoryImpl(
-    private val context: Context
+    private val context: Context,
+    private val discountRepository: DiscountRepository? = null
 ) : UserSettingsRepository {
 
     private var userSettings = UserSettings()
@@ -88,7 +89,7 @@ class UserSettingsRepositoryImpl(
     }
 
     override suspend fun generateDiscountNotifications(favoriteGameIds: List<Int>) {
-        val discounts = MockDataGenerator.generateDiscounts()
+        val discounts = discountRepository?.getCurrentDiscounts()?.getOrNull() ?: emptyList()
         val favoriteDiscounts = discounts.filter { it.gameId in favoriteGameIds && !it.isF2P }
 
         // Clear old auto-generated notifications

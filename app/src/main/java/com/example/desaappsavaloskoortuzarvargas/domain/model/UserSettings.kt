@@ -37,20 +37,21 @@ data class CountryInfo(
     val name: String,
     val code: String,       // ISO 3166-1 alpha-2
     val steamCc: String,    // Steam country code for regional pricing
-    val currency: String    // Display currency label
+    val currency: String,   // Display currency label
+    val isAvailable: Boolean = false // Whether this region is currently supported
 )
 
 val SUPPORTED_COUNTRIES = listOf(
-    CountryInfo("Argentina", "AR", "ar", "USD"),
-    CountryInfo("Brasil", "BR", "br", "USD"),
-    CountryInfo("Chile", "CL", "cl", "USD"),
-    CountryInfo("Colombia", "CO", "co", "USD"),
-    CountryInfo("México", "MX", "mx", "USD"),
-    CountryInfo("Estados Unidos", "US", "us", "USD"),
-    CountryInfo("España", "ES", "es", "USD"),
-    CountryInfo("Uruguay", "UY", "uy", "USD"),
-    CountryInfo("Perú", "PE", "pe", "USD"),
-    CountryInfo("Paraguay", "PY", "py", "USD")
+    CountryInfo("Argentina", "AR", "ar", "ARS", isAvailable = true),
+    CountryInfo("Brasil", "BR", "br", "USD", isAvailable = false),
+    CountryInfo("Chile", "CL", "cl", "USD", isAvailable = false),
+    CountryInfo("Colombia", "CO", "co", "USD", isAvailable = false),
+    CountryInfo("México", "MX", "mx", "USD", isAvailable = false),
+    CountryInfo("Estados Unidos", "US", "us", "USD", isAvailable = false),
+    CountryInfo("España", "ES", "es", "USD", isAvailable = false),
+    CountryInfo("Uruguay", "UY", "uy", "USD", isAvailable = false),
+    CountryInfo("Perú", "PE", "pe", "USD", isAvailable = false),
+    CountryInfo("Paraguay", "PY", "py", "USD", isAvailable = false)
 )
 
 /**

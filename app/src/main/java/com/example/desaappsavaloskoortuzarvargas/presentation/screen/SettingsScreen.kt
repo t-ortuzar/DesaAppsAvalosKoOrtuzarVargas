@@ -188,11 +188,23 @@ fun SettingsScreen(
                     ) {
                         SUPPORTED_COUNTRIES.forEach { country ->
                             DropdownMenuItem(
-                                text = { Text("${countryCodeToFlag(country.code)} ${country.name}") },
+                                text = {
+                                    Text(
+                                        text = if (country.isAvailable) {
+                                            "${countryCodeToFlag(country.code)} ${country.name}"
+                                        } else {
+                                            "${countryCodeToFlag(country.code)} ${country.name} (${stringResource(R.string.label_coming_soon)})"
+                                        },
+                                        color = if (country.isAvailable) Color.Unspecified else Color.Gray
+                                    )
+                                },
                                 onClick = {
-                                    settingsViewModel.updateCountry(country.name, country.code)
-                                    showCountryDropdown = false
-                                }
+                                    if (country.isAvailable) {
+                                        settingsViewModel.updateCountry(country.name, country.code)
+                                        showCountryDropdown = false
+                                    }
+                                },
+                                enabled = country.isAvailable
                             )
                         }
                 }

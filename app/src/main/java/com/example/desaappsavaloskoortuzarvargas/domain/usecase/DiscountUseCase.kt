@@ -20,3 +20,7 @@ class GetFreeGamesUseCase(private val discountRepository: DiscountRepository) {
     suspend operator fun invoke(): Result<List<DiscountedGame>> = discountRepository.getFreeGames()
 }
 
+class GetPriceDropsUseCase(private val discountRepository: DiscountRepository) {
+    suspend operator fun invoke(): Result<List<DiscountedGame>> = discountRepository.getPriceDrops()
+}
+

@@ -1,28 +1,45 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SignalWifiOff
 import androidx.compose.material.icons.filled.VideogameAsset
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.example.desaappsavaloskoortuzarvargas.di.ServiceLocator
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
@@ -40,6 +57,7 @@ import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetInAppNotifica
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetNewsByFavoritesUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetNewsByGameIdUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetPriceHistoryUseCase
+import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetPriceDropsUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetUnreadNotificationCountUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetUserSettingsUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GenerateDiscountNotificationsUseCase
@@ -68,7 +86,12 @@ fun MainScreen() {
     val newsRepository = ServiceLocator.newsRepository
     val discountRepository = ServiceLocator.discountRepository
     val userSettingsRepository = ServiceLocator.userSettingsRepository
-    val cheapSharkService = ServiceLocator.cheapSharkService
+    val priceRefreshManager = ServiceLocator.priceRefreshManager
+    val dolarService = ServiceLocator.dolarService
+    val epicPriceService = ServiceLocator.epicPriceService
+    val database = ServiceLocator.database
+    val connectivityObserver = ServiceLocator.connectivityObserver
+
 
     val gamesViewModel = remember {
         GamesViewModel(
@@ -80,7 +103,11 @@ fun MainScreen() {
             GetFavoritesUseCase(gameRepository),
             GetPriceHistoryUseCase(gameRepository),
             GetGamesByTagUseCase(gameRepository),
-            cheapSharkService
+            priceRefreshManager,
+            dolarService,
+            epicPriceService,
+            database.gameImageDao(),
+            connectivityObserver
         )
     }
 
@@ -99,7 +126,8 @@ fun MainScreen() {
             GetFavoriteDiscountsUseCase(discountRepository),
             GetHistoricalLowDiscountsUseCase(discountRepository),
             GetFreeGamesUseCase(discountRepository),
-            GetFavoritesUseCase(gameRepository)
+            GetFavoritesUseCase(gameRepository),
+            GetPriceDropsUseCase(discountRepository)
         )
     }
 
@@ -121,6 +149,30 @@ fun MainScreen() {
     }
 
     val unreadCount by settingsViewModel.unreadCount.collectAsState()
+    val isOnline by gamesViewModel.isOnline.collectAsState()
+
+    // Start periodic background price refresh and ensure all games are cached
+    LaunchedEffect(Unit) {
+        val steamIdMap = com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog.getSteamAppIdsByName()
+        priceRefreshManager.setSteamAppIds(steamIdMap)
+        priceRefreshManager.startPeriodicRefresh()
+        // Ensure all catalog games have prices cached (for offers section)
+        val allNames = com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog.generateGames()
+            .filter { !it.tags.contains("Free2Play") }
+            .map { it.name }
+        priceRefreshManager.ensureAllGamesCached(allNames) {
+            // Reload offers progressively after each batch so the user
+            // sees results appearing instead of an empty screen
+            offersViewModel.loadCurrentDiscounts()
+            offersViewModel.loadFreeGames()
+        }
+        // Final reload when everything is done
+        offersViewModel.loadCurrentDiscounts()
+        offersViewModel.loadFreeGames()
+    }
+
+    // Preserve catalog scroll position across detail screen navigation
+    val catalogListState = rememberLazyListState()
 
     // Detail screens
     when {
@@ -128,7 +180,6 @@ fun MainScreen() {
             GameDetailScreen(
                 game = selectedGame!!,
                 viewModel = gamesViewModel,
-                settingsViewModel = settingsViewModel,
                 onBackClick = { selectedGame = null },
                 onFavoriteClick = { game ->
                     gamesViewModel.toggleFavorite(game)
@@ -148,6 +199,37 @@ fun MainScreen() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        topBar = {
+            // Offline banner
+            AnimatedVisibility(
+                visible = !isOnline,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFF6B00))
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.SignalWifiOff,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.offline_banner),
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+        },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
@@ -175,13 +257,27 @@ fun MainScreen() {
                 NavigationBarItem(
                     icon = {
                         Icon(
+                            Icons.Filled.Favorite,
+                            contentDescription = stringResource(R.string.nav_favorites)
+                        )
+                    },
+                    label = { Text(stringResource(R.string.nav_favorites)) },
+                    selected = currentTab == 2,
+                    onClick = {
+                        currentTab = 2
+                        gamesViewModel.loadFavorites()
+                    }
+                )
+                NavigationBarItem(
+                    icon = {
+                        Icon(
                             Icons.Filled.Newspaper,
                             contentDescription = stringResource(R.string.nav_news)
                         )
                     },
                     label = { Text(stringResource(R.string.nav_news)) },
-                    selected = currentTab == 2,
-                    onClick = { currentTab = 2 }
+                    selected = currentTab == 3,
+                    onClick = { currentTab = 3 }
                 )
                 NavigationBarItem(
                     icon = {
@@ -199,15 +295,16 @@ fun MainScreen() {
                         }
                     },
                     label = { Text(stringResource(R.string.nav_settings)) },
-                    selected = currentTab == 3,
+                    selected = currentTab == 4,
                     onClick = {
-                        currentTab = 3
+                        currentTab = 4
                         settingsViewModel.refreshNotifications()
                     }
                 )
             }
         }
     ) { paddingValues ->
+        val dolarRate by gamesViewModel.dolarTarjetaRate.collectAsState()
         when (currentTab) {
             0 -> OffersScreen(
                 viewModel = offersViewModel,
@@ -217,14 +314,22 @@ fun MainScreen() {
                         selectedGame = game
                     }
                 },
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(paddingValues),
+                dolarRate = dolarRate,
+                convertToArs = { gamesViewModel.convertToArs(it) }
             )
             1 -> GamesScreen(
                 viewModel = gamesViewModel,
                 onGameSelected = { selectedGame = it },
+                modifier = Modifier.padding(paddingValues),
+                listState = catalogListState
+            )
+            2 -> FavoritesScreen(
+                viewModel = gamesViewModel,
+                onGameSelected = { selectedGame = it },
                 modifier = Modifier.padding(paddingValues)
             )
-            2 -> NewsScreen(
+            3 -> NewsScreen(
                 viewModel = newsViewModel,
                 onNewsSelected = { selectedNews = it },
                 onGameClicked = { gameId ->
@@ -235,7 +340,7 @@ fun MainScreen() {
                 },
                 modifier = Modifier.padding(paddingValues)
             )
-            3 -> SettingsScreen(
+            4 -> SettingsScreen(
                 settingsViewModel = settingsViewModel,
                 gamesViewModel = gamesViewModel,
                 modifier = Modifier.padding(paddingValues)

@@ -74,4 +74,19 @@ class DiscountUseCaseTest {
         val result = GetFreeGamesUseCase(repo)()
         assertTrue(result.isFailure)
     }
+
+    @Test
+    fun `GetPriceDropsUseCase delegates to repository`() = runTest {
+        whenever(repo.getPriceDrops()).thenReturn(Result.success(listOf(sampleDiscount)))
+        val result = GetPriceDropsUseCase(repo)()
+        assertTrue(result.isSuccess)
+        assertEquals(1, result.getOrNull()?.size)
+    }
+
+    @Test
+    fun `GetPriceDropsUseCase propagates failure`() = runTest {
+        whenever(repo.getPriceDrops()).thenReturn(Result.failure(RuntimeException("Error")))
+        val result = GetPriceDropsUseCase(repo)()
+        assertTrue(result.isFailure)
+    }
 }

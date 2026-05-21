@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
+import java.util.Locale
 
 @Composable
 fun GameCard(
@@ -82,8 +83,14 @@ fun GameCard(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = String.format("%.1f", game.rating),
+                                text = String.format(Locale.US, "%.1f", game.rating),
                                 style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.game_rating_source),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Gray,
                                 modifier = Modifier.padding(start = 4.dp)
                             )
                         }
@@ -121,14 +128,32 @@ fun GameCard(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 // Price info
-                val prices = game.currentPrices.entries.take(2)
-                prices.forEach { (platform, price) ->
-                    if (price > 0) {
+                val isF2P = game.tags.contains("Free2Play")
+                if (isF2P && game.currentPrices.isEmpty()) {
+                    // F2P game: show "Disponible en [platform]"
+                    Text(
+                        text = stringResource(R.string.game_free_to_play_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold
+                    )
+                    game.availablePlatforms.forEach { platform ->
                         Text(
-                            text = stringResource(R.string.game_price_platform, platform, price),
+                            text = stringResource(R.string.game_available_on, platform),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
+                    }
+                } else {
+                    val prices = game.currentPrices.entries.take(2)
+                    prices.forEach { (platform, price) ->
+                        if (price > 0) {
+                            Text(
+                                text = stringResource(R.string.game_price_platform, platform, price),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             }

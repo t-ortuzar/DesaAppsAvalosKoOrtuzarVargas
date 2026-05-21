@@ -1,14 +1,14 @@
 package com.example.desaappsavaloskoortuzarvargas.data.repository
 
-import com.example.desaappsavaloskoortuzarvargas.data.mock.MockDataGenerator
+import com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.PriceHistory
 import com.example.desaappsavaloskoortuzarvargas.domain.repository.GameRepository
 
 class GameRepositoryImpl : GameRepository {
 
-    private val allGames = MockDataGenerator.generateGames()
-    private val priceHistory = MockDataGenerator.generatePriceHistory()
+    private val allGames = GameCatalog.generateGames()
+    private val priceHistory = GameCatalog.generatePriceHistory()
     private val favoriteIds = mutableSetOf<Int>()
 
     override suspend fun getAllGames(): Result<List<Game>> = try {

@@ -99,16 +99,30 @@ class UserSettingsTest {
 
     @Test
     fun `CountryInfo data class`() {
-        val country = CountryInfo("Argentina", "AR", "ar", "USD")
+        val country = CountryInfo("Argentina", "AR", "ar", "ARS", isAvailable = true)
         assertEquals("Argentina", country.name)
         assertEquals("AR", country.code)
         assertEquals("ar", country.steamCc)
-        assertEquals("USD", country.currency)
+        assertEquals("ARS", country.currency)
+        assertTrue(country.isAvailable)
+    }
+
+    @Test
+    fun `CountryInfo defaults isAvailable to false`() {
+        val country = CountryInfo("Test", "TS", "ts", "USD")
+        assertFalse(country.isAvailable)
     }
 
     @Test
     fun `SUPPORTED_COUNTRIES has 10 countries`() {
         assertEquals(10, SUPPORTED_COUNTRIES.size)
+    }
+
+    @Test
+    fun `SUPPORTED_COUNTRIES only Argentina is available`() {
+        val available = SUPPORTED_COUNTRIES.filter { it.isAvailable }
+        assertEquals(1, available.size)
+        assertEquals("Argentina", available.first().name)
     }
 
     @Test
