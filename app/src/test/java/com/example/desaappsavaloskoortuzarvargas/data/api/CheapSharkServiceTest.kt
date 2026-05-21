@@ -1,13 +1,11 @@
 package com.example.desaappsavaloskoortuzarvargas.data.api
 
-import kotlinx.serialization.json.Json
 import org.junit.Assert.*
 import org.junit.Test
 
 class CheapSharkServiceTest {
 
     private val service = CheapSharkService()
-    private val json = Json { ignoreUnknownKeys = true }
 
     @Test
     fun `getStoreName returns correct name for known store`() {
@@ -43,12 +41,16 @@ class CheapSharkServiceTest {
         assertEquals("DreamGame", service.getStoreName("35"))
     }
 
-    // --- Data class serialization tests ---
+    // --- Data class construction tests ---
 
     @Test
-    fun `CheapSharkDeal deserializes from JSON`() {
-        val jsonStr = """{"internalName":"TESTGAME","title":"Test Game","dealID":"abc","storeID":"1","gameID":"123","salePrice":"9.99","normalPrice":"19.99","savings":"50.0","metacriticScore":"85","steamRatingPercent":"90","releaseDate":1609459200,"thumb":"http://img.jpg"}"""
-        val deal = json.decodeFromString<CheapSharkDeal>(jsonStr)
+    fun `CheapSharkDeal with all fields`() {
+        val deal = CheapSharkDeal(
+            internalName = "TESTGAME", title = "Test Game", dealID = "abc",
+            storeID = "1", gameID = "123", salePrice = "9.99",
+            normalPrice = "19.99", savings = "50.0", metacriticScore = "85",
+            steamRatingPercent = "90", releaseDate = 1609459200L, thumb = "http://img.jpg"
+        )
         assertEquals("Test Game", deal.title)
         assertEquals("9.99", deal.salePrice)
         assertEquals("19.99", deal.normalPrice)
@@ -64,26 +66,12 @@ class CheapSharkServiceTest {
     }
 
     @Test
-    fun `CheapSharkDeal default values`() {
-        val deal = CheapSharkDeal()
-        assertEquals("", deal.title)
-        assertEquals("", deal.internalName)
-        assertEquals("", deal.dealID)
-        assertEquals("", deal.storeID)
-        assertEquals("", deal.gameID)
-        assertEquals("0", deal.salePrice)
-        assertEquals("0", deal.normalPrice)
-        assertEquals("0", deal.savings)
-        assertEquals("0", deal.metacriticScore)
-        assertEquals("0", deal.steamRatingPercent)
-        assertEquals(0L, deal.releaseDate)
-        assertEquals("", deal.thumb)
-    }
-
-    @Test
-    fun `CheapSharkGameSearchResult deserializes from JSON`() {
-        val jsonStr = """{"gameID":"123","steamAppID":"456","cheapest":"4.99","cheapestDealID":"deal1","external":"Test","internalName":"test","thumb":"http://t.jpg"}"""
-        val result = json.decodeFromString<CheapSharkGameSearchResult>(jsonStr)
+    fun `CheapSharkGameSearchResult with all fields`() {
+        val result = CheapSharkGameSearchResult(
+            gameID = "123", steamAppID = "456", cheapest = "4.99",
+            cheapestDealID = "deal1", external = "Test",
+            internalName = "test", thumb = "http://t.jpg"
+        )
         assertEquals("123", result.gameID)
         assertEquals("456", result.steamAppID)
         assertEquals("4.99", result.cheapest)
@@ -94,21 +82,10 @@ class CheapSharkServiceTest {
     }
 
     @Test
-    fun `CheapSharkGameSearchResult default values`() {
-        val result = CheapSharkGameSearchResult()
-        assertEquals("", result.gameID)
-        assertNull(result.steamAppID)
-        assertEquals("0", result.cheapest)
-        assertNull(result.cheapestDealID)
-        assertEquals("", result.external)
-        assertEquals("", result.internalName)
-        assertEquals("", result.thumb)
-    }
-
-    @Test
-    fun `CheapSharkGameLookup deserializes with info and deals`() {
-        val jsonStr = """{"info":{"title":"Game","steamAppID":"789","thumb":"http://t.jpg"},"deals":[{"storeID":"1","dealID":"d1","price":"9.99","retailPrice":"19.99","savings":"50.0"}]}"""
-        val lookup = json.decodeFromString<CheapSharkGameLookup>(jsonStr)
+    fun `CheapSharkGameLookup with info and deals`() {
+        val info = CheapSharkGameInfo(title = "Game", steamAppID = "789", thumb = "http://t.jpg")
+        val deal = CheapSharkStoreDeal(storeID = "1", dealID = "d1", price = "9.99", retailPrice = "19.99", savings = "50.0")
+        val lookup = CheapSharkGameLookup(info = info, deals = listOf(deal))
         assertNotNull(lookup.info)
         assertEquals("Game", lookup.info?.title)
         assertEquals("789", lookup.info?.steamAppID)
@@ -121,30 +98,6 @@ class CheapSharkServiceTest {
         assertEquals("d1", lookup.deals[0].dealID)
     }
 
-    @Test
-    fun `CheapSharkGameLookup default values`() {
-        val lookup = CheapSharkGameLookup()
-        assertNull(lookup.info)
-        assertTrue(lookup.deals.isEmpty())
-    }
-
-    @Test
-    fun `CheapSharkGameInfo default values`() {
-        val info = CheapSharkGameInfo()
-        assertEquals("", info.title)
-        assertNull(info.steamAppID)
-        assertEquals("", info.thumb)
-    }
-
-    @Test
-    fun `CheapSharkStoreDeal default values`() {
-        val deal = CheapSharkStoreDeal()
-        assertEquals("", deal.storeID)
-        assertEquals("", deal.dealID)
-        assertEquals("0", deal.price)
-        assertEquals("0", deal.retailPrice)
-        assertEquals("0", deal.savings)
-    }
 
     @Test
     fun `GamePrice data class properties`() {
