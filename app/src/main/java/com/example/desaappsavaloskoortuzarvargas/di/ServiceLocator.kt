@@ -17,6 +17,10 @@ object ServiceLocator {
     val newsRepository: NewsRepository by lazy { NewsRepositoryImpl() }
     val discountRepository: DiscountRepository by lazy { DiscountRepositoryImpl() }
     val userSettingsRepository: UserSettingsRepository by lazy {
+        check(GameTrackerApp::appContext.isInitialized) {
+            "ServiceLocator.userSettingsRepository accessed before Application.onCreate() has run. " +
+                "Ensure GameTrackerApp is initialized before accessing this repository."
+        }
         UserSettingsRepositoryImpl(GameTrackerApp.appContext)
     }
 }
