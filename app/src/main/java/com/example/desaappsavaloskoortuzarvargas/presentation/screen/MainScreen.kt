@@ -1,15 +1,25 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SignalWifiOff
 import androidx.compose.material.icons.filled.VideogameAsset
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -21,8 +31,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.di.ServiceLocator
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
@@ -69,6 +83,8 @@ fun MainScreen() {
     val discountRepository = ServiceLocator.discountRepository
     val userSettingsRepository = ServiceLocator.userSettingsRepository
     val cheapSharkService = ServiceLocator.cheapSharkService
+    val database = ServiceLocator.database
+    val connectivityObserver = ServiceLocator.connectivityObserver
 
     val gamesViewModel = remember {
         GamesViewModel(
@@ -80,7 +96,10 @@ fun MainScreen() {
             GetFavoritesUseCase(gameRepository),
             GetPriceHistoryUseCase(gameRepository),
             GetGamesByTagUseCase(gameRepository),
-            cheapSharkService
+            cheapSharkService,
+            database.gamePriceDao(),
+            database.gameImageDao(),
+            connectivityObserver
         )
     }
 
@@ -121,6 +140,7 @@ fun MainScreen() {
     }
 
     val unreadCount by settingsViewModel.unreadCount.collectAsState()
+    val isOnline by gamesViewModel.isOnline.collectAsState()
 
     // Detail screens
     when {
@@ -148,6 +168,37 @@ fun MainScreen() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        topBar = {
+            // Offline banner
+            AnimatedVisibility(
+                visible = !isOnline,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFF6B00))
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.SignalWifiOff,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.offline_banner),
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+            }
+        },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(

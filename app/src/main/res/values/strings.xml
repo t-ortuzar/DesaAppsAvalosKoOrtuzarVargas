@@ -96,4 +96,8 @@
     <string name="language_restart_message">To apply changes, the app must restart. Do you want to restart now?</string>
     <string name="action_apply_changes">Apply changes</string>
     <string name="action_no_apply">Do not apply</string>
+
+    <string name="offline_banner">You are offline. Prices may be outdated.</string>
+    <string name="prices_from_cache">⚠ Prices loaded from cache (may be outdated)</string>
+    <string name="label_coming_soon">coming soon</string>
 </resources>

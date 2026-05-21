@@ -1,6 +1,8 @@
 package com.example.desaappsavaloskoortuzarvargas.di
 
 import com.example.desaappsavaloskoortuzarvargas.data.api.CheapSharkService
+import com.example.desaappsavaloskoortuzarvargas.data.local.ConnectivityObserver
+import com.example.desaappsavaloskoortuzarvargas.data.local.GameTrackerDatabase
 import com.example.desaappsavaloskoortuzarvargas.data.repository.DiscountRepositoryImpl
 import com.example.desaappsavaloskoortuzarvargas.data.repository.GameRepositoryImpl
 import com.example.desaappsavaloskoortuzarvargas.data.repository.NewsRepositoryImpl
@@ -13,6 +15,15 @@ import com.example.desaappsavaloskoortuzarvargas.GameTrackerApp
 
 object ServiceLocator {
     val cheapSharkService: CheapSharkService by lazy { CheapSharkService() }
+
+    val database: GameTrackerDatabase by lazy {
+        GameTrackerDatabase.getInstance(GameTrackerApp.appContext)
+    }
+
+    val connectivityObserver: ConnectivityObserver by lazy {
+        ConnectivityObserver(GameTrackerApp.appContext)
+    }
+
     val gameRepository: GameRepository by lazy { GameRepositoryImpl() }
     val newsRepository: NewsRepository by lazy { NewsRepositoryImpl() }
     val discountRepository: DiscountRepository by lazy { DiscountRepositoryImpl() }

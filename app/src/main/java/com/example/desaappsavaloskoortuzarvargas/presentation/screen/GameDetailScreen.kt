@@ -65,6 +65,7 @@ fun GameDetailScreen(
     val realPrices by viewModel.realPrices.collectAsState()
     val isLoadingPrices by viewModel.isLoadingPrices.collectAsState()
     val userSettings by settingsViewModel.userSettings.collectAsState()
+    val pricesFromCache by viewModel.pricesFromCache.collectAsState()
 
     // Filter prices by stores available in user's region
     val regionFilteredPrices = realPrices.filter { price ->
@@ -203,6 +204,16 @@ fun GameDetailScreen(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    // Cached prices warning
+                    if (pricesFromCache) {
+                        Text(
+                            text = stringResource(R.string.prices_from_cache),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFFF9800),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
 
                     if (regionFilteredPrices.isNotEmpty()) {
                         regionFilteredPrices.sortedBy { it.currentPrice }.forEach { price ->

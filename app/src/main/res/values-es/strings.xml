@@ -96,4 +96,8 @@
     <string name="language_restart_message">Para aplicar los cambios es necesario reiniciar la app. ¿Confirma que quiere reiniciar?</string>
     <string name="action_apply_changes">Aplicar cambios</string>
     <string name="action_no_apply">No aplicar</string>
+
+    <string name="offline_banner">Estás sin conexión. Los precios pueden estar desactualizados.</string>
+    <string name="prices_from_cache">⚠ Precios cargados desde caché (pueden estar desactualizados)</string>
+    <string name="label_coming_soon">próximamente</string>
 </resources>
