@@ -78,11 +78,9 @@ class SettingsViewModel(
         }
     }
 
-    fun updateLanguage(languageCode: String) {
-        viewModelScope.launch {
-            updateLanguageUseCase(languageCode)
-            _userSettings.value = getUserSettingsUseCase()
-        }
+    suspend fun updateLanguage(languageCode: String) {
+        updateLanguageUseCase(languageCode)
+        _userSettings.value = getUserSettingsUseCase()
     }
 
     fun setGlobalNotifications(enabled: Boolean) {

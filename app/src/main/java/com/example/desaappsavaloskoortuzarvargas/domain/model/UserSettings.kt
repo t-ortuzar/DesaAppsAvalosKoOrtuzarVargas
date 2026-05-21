@@ -25,7 +25,7 @@ data class InAppNotification(
     val gameName: String,
     val discountPercentage: Int,
     val platform: String,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long,
     val isRead: Boolean = false
 )
 

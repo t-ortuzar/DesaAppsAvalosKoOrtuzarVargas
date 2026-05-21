@@ -105,7 +105,8 @@ class UserSettingsRepositoryImpl(
                         type = NotificationType.HISTORICAL_LOW,
                         gameName = discount.gameName,
                         discountPercentage = discount.discountPercentage,
-                        platform = discount.platform
+                        platform = discount.platform,
+                        timestamp = System.currentTimeMillis()
                     )
                 )
             } else if (pref?.notifyOffers != false) {
@@ -116,7 +117,8 @@ class UserSettingsRepositoryImpl(
                         type = NotificationType.DISCOUNT,
                         gameName = discount.gameName,
                         discountPercentage = discount.discountPercentage,
-                        platform = discount.platform
+                        platform = discount.platform,
+                        timestamp = System.currentTimeMillis()
                     )
                 )
             }

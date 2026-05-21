@@ -51,8 +51,10 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesVie
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
 import android.app.Activity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.LocaleListCompat
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -66,6 +68,7 @@ fun SettingsScreen(
     val favorites by gamesViewModel.favorites.collectAsState()
 
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var editingName by remember { mutableStateOf(false) }
     var editingEmail by remember { mutableStateOf(false) }
@@ -461,13 +464,16 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val languageCode = pendingLanguageCode ?: return@TextButton
-                    settingsViewModel.updateLanguage(languageCode)
-                    AppCompatDelegate.setApplicationLocales(
-                        LocaleListCompat.forLanguageTags(languageCode)
-                    )
                     showLanguageConfirm = false
                     pendingLanguageCode = null
-                    (context as? Activity)?.recreate()
+                    // Persist language first, then apply locale and recreate
+                    coroutineScope.launch {
+                        settingsViewModel.updateLanguage(languageCode)
+                        AppCompatDelegate.setApplicationLocales(
+                            LocaleListCompat.forLanguageTags(languageCode)
+                        )
+                        (context as? Activity)?.recreate()
+                    }
                 }) {
                     Text(stringResource(R.string.action_apply_changes))
                 }
