@@ -45,6 +45,10 @@ import com.example.desaappsavaloskoortuzarvargas.data.api.StoreRegionAvailabilit
 import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.DetailSection
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.FavoriteButton
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.SectionHeader
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.TagChips
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
 import kotlin.math.roundToInt
@@ -88,13 +92,7 @@ fun GameDetailScreen(
                 }
             },
             actions = {
-                IconButton(onClick = { onFavoriteClick(game) }) {
-                    Icon(
-                        imageVector = if (game.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = stringResource(R.string.content_desc_favorite),
-                        tint = if (game.isFavorite) Color.Red else Color.Gray
-                    )
-                }
+                FavoriteButton(game = game, onClick = { onFavoriteClick(game) })
             }
         )
 
@@ -119,24 +117,7 @@ fun GameDetailScreen(
             // Tags
             if (game.tags.isNotEmpty()) {
                 item {
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        game.tags.forEach { tag ->
-                            Text(
-                                text = tag,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = Color.White,
-                                modifier = Modifier
-                                    .background(
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                        shape = RoundedCornerShape(6.dp)
-                                    )
-                                    .padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
+                    TagChips(tags = game.tags)
                 }
             }
 
@@ -168,33 +149,34 @@ fun GameDetailScreen(
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.game_release_date), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(game.releaseDate, style = MaterialTheme.typography.bodyMedium)
-                }
+                DetailSection(
+                    title = stringResource(R.string.game_release_date),
+                    value = game.releaseDate
+                )
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.game_rating_label), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.game_rating_format, game.rating), style = MaterialTheme.typography.bodyMedium)
-                }
+                DetailSection(
+                    title = stringResource(R.string.game_rating_label),
+                    value = stringResource(R.string.game_rating_format, game.rating)
+                )
             }
 
             item {
                 if (game.historicalDiscount > 0) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.game_historical_discount), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("${game.historicalDiscount}%", style = MaterialTheme.typography.bodyMedium, color = Color.Green)
-                    }
+                    DetailSection(
+                        title = stringResource(R.string.game_historical_discount),
+                        value = "${game.historicalDiscount}%",
+                        valueColor = Color.Green
+                    )
                 }
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.game_description), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(game.description, style = MaterialTheme.typography.bodyMedium)
-                }
+                DetailSection(
+                    title = stringResource(R.string.game_description),
+                    value = game.description
+                )
             }
 
             // Real prices from CheapShark API
@@ -205,7 +187,7 @@ fun GameDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.game_prices), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        SectionHeader(stringResource(R.string.game_prices))
                         if (isLoadingPrices) {
                             CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         }
@@ -304,11 +286,7 @@ fun GameDetailScreen(
             // DLCs section
             if (game.dlcs.isNotEmpty()) {
                 item {
-                    Text(
-                        stringResource(R.string.game_dlcs_expansions, game.dlcs.size),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    SectionHeader(stringResource(R.string.game_dlcs_expansions, game.dlcs.size))
                 }
                 game.dlcs.forEach { dlc ->
                     item {

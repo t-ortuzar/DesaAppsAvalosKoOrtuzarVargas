@@ -2,7 +2,6 @@ package com.example.desaappsavaloskoortuzarvargas.domain.repository
 
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.model.PriceHistory
-import com.example.desaappsavaloskoortuzarvargas.domain.model.UserFavorite
 
 interface GameRepository {
     suspend fun getAllGames(): Result<List<Game>>

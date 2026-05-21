@@ -1,6 +1,5 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,15 +14,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
 
 @Composable
@@ -40,18 +35,12 @@ fun NewsCard(
         shape = RoundedCornerShape(8.dp)
     ) {
         Column {
-            // Image on top - full width
-            AsyncImage(
-                model = news.imageUrl,
+            CardHeaderImage(
+                imageUrl = news.imageUrl,
                 contentDescription = news.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
-                contentScale = ContentScale.Crop
+                height = 160.dp
             )
 
-            // Content below
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

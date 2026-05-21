@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.LoadingContent
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.NewsCard
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.NewsViewModel
 
@@ -104,29 +105,17 @@ fun NewsScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        when {
-            isLoading -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) { CircularProgressIndicator() }
-            }
-            displayedNews.isEmpty() -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) { Text(stringResource(R.string.news_no_results)) }
-            }
-            else -> {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(displayedNews) { news ->
-                        NewsCard(
-                            news = news,
-                            onNewsClick = onNewsSelected
-                        )
-                    }
+        LoadingContent(
+            isLoading = isLoading,
+            items = displayedNews,
+            emptyMessage = stringResource(R.string.news_no_results)
+        ) { news ->
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(news) { newsItem ->
+                    NewsCard(
+                        news = newsItem,
+                        onNewsClick = onNewsSelected
+                    )
                 }
             }
         }

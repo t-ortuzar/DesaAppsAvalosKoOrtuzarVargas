@@ -47,6 +47,8 @@ import com.example.desaappsavaloskoortuzarvargas.domain.model.GameNotificationPr
 import com.example.desaappsavaloskoortuzarvargas.domain.model.NotificationType
 import com.example.desaappsavaloskoortuzarvargas.domain.model.SUPPORTED_COUNTRIES
 import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.LabeledSwitchRow
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.SettingsCard
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
 import android.app.Activity
@@ -95,14 +97,9 @@ fun SettingsScreen(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(2.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // Username
-                    Row(
+            SettingsCard {
+                // Username
+                Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -166,7 +163,6 @@ fun SettingsScreen(
                             editingEmail = !editingEmail
                         }) {
                             Text(if (editingEmail) stringResource(R.string.action_save) else stringResource(R.string.action_edit))
-                        }
                     }
                 }
             }
@@ -178,14 +174,9 @@ fun SettingsScreen(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(2.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(stringResource(R.string.label_country_affects_prices), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    OutlinedButton(
+            SettingsCard {
+                Text(stringResource(R.string.label_country_affects_prices), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                OutlinedButton(
                         onClick = { showCountryDropdown = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -204,46 +195,39 @@ fun SettingsScreen(
                                 }
                             )
                         }
-                    }
                 }
             }
         }
 
         // Language selection
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(2.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(stringResource(R.string.label_language), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    val languageOptions = listOf(
-                        "en" to stringResource(R.string.language_english),
-                        "es" to stringResource(R.string.language_spanish)
-                    )
-                    val currentLanguageLabel = languageOptions.firstOrNull { it.first == userSettings.languageCode }?.second
-                        ?: languageOptions.first().second
-                    OutlinedButton(
-                        onClick = { showLanguageDropdown = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(currentLanguageLabel)
-                    }
-                    DropdownMenu(
-                        expanded = showLanguageDropdown,
-                        onDismissRequest = { showLanguageDropdown = false }
-                    ) {
-                        languageOptions.forEach { (code, label) ->
-                            DropdownMenuItem(
-                                text = { Text(label) },
-                                onClick = {
-                                    pendingLanguageCode = code
-                                    showLanguageConfirm = true
-                                    showLanguageDropdown = false
-                                }
-                            )
-                        }
+            SettingsCard {
+                Text(stringResource(R.string.label_language), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                val languageOptions = listOf(
+                    "en" to stringResource(R.string.language_english),
+                    "es" to stringResource(R.string.language_spanish)
+                )
+                val currentLanguageLabel = languageOptions.firstOrNull { it.first == userSettings.languageCode }?.second
+                    ?: languageOptions.first().second
+                OutlinedButton(
+                    onClick = { showLanguageDropdown = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(currentLanguageLabel)
+                }
+                DropdownMenu(
+                    expanded = showLanguageDropdown,
+                    onDismissRequest = { showLanguageDropdown = false }
+                ) {
+                    languageOptions.forEach { (code, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                pendingLanguageCode = code
+                                showLanguageConfirm = true
+                                showLanguageDropdown = false
+                            }
+                        )
                     }
                 }
             }
@@ -255,24 +239,12 @@ fun SettingsScreen(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(2.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.label_enable_notifications), style = MaterialTheme.typography.bodyMedium)
-                        Switch(
-                            checked = userSettings.globalNotificationsEnabled,
-                            onCheckedChange = { settingsViewModel.setGlobalNotifications(it) }
-                        )
-                    }
-                }
+            SettingsCard {
+                LabeledSwitchRow(
+                    label = stringResource(R.string.label_enable_notifications),
+                    checked = userSettings.globalNotificationsEnabled,
+                    onCheckedChange = { settingsViewModel.setGlobalNotifications(it) }
+                )
             }
         }
 
@@ -403,30 +375,21 @@ fun SettingsScreen(
             title = { Text(stringResource(R.string.label_notifications_for_game, game.name)) },
             text = {
                 Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.label_offers))
-                        Switch(checked = notifyOffers, onCheckedChange = { notifyOffers = it })
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.label_news))
-                        Switch(checked = notifyNews, onCheckedChange = { notifyNews = it })
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.label_historical_low))
-                        Switch(checked = notifyHistorical, onCheckedChange = { notifyHistorical = it })
-                    }
+                    LabeledSwitchRow(
+                        label = stringResource(R.string.label_offers),
+                        checked = notifyOffers,
+                        onCheckedChange = { notifyOffers = it }
+                    )
+                    LabeledSwitchRow(
+                        label = stringResource(R.string.label_news),
+                        checked = notifyNews,
+                        onCheckedChange = { notifyNews = it }
+                    )
+                    LabeledSwitchRow(
+                        label = stringResource(R.string.label_historical_low),
+                        checked = notifyHistorical,
+                        onCheckedChange = { notifyHistorical = it }
+                    )
                 }
             },
             confirmButton = {

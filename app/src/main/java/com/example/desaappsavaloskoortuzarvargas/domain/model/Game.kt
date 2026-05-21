@@ -40,15 +40,3 @@ data class PriceHistory(
     val isHistoricalLowest: Boolean = false
 )
 
-@Serializable
-data class Platform(
-    val id: String,
-    val name: String,
-    val icon: String
-)
-
-data class UserFavorite(
-    val gameId: Int,
-    val gameName: String,
-    val addedDate: String
-)

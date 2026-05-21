@@ -29,7 +29,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.DiscountedGame
+import com.example.desaappsavaloskoortuzarvargas.presentation.STORE_PLATFORMS
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.DiscountCard
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.LoadingContent
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.OffersViewModel
 
 @Composable
@@ -54,7 +56,6 @@ fun OffersScreen(
         R.string.offers_tab_hist_low,
         R.string.offers_tab_free
     )
-    val platforms = listOf("Steam", "Epic Games", "GOG", "EA Play", "Ubisoft+", "Battle.net", "G2A", "Eneba")
 
     Column(
         modifier = modifier
@@ -93,7 +94,7 @@ fun OffersScreen(
                 label = { Text(stringResource(R.string.label_all)) },
                 selected = selectedPlatform == null
             )
-            platforms.forEach { platform ->
+            STORE_PLATFORMS.forEach { platform ->
                 FilterChip(
                     onClick = {
                         viewModel.setPlatformFilter(
@@ -141,29 +142,17 @@ fun OffersScreen(
             else -> currentDiscounts
         }
 
-        when {
-            isLoading -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) { CircularProgressIndicator() }
-            }
-            displayedDiscounts.isEmpty() -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) { Text(stringResource(R.string.offers_no_discounts)) }
-            }
-            else -> {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(displayedDiscounts) { discount ->
-                        DiscountCard(
-                            discount = discount,
-                            onGameClick = onDiscountSelected
-                        )
-                    }
+        LoadingContent(
+            isLoading = isLoading,
+            items = displayedDiscounts,
+            emptyMessage = stringResource(R.string.offers_no_discounts)
+        ) { discounts ->
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(discounts) { discount ->
+                    DiscountCard(
+                        discount = discount,
+                        onGameClick = onDiscountSelected
+                    )
                 }
             }
         }
