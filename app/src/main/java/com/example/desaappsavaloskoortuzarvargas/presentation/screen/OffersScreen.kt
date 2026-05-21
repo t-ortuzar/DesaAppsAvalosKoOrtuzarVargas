@@ -25,7 +25,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.DiscountedGame
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.DiscountCard
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.OffersViewModel
@@ -46,7 +48,12 @@ fun OffersScreen(
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
 
-    val tabs = listOf("Discounts", "Favorites", "Hist. Low", "Free")
+    val tabs = listOf(
+        R.string.offers_tab_discounts,
+        R.string.offers_tab_favorites,
+        R.string.offers_tab_hist_low,
+        R.string.offers_tab_free
+    )
     val platforms = listOf("Steam", "Epic Games", "GOG", "EA Play", "Ubisoft+", "Battle.net", "G2A", "Eneba")
 
     Column(
@@ -55,7 +62,7 @@ fun OffersScreen(
             .padding(16.dp)
     ) {
         TabRow(selectedTabIndex = selectedTabIndex) {
-            tabs.forEachIndexed { index, title ->
+            tabs.forEachIndexed { index, titleRes ->
                 Tab(
                     selected = selectedTabIndex == index,
                     onClick = {
@@ -67,7 +74,7 @@ fun OffersScreen(
                             3 -> viewModel.showFreeGames()
                         }
                     },
-                    text = { Text(title) }
+                    text = { Text(stringResource(titleRes)) }
                 )
             }
         }
@@ -83,7 +90,7 @@ fun OffersScreen(
         ) {
             FilterChip(
                 onClick = { viewModel.setPlatformFilter(null) },
-                label = { Text("All") },
+                label = { Text(stringResource(R.string.label_all)) },
                 selected = selectedPlatform == null
             )
             platforms.forEach { platform ->
@@ -108,17 +115,17 @@ fun OffersScreen(
             ) {
                 FilterChip(
                     onClick = { viewModel.setFreeFilter(OffersViewModel.FreeFilter.TEMP_FREE_ONLY) },
-                    label = { Text("Temp. Free") },
+                    label = { Text(stringResource(R.string.offers_filter_temp_free)) },
                     selected = freeFilter == OffersViewModel.FreeFilter.TEMP_FREE_ONLY
                 )
                 FilterChip(
                     onClick = { viewModel.setFreeFilter(OffersViewModel.FreeFilter.F2P_ONLY) },
-                    label = { Text("F2P") },
+                    label = { Text(stringResource(R.string.offers_filter_f2p)) },
                     selected = freeFilter == OffersViewModel.FreeFilter.F2P_ONLY
                 )
                 FilterChip(
                     onClick = { viewModel.setFreeFilter(OffersViewModel.FreeFilter.ALL) },
-                    label = { Text("All Free") },
+                    label = { Text(stringResource(R.string.offers_filter_all_free)) },
                     selected = freeFilter == OffersViewModel.FreeFilter.ALL
                 )
             }
@@ -147,7 +154,7 @@ fun OffersScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ) { Text("No discounts available") }
+                ) { Text(stringResource(R.string.offers_no_discounts)) }
             }
             else -> {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
