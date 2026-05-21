@@ -22,9 +22,9 @@ data class InAppNotification(
     val id: Int,
     val gameId: Int?,
     val type: NotificationType,
-    val gameName: String = "",
-    val discountPercentage: Int = 0,
-    val platform: String = "",
+    val gameName: String,
+    val discountPercentage: Int,
+    val platform: String,
     val timestamp: Long = System.currentTimeMillis(),
     val isRead: Boolean = false
 )
