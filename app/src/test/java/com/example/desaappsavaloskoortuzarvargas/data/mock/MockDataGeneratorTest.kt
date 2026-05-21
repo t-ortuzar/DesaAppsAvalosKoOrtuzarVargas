@@ -130,7 +130,8 @@ class MockDataGeneratorTest {
     fun `alternative image used for game 9`() {
         val games = MockDataGenerator.generateGames()
         val game9 = games.first { it.id == 9 }
-        assertTrue(game9.imageUrl.contains("gaming-cdn.com"))
+        // Alan Wake 2 is not on Steam, uses PlayStation CDN image
+        assertFalse(game9.imageUrl.contains("steamstatic.com"))
     }
 
     @Test

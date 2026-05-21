@@ -100,4 +100,5 @@
     <string name="offline_banner">Estás sin conexión. Los precios pueden estar desactualizados.</string>
     <string name="prices_from_cache">⚠ Precios cargados desde caché (pueden estar desactualizados)</string>
     <string name="label_coming_soon">próximamente</string>
+    <string name="dolar_tarjeta_rate">💳 Dólar tarjeta: ARS $%1$s (impuestos incluidos)</string>
 </resources>

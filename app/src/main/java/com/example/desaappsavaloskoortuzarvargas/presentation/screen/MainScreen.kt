@@ -83,6 +83,8 @@ fun MainScreen() {
     val discountRepository = ServiceLocator.discountRepository
     val userSettingsRepository = ServiceLocator.userSettingsRepository
     val cheapSharkService = ServiceLocator.cheapSharkService
+    val steamPriceService = ServiceLocator.steamPriceService
+    val dolarService = ServiceLocator.dolarService
     val database = ServiceLocator.database
     val connectivityObserver = ServiceLocator.connectivityObserver
 
@@ -97,6 +99,8 @@ fun MainScreen() {
             GetPriceHistoryUseCase(gameRepository),
             GetGamesByTagUseCase(gameRepository),
             cheapSharkService,
+            steamPriceService,
+            dolarService,
             database.gamePriceDao(),
             database.gameImageDao(),
             connectivityObserver

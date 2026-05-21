@@ -100,4 +100,5 @@
     <string name="offline_banner">You are offline. Prices may be outdated.</string>
     <string name="prices_from_cache">⚠ Prices loaded from cache (may be outdated)</string>
     <string name="label_coming_soon">coming soon</string>
+    <string name="dolar_tarjeta_rate">💳 Dólar tarjeta: ARS $%1$s (incl. taxes)</string>
 </resources>

@@ -1,6 +1,8 @@
 package com.example.desaappsavaloskoortuzarvargas.di
 
 import com.example.desaappsavaloskoortuzarvargas.data.api.CheapSharkService
+import com.example.desaappsavaloskoortuzarvargas.data.api.DolarService
+import com.example.desaappsavaloskoortuzarvargas.data.api.SteamPriceService
 import com.example.desaappsavaloskoortuzarvargas.data.local.ConnectivityObserver
 import com.example.desaappsavaloskoortuzarvargas.data.local.GameTrackerDatabase
 import com.example.desaappsavaloskoortuzarvargas.data.repository.DiscountRepositoryImpl
@@ -15,6 +17,8 @@ import com.example.desaappsavaloskoortuzarvargas.GameTrackerApp
 
 object ServiceLocator {
     val cheapSharkService: CheapSharkService by lazy { CheapSharkService() }
+    val steamPriceService: SteamPriceService by lazy { SteamPriceService() }
+    val dolarService: DolarService by lazy { DolarService() }
 
     val database: GameTrackerDatabase by lazy {
         GameTrackerDatabase.getInstance(GameTrackerApp.appContext)

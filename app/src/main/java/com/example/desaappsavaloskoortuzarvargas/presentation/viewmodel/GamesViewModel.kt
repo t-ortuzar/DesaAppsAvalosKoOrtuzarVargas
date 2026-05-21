@@ -2,8 +2,11 @@ package com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.desaappsavaloskoortuzarvargas.data.api.ArgentineTaxCalculator
 import com.example.desaappsavaloskoortuzarvargas.data.api.CheapSharkService
+import com.example.desaappsavaloskoortuzarvargas.data.api.DolarService
 import com.example.desaappsavaloskoortuzarvargas.data.api.GamePrice
+import com.example.desaappsavaloskoortuzarvargas.data.api.SteamPriceService
 import com.example.desaappsavaloskoortuzarvargas.data.local.ConnectivityObserver
 import com.example.desaappsavaloskoortuzarvargas.data.local.dao.GameImageDao
 import com.example.desaappsavaloskoortuzarvargas.data.local.dao.GamePriceDao
@@ -33,6 +36,8 @@ class GamesViewModel(
     private val getPriceHistoryUseCase: GetPriceHistoryUseCase,
     private val getGamesByTagUseCase: GetGamesByTagUseCase,
     private val cheapSharkService: CheapSharkService? = null,
+    private val steamPriceService: SteamPriceService? = null,
+    private val dolarService: DolarService? = null,
     private val gamePriceDao: GamePriceDao? = null,
     private val gameImageDao: GameImageDao? = null,
     private val connectivityObserver: ConnectivityObserver? = null
@@ -74,9 +79,22 @@ class GamesViewModel(
     private val _pricesFromCache = MutableStateFlow(false)
     val pricesFromCache: StateFlow<Boolean> = _pricesFromCache.asStateFlow()
 
+    // Currency toggle: true = show ARS, false = show USD
+    private val _showArs = MutableStateFlow(false)
+    val showArs: StateFlow<Boolean> = _showArs.asStateFlow()
+
+    // Dólar tarjeta sell rate (fetched from DolarAPI)
+    private val _dolarTarjetaRate = MutableStateFlow<Double?>(null)
+    val dolarTarjetaRate: StateFlow<Double?> = _dolarTarjetaRate.asStateFlow()
+
+    // Steam header image URL (for non-CheapShark games or better quality)
+    private val _steamHeaderImage = MutableStateFlow<String?>(null)
+    val steamHeaderImage: StateFlow<String?> = _steamHeaderImage.asStateFlow()
+
     init {
         loadAllGames()
         observeConnectivity()
+        loadDolarRate()
     }
 
     private fun observeConnectivity() {
@@ -86,6 +104,38 @@ class GamesViewModel(
                 _isOnline.value = connected
             }
         }
+    }
+
+    /**
+     * Fetch the dólar tarjeta rate for USD→ARS conversion.
+     */
+    private fun loadDolarRate() {
+        val service = dolarService ?: return
+        viewModelScope.launch {
+            try {
+                val cotizacion = service.getDolarTarjeta()
+                if (cotizacion != null) {
+                    _dolarTarjetaRate.value = cotizacion.venta
+                }
+            } catch (_: Exception) {
+                // Will use fallback rate
+            }
+        }
+    }
+
+    fun toggleCurrency() {
+        _showArs.value = !_showArs.value
+        // Refresh dolar rate if switching to ARS and rate is stale
+        if (_showArs.value && _dolarTarjetaRate.value == null) {
+            loadDolarRate()
+        }
+    }
+
+    /**
+     * Convert a USD price to ARS using the current dólar tarjeta rate.
+     */
+    fun convertToArs(usdPrice: Float): Float {
+        return ArgentineTaxCalculator.usdToArs(usdPrice, _dolarTarjetaRate.value)
     }
 
     fun loadAllGames() {
@@ -118,9 +168,7 @@ class GamesViewModel(
         }
         try {
             dao.insertAll(entities)
-        } catch (_: Exception) {
-            // Silently fail — caching is best-effort
-        }
+        } catch (_: Exception) { }
     }
 
     fun getGameById(id: Int) {
@@ -183,19 +231,31 @@ class GamesViewModel(
 
     /**
      * Load real prices from CheapShark API for a game.
+     * Also fetches the Steam header image for better quality.
      * If online: fetch from API, compare with cached prices, update Room if changed.
      * If offline: load from Room cache.
      */
-    fun loadRealPrices(gameName: String) {
+    fun loadRealPrices(gameName: String, steamAppId: Int? = null) {
         val service = cheapSharkService ?: return
         viewModelScope.launch {
             _isLoadingPrices.value = true
             _realPrices.value = emptyList()
             _pricesFromCache.value = false
+            _steamHeaderImage.value = null
 
             val online = connectivityObserver?.isConnected() ?: true
 
             if (online) {
+                // Fetch Steam header image if app ID is known
+                if (steamAppId != null && steamAppId > 0) {
+                    try {
+                        val steamDetails = steamPriceService?.getAppDetails(steamAppId)
+                        if (steamDetails != null && steamDetails.headerImageUrl.isNotEmpty()) {
+                            _steamHeaderImage.value = steamDetails.headerImageUrl
+                        }
+                    } catch (_: Exception) { }
+                }
+
                 try {
                     val searchResults = service.searchGame(gameName)
                     if (searchResults.isNotEmpty()) {
@@ -235,7 +295,7 @@ class GamesViewModel(
                 dao.deletePricesForGameByName(gameName)
                 dao.insertAll(newPrices.map { price ->
                     GamePriceEntity(
-                        gameId = 0, // We use gameName as key
+                        gameId = 0,
                         gameName = gameName,
                         storeName = price.storeName,
                         currentPrice = price.currentPrice,
@@ -245,9 +305,7 @@ class GamesViewModel(
                     )
                 })
             }
-        } catch (_: Exception) {
-            // Caching is best-effort
-        }
+        } catch (_: Exception) { }
     }
 
     /**
@@ -269,14 +327,13 @@ class GamesViewModel(
                 }
                 _pricesFromCache.value = true
             }
-        } catch (_: Exception) {
-            // Cache read failed
-        }
+        } catch (_: Exception) { }
     }
 
     fun clearRealPrices() {
         _realPrices.value = emptyList()
         _pricesFromCache.value = false
+        _steamHeaderImage.value = null
     }
 
     fun toggleFavorite(game: Game) {

@@ -146,7 +146,7 @@ object MockDataGenerator {
 
     // Games NOT on Steam - use alternative image sources
     private val alternativeImages = mapOf(
-        9 to "https://gaming-cdn.com/images/products/14178/616x353/alan-wake-2-pc-game-epic-games-cover.jpg"
+        9 to "https://image.api.playstation.com/vulcan/ap/rnd/202306/1301/10cc689e0f2a79b9258bad498ab8b36e14dbd4830a19aee2.jpg"
     )
 
     private val freeGameSteamIds = mapOf(
@@ -284,7 +284,8 @@ object MockDataGenerator {
             historicalDiscount = 10 + (info.id % 80),
             tags = info.tags,
             dlcs = generateDLCsForGame(info.id),
-            availablePlatforms = info.platforms
+            availablePlatforms = info.platforms,
+            steamAppId = steamAppIds[info.id] ?: 0
         )
     }
 
