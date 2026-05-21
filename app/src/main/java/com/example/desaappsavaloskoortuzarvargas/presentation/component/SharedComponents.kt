@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 
 /**
  * Reusable card header image used by GameCard, DiscountCard, NewsCard.
+ * Shows a placeholder with the game name when image URL is empty or fails to load.
  */
 @Composable
 fun CardHeaderImage(
@@ -39,15 +40,35 @@ fun CardHeaderImage(
     height: Dp = 180.dp,
     cornerRadius: Dp = 8.dp
 ) {
-    AsyncImage(
-        model = imageUrl,
-        contentDescription = contentDescription,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(height)
-            .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)),
-        contentScale = ContentScale.Crop
-    )
+    if (imageUrl.isEmpty()) {
+        // Placeholder for games without images (non-Steam exclusives)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height)
+                .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = contentDescription,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+    } else {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height)
+                .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)),
+            contentScale = ContentScale.Crop
+        )
+    }
 }
 
 /**
@@ -111,6 +132,7 @@ fun SectionHeader(
         text = title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground,
         modifier = modifier
     )
 }
@@ -133,7 +155,9 @@ fun DetailSection(
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = valueColor
+            color = if (valueColor == Color.Unspecified)
+                MaterialTheme.colorScheme.onBackground
+            else valueColor
         )
     }
 }

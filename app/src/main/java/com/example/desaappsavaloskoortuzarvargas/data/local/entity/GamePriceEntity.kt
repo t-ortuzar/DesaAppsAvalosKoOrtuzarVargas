@@ -4,8 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Cached game price from CheapShark API.
- * Composite key: gameId + storeName uniquely identifies a price entry.
+ * Cached game price from store APIs (Steam, Epic, GOG).
  */
 @Entity(tableName = "game_prices")
 data class GamePriceEntity(
@@ -18,6 +17,7 @@ data class GamePriceEntity(
     val retailPrice: Float,
     val savings: Float,
     val dealUrl: String,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val currency: String = "ARS",
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val discountEndTimestamp: Long? = null  // Epoch millis when the discount ends (from store API)
 )
-

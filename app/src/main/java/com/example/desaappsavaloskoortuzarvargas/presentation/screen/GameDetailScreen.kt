@@ -3,6 +3,7 @@ package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,22 +17,23 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,47 +43,48 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.desaappsavaloskoortuzarvargas.data.api.StoreRegionAvailability
 import com.example.desaappsavaloskoortuzarvargas.data.api.ArgentineTaxCalculator
+import com.example.desaappsavaloskoortuzarvargas.data.api.StorePrice
 import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
-import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.DetailSection
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.FavoriteButton
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.OfferCountdown
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.SectionHeader
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.TagChips
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
-import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
-import kotlin.math.roundToInt
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameDetailScreen(
     game: Game,
     viewModel: GamesViewModel,
-    settingsViewModel: SettingsViewModel,
     onBackClick: () -> Unit,
     onFavoriteClick: (Game) -> Unit
 ) {
-    val realPrices by viewModel.realPrices.collectAsState()
+    val storePrices by viewModel.storePrices.collectAsState()
     val isLoadingPrices by viewModel.isLoadingPrices.collectAsState()
-    val userSettings by settingsViewModel.userSettings.collectAsState()
     val pricesFromCache by viewModel.pricesFromCache.collectAsState()
-    val showArs by viewModel.showArs.collectAsState()
     val dolarRate by viewModel.dolarTarjetaRate.collectAsState()
+    val gameDetailImageUrl by viewModel.gameDetailImageUrl.collectAsState()
 
-    // Filter prices by stores available in user's region
-    val regionFilteredPrices = realPrices.filter { price ->
-        StoreRegionAvailability.isAvailableInRegion(price.storeName, userSettings.countryCode)
-    }
+    // Currency toggle: true = show in ARS, false = show in USD
+    var showInArs by remember { mutableStateOf(true) }
+
+    // Use dynamic image from store API if available, otherwise game's static image
+    val displayImageUrl = gameDetailImageUrl ?: game.imageUrl
 
     // Load real prices when entering the screen
     LaunchedEffect(game.id) {
         viewModel.loadRealPrices(game.name, game.steamAppId)
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Top bar
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         TopAppBar(
             title = { Text(game.name) },
             navigationIcon = {
@@ -106,30 +109,45 @@ fun GameDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // ── Game image (FillWidth to avoid cropping) ──
             item {
-                AsyncImage(
-                    model = game.imageUrl,
-                    contentDescription = game.name,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            // Tags
-            if (game.tags.isNotEmpty()) {
-                item {
-                    TagChips(tags = game.tags)
+                if (displayImageUrl.isNullOrEmpty()) {
+                    // Placeholder for games without images
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = game.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    AsyncImage(
+                        model = displayImageUrl,
+                        contentDescription = game.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.FillWidth
+                    )
                 }
             }
 
-            // Available platforms
+            if (game.tags.isNotEmpty()) {
+                item { TagChips(tags = game.tags) }
+            }
+
             if (game.availablePlatforms.isNotEmpty()) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(stringResource(R.string.game_available_on), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.game_available_on_header), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                         Row(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -153,195 +171,132 @@ fun GameDetailScreen(
             }
 
             item {
-                DetailSection(
-                    title = stringResource(R.string.game_release_date),
-                    value = game.releaseDate
-                )
-            }
-
-            item {
-                DetailSection(
-                    title = stringResource(R.string.game_rating_label),
-                    value = stringResource(R.string.game_rating_format, game.rating)
-                )
-            }
-
-            item {
-                if (game.historicalDiscount > 0) {
-                    DetailSection(
-                        title = stringResource(R.string.game_historical_discount),
-                        value = "${game.historicalDiscount}%",
-                        valueColor = Color.Green
-                    )
+                if (game.releaseDate.isNotEmpty()) {
+                    DetailSection(title = stringResource(R.string.game_release_date), value = game.releaseDate)
                 }
             }
-
+            item { DetailSection(title = stringResource(R.string.game_rating_label), value = stringResource(R.string.game_rating_format, game.rating)) }
             item {
-                DetailSection(
-                    title = stringResource(R.string.game_description),
-                    value = game.description
-                )
+                // Historical discount must be >= any current real discount
+                val maxCurrentDiscount = storePrices.maxOfOrNull { it.discountPercent } ?: 0
+                val effectiveHistorical = maxOf(game.historicalDiscount, maxCurrentDiscount)
+                if (effectiveHistorical > 0) {
+                    DetailSection(title = stringResource(R.string.game_historical_discount), value = "${effectiveHistorical}%", valueColor = Color.Green)
+                }
             }
+            item { DetailSection(title = stringResource(R.string.game_description), value = game.description) }
 
-            // Real prices from CheapShark API
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // F2P games: show "Disponible en" instead of prices
+            val isF2P = game.tags.contains("Free2Play")
+            if (isF2P) {
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SectionHeader(stringResource(R.string.game_free_to_play_label))
+                        game.availablePlatforms.forEach { platform ->
+                            Text(
+                                text = stringResource(R.string.game_available_on, platform),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            } else {
+
+                // ── Currency toggle ──
+                item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        SectionHeader(stringResource(R.string.game_prices))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            if (isLoadingPrices) {
-                                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                            }
-                            // Currency toggle button
-                            TextButton(onClick = { viewModel.toggleCurrency() }) {
-                                Text(
-                                    text = if (showArs) "ARS \uD83C\uDDE6\uD83C\uDDF7" else "USD \uD83C\uDDFA\uD83C\uDDF8",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                        Text(
+                            stringResource(R.string.currency_display_label),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FilterChip(
+                                selected = showInArs,
+                                onClick = { showInArs = true },
+                                label = { Text("ARS 🇦🇷") }
+                            )
+                            FilterChip(
+                                selected = !showInArs,
+                                onClick = { showInArs = false },
+                                label = { Text("USD 🇺🇸") }
+                            )
                         }
                     }
-
-                    // Dolar tarjeta rate info (when showing ARS)
-                    if (showArs && dolarRate != null) {
+                    if (showInArs && dolarRate != null) {
                         Text(
-                            text = stringResource(R.string.dolar_tarjeta_rate, String.format("%.2f", dolarRate)),
+                            text = stringResource(R.string.dolar_tarjeta_rate, String.format(Locale.US, "%.2f", dolarRate)),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
 
-                    // Region indicator
-                    Text(
-                        text = stringResource(
-                            R.string.game_prices_region,
-                            countryCodeToFlag(userSettings.countryCode),
-                            userSettings.country
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Cached prices warning
-                    if (pricesFromCache) {
-                        Text(
-                            text = stringResource(R.string.prices_from_cache),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFFFF9800),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    if (regionFilteredPrices.isNotEmpty()) {
-                        regionFilteredPrices.sortedBy { it.currentPrice }.forEach { price ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                elevation = CardDefaults.cardElevation(1.dp),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(10.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(price.storeName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                        if (price.savings > 0) {
-                                            Text(
-                                                text = stringResource(
-                                                    R.string.game_off_percent,
-                                                    price.savings.roundToInt()
-                                                ),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = Color.Green
-                                            )
-                                        }
-                                    }
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        if (price.currentPrice > 0) {
-                                            if (showArs) {
-                                                val arsPrice = viewModel.convertToArs(price.currentPrice)
-                                                Text(
-                                                    text = ArgentineTaxCalculator.formatArs(arsPrice),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                                Text(
-                                                    text = stringResource(R.string.game_price_usd, price.currentPrice),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = Color.Gray
-                                                )
-                                            } else {
-                                                Text(
-                                                    text = stringResource(R.string.game_price_usd, price.currentPrice),
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                            }
-                                        } else {
-                                            Text(
-                                                text = stringResource(R.string.game_free),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.Green
-                                            )
-                                        }
-                                        if (price.retailPrice > price.currentPrice) {
-                                            Text(
-                                                text = if (showArs) {
-                                                    ArgentineTaxCalculator.formatArs(viewModel.convertToArs(price.retailPrice))
-                                                } else {
-                                                    stringResource(R.string.game_price_usd, price.retailPrice)
-                                                },
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = Color.Gray
-                                            )
-                                        }
-                                    }
-                                }
+                // ===== UNIFIED PRICES SECTION =====
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            SectionHeader("💰 " + stringResource(R.string.game_prices_header))
+                            if (isLoadingPrices) {
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                             }
                         }
-                    } else if (!isLoadingPrices) {
-                        Text(
-                            stringResource(R.string.game_no_live_data),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
-                        )
-                        // Fallback to mock prices (only available platforms)
-                        game.currentPrices.entries.forEach { entry ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(entry.key, style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    text = if (entry.value > 0) {
-                                        stringResource(R.string.game_price_usd_simple, entry.value)
-                                    } else {
-                                        stringResource(R.string.game_not_available)
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+
+                        if (pricesFromCache) {
+                            Text(
+                                text = stringResource(R.string.prices_from_cache),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFFFF9800),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        // Live API prices first (Steam, Epic, GOG, etc.)
+                        if (storePrices.isNotEmpty()) {
+                            storePrices.forEach { price ->
+                                StorePriceCard(
+                                    price = price,
+                                    dolarRate = dolarRate,
+                                    showInArs = showInArs,
+                                    viewModel = viewModel
                                 )
                             }
                         }
+
+                        // Catalog reference prices for platforms NOT covered by live API
+                        val livePlatforms = storePrices.map { it.storeName }.toSet()
+                        val catalogPrices = game.currentPrices.filter { it.key !in livePlatforms }
+                        catalogPrices.forEach { (platform, usdPrice) ->
+                            CatalogPriceRow(
+                                platform = platform,
+                                usdPrice = usdPrice,
+                                dolarRate = dolarRate,
+                                showInArs = showInArs,
+                                viewModel = viewModel
+                            )
+                        }
+
+                        // No prices at all
+                        if (storePrices.isEmpty() && catalogPrices.isEmpty() && !isLoadingPrices) {
+                            Text(
+                                stringResource(R.string.game_no_live_data),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
-            }
+            } // end else (non-F2P)
 
             // DLCs section
             if (game.dlcs.isNotEmpty()) {
@@ -356,49 +311,43 @@ fun GameDetailScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = dlc.name,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Text(text = dlc.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                                 if (dlc.description.isNotEmpty()) {
-                                    Text(
-                                        text = dlc.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Gray,
-                                        maxLines = 2
-                                    )
+                                    Text(text = dlc.description, style = MaterialTheme.typography.bodySmall, color = Color.Gray, maxLines = 2)
                                 }
                                 Spacer(modifier = Modifier.height(6.dp))
-                                // Only show DLC prices for platforms where the game is available
                                 val dlcAvailablePrices = if (game.availablePlatforms.isNotEmpty()) {
                                     dlc.currentPrices.filter { it.key in game.availablePlatforms }
-                                } else {
-                                    dlc.currentPrices
-                                }
+                                } else dlc.currentPrices
                                 dlcAvailablePrices.entries.take(3).forEach { (platform, price) ->
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(platform, style = MaterialTheme.typography.labelSmall)
-                                        Text(
-                                            stringResource(R.string.game_price_usd_simple, price),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
+                                        if (showInArs) {
+                                            val arsPrice = viewModel.convertToArs(price)
+                                            Text(
+                                                ArgentineTaxCalculator.formatArs(arsPrice),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        } else {
+                                            Text(
+                                                stringResource(R.string.game_price_usd_simple, price),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
                                     }
                                 }
                                 if (dlc.historicalDiscount > 0) {
                                     Text(
-                                        text = stringResource(
-                                            R.string.game_dlc_hist_discount,
-                                            dlc.historicalDiscount
-                                        ),
+                                        text = stringResource(R.string.game_dlc_hist_discount, dlc.historicalDiscount),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color.Green,
-                                        fontWeight = FontWeight.Bold
+                                        color = Color.Green, fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
@@ -408,6 +357,206 @@ fun GameDetailScreen(
             }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
+        }
+    }
+}
+
+/**
+ * Card showing a real store price for Argentina.
+ * Respects the [showInArs] toggle to display in ARS or USD.
+ */
+@Composable
+private fun StorePriceCard(
+    price: StorePrice,
+    dolarRate: Double?,
+    showInArs: Boolean,
+    viewModel: GamesViewModel
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = price.storeName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (price.isDiscounted) {
+                    Text(
+                        text = "-${price.discountPercent}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Green,
+                        fontWeight = FontWeight.Bold
+                    )
+                    // Countdown timer if end date is known
+                    val endTs = price.discountEndTimestamp
+                    if (endTs != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OfferCountdown(endTimestamp = endTs)
+                    }
+                }
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                if (price.isFree) {
+                    Text(
+                        text = stringResource(R.string.game_free),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Green
+                    )
+                } else if (price.isArs) {
+                    if (showInArs) {
+                        Text(
+                            text = ArgentineTaxCalculator.formatArs(price.currentPrice),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (price.isDiscounted) {
+                            Text(
+                                text = ArgentineTaxCalculator.formatArs(price.originalPrice),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Gray
+                            )
+                        }
+                    } else {
+                        val usdApprox = if (dolarRate != null && dolarRate > 0) {
+                            price.currentPrice / dolarRate.toFloat()
+                        } else price.currentPrice
+                        Text(
+                            text = "USD $${String.format(Locale.US, "%.2f", usdApprox)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "≈ ${ArgentineTaxCalculator.formatArs(price.currentPrice)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    if (showInArs && dolarRate != null) {
+                        val arsApprox = viewModel.convertToArs(price.currentPrice)
+                        Text(
+                            text = ArgentineTaxCalculator.formatArs(arsApprox),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "USD $${String.format(Locale.US, "%.2f", price.currentPrice)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Text(
+                            text = "USD $${String.format(Locale.US, "%.2f", price.currentPrice)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (dolarRate != null) {
+                            val arsPrice = viewModel.convertToArs(price.currentPrice)
+                            Text(
+                                text = "≈ ${ArgentineTaxCalculator.formatArs(arsPrice)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    if (price.isDiscounted) {
+                        Text(
+                            text = "USD $${String.format(Locale.US, "%.2f", price.originalPrice)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Row showing a catalog reference price for a platform.
+ * Displayed with slightly different styling to indicate it's a reference price.
+ */
+@Composable
+private fun CatalogPriceRow(
+    platform: String,
+    usdPrice: Float,
+    dolarRate: Double?,
+    showInArs: Boolean,
+    viewModel: GamesViewModel
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(1.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = platform,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                if (showInArs && dolarRate != null) {
+                    val arsPrice = viewModel.convertToArs(usdPrice)
+                    Text(
+                        text = ArgentineTaxCalculator.formatArs(arsPrice),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "USD $${String.format(Locale.US, "%.2f", usdPrice)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Text(
+                        text = "USD $${String.format(Locale.US, "%.2f", usdPrice)}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (dolarRate != null) {
+                        val arsPrice = viewModel.convertToArs(usdPrice)
+                        Text(
+                            text = "≈ ${ArgentineTaxCalculator.formatArs(arsPrice)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -20,6 +20,7 @@ class OffersViewModelTest {
     private lateinit var getHistLow: GetHistoricalLowDiscountsUseCase
     private lateinit var getFreeGames: GetFreeGamesUseCase
     private lateinit var getFavs: GetFavoritesUseCase
+    private lateinit var getPriceDrops: GetPriceDropsUseCase
 
     private val sampleDiscount = DiscountedGame(gameId = 1, gameName = "Test", imageUrl = "url",
         platform = "Steam", originalPrice = 59.99f, currentPrice = 29.99f, discountPercentage = 50)
@@ -36,13 +37,14 @@ class OffersViewModelTest {
         getHistLow = mock()
         getFreeGames = mock()
         getFavs = mock()
+        getPriceDrops = mock()
     }
 
     @After
     fun tearDown() { Dispatchers.resetMain() }
 
     private fun createViewModel(): OffersViewModel {
-        return OffersViewModel(getCurrentDiscounts, getFavDiscounts, getHistLow, getFreeGames, getFavs)
+        return OffersViewModel(getCurrentDiscounts, getFavDiscounts, getHistLow, getFreeGames, getFavs, getPriceDrops)
     }
 
     @Test

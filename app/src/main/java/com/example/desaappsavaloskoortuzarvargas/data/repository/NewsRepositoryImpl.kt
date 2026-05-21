@@ -1,12 +1,12 @@
 package com.example.desaappsavaloskoortuzarvargas.data.repository
 
-import com.example.desaappsavaloskoortuzarvargas.data.mock.MockDataGenerator
+import com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
 import com.example.desaappsavaloskoortuzarvargas.domain.repository.NewsRepository
 
 class NewsRepositoryImpl : NewsRepository {
 
-    private val allNews = MockDataGenerator.generateNews()
+    private val allNews = GameCatalog.generateNews()
 
     override suspend fun getAllNews(): Result<List<News>> = try {
         Result.success(allNews.sortedByDescending { it.date })

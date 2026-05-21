@@ -28,7 +28,7 @@ class ConstantsTest {
 
     @Test
     fun `STORE_PLATFORMS has expected size`() {
-        assertEquals(8, STORE_PLATFORMS.size)
+        assertEquals(7, STORE_PLATFORMS.size)
     }
 
     @Test

@@ -3,15 +3,13 @@ package com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.desaappsavaloskoortuzarvargas.data.api.ArgentineTaxCalculator
-import com.example.desaappsavaloskoortuzarvargas.data.api.CheapSharkService
 import com.example.desaappsavaloskoortuzarvargas.data.api.DolarService
-import com.example.desaappsavaloskoortuzarvargas.data.api.GamePrice
-import com.example.desaappsavaloskoortuzarvargas.data.api.SteamPriceService
+import com.example.desaappsavaloskoortuzarvargas.data.api.EpicPriceService
+import com.example.desaappsavaloskoortuzarvargas.data.api.PriceRefreshManager
+import com.example.desaappsavaloskoortuzarvargas.data.api.StorePrice
 import com.example.desaappsavaloskoortuzarvargas.data.local.ConnectivityObserver
 import com.example.desaappsavaloskoortuzarvargas.data.local.dao.GameImageDao
-import com.example.desaappsavaloskoortuzarvargas.data.local.dao.GamePriceDao
 import com.example.desaappsavaloskoortuzarvargas.data.local.entity.GameImageEntity
-import com.example.desaappsavaloskoortuzarvargas.data.local.entity.GamePriceEntity
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.AddToFavoritesUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetAllGamesUseCase
@@ -35,10 +33,9 @@ class GamesViewModel(
     private val getFavoritesUseCase: GetFavoritesUseCase,
     private val getPriceHistoryUseCase: GetPriceHistoryUseCase,
     private val getGamesByTagUseCase: GetGamesByTagUseCase,
-    private val cheapSharkService: CheapSharkService? = null,
-    private val steamPriceService: SteamPriceService? = null,
+    private val priceRefreshManager: PriceRefreshManager? = null,
     private val dolarService: DolarService? = null,
-    private val gamePriceDao: GamePriceDao? = null,
+    private val epicPriceService: EpicPriceService? = null,
     private val gameImageDao: GameImageDao? = null,
     private val connectivityObserver: ConnectivityObserver? = null
 ) : ViewModel() {
@@ -64,9 +61,9 @@ class GamesViewModel(
     private val _showDLCs = MutableStateFlow(false)
     val showDLCs: StateFlow<Boolean> = _showDLCs.asStateFlow()
 
-    // CheapShark real prices for the currently viewed game
-    private val _realPrices = MutableStateFlow<List<GamePrice>>(emptyList())
-    val realPrices: StateFlow<List<GamePrice>> = _realPrices.asStateFlow()
+    // Real Argentine prices from all stores
+    private val _storePrices = MutableStateFlow<List<StorePrice>>(emptyList())
+    val storePrices: StateFlow<List<StorePrice>> = _storePrices.asStateFlow()
 
     private val _isLoadingPrices = MutableStateFlow(false)
     val isLoadingPrices: StateFlow<Boolean> = _isLoadingPrices.asStateFlow()
@@ -79,17 +76,13 @@ class GamesViewModel(
     private val _pricesFromCache = MutableStateFlow(false)
     val pricesFromCache: StateFlow<Boolean> = _pricesFromCache.asStateFlow()
 
-    // Currency toggle: true = show ARS, false = show USD
-    private val _showArs = MutableStateFlow(false)
-    val showArs: StateFlow<Boolean> = _showArs.asStateFlow()
-
-    // Dólar tarjeta sell rate (fetched from DolarAPI)
+    // Dólar tarjeta sell rate (for GOG USD→ARS conversion display)
     private val _dolarTarjetaRate = MutableStateFlow<Double?>(null)
     val dolarTarjetaRate: StateFlow<Double?> = _dolarTarjetaRate.asStateFlow()
 
-    // Steam header image URL (for non-CheapShark games or better quality)
-    private val _steamHeaderImage = MutableStateFlow<String?>(null)
-    val steamHeaderImage: StateFlow<String?> = _steamHeaderImage.asStateFlow()
+    // Dynamic game image URL fetched from store APIs (used as fallback for non-Steam games)
+    private val _gameDetailImageUrl = MutableStateFlow<String?>(null)
+    val gameDetailImageUrl: StateFlow<String?> = _gameDetailImageUrl.asStateFlow()
 
     init {
         loadAllGames()
@@ -106,9 +99,6 @@ class GamesViewModel(
         }
     }
 
-    /**
-     * Fetch the dólar tarjeta rate for USD→ARS conversion.
-     */
     private fun loadDolarRate() {
         val service = dolarService ?: return
         viewModelScope.launch {
@@ -117,22 +107,12 @@ class GamesViewModel(
                 if (cotizacion != null) {
                     _dolarTarjetaRate.value = cotizacion.venta
                 }
-            } catch (_: Exception) {
-                // Will use fallback rate
-            }
-        }
-    }
-
-    fun toggleCurrency() {
-        _showArs.value = !_showArs.value
-        // Refresh dolar rate if switching to ARS and rate is stale
-        if (_showArs.value && _dolarTarjetaRate.value == null) {
-            loadDolarRate()
+            } catch (_: Exception) { }
         }
     }
 
     /**
-     * Convert a USD price to ARS using the current dólar tarjeta rate.
+     * Convert a USD price to ARS using dólar tarjeta rate.
      */
     fun convertToArs(usdPrice: Float): Float {
         return ArgentineTaxCalculator.usdToArs(usdPrice, _dolarTarjetaRate.value)
@@ -145,8 +125,14 @@ class GamesViewModel(
             _selectedTag.value = null
             getAllGamesUseCase().onSuccess { games ->
                 _allGames.value = games
-                // Cache game images in Room
                 cacheGameImages(games)
+                // Populate Steam App ID map for the PriceRefreshManager
+                priceRefreshManager?.setSteamAppIds(
+                    games.filter { it.steamAppId > 0 }
+                        .associate { it.name to it.steamAppId }
+                )
+                // Fetch images for non-Steam games from their available stores
+                fetchMissingImages(games)
             }.onFailure { exception ->
                 _error.value = exception.message
             }
@@ -154,21 +140,43 @@ class GamesViewModel(
         }
     }
 
-    /**
-     * Cache game images in Room for offline use.
-     */
     private suspend fun cacheGameImages(games: List<Game>) {
         val dao = gameImageDao ?: return
         val entities = games.map { game ->
-            GameImageEntity(
-                gameId = game.id,
-                gameName = game.name,
-                imageUrl = game.imageUrl
-            )
+            GameImageEntity(gameId = game.id, gameName = game.name, imageUrl = game.imageUrl)
         }
-        try {
-            dao.insertAll(entities)
-        } catch (_: Exception) { }
+        try { dao.insertAll(entities) } catch (_: Exception) { }
+    }
+
+    /**
+     * For games with no image (empty imageUrl), fetch from Epic Games Store.
+     * Only targets games that list "Epic Games" in their available platforms.
+     * Updates the games list in-place with the fetched image URLs.
+     */
+    private fun fetchMissingImages(games: List<Game>) {
+        val epic = epicPriceService ?: return
+        val needsImage = games.filter { it.imageUrl.isEmpty() && it.availablePlatforms.contains("Epic Games") }
+        if (needsImage.isEmpty()) return
+
+        viewModelScope.launch {
+            var updated = false
+            val currentGames = _allGames.value.toMutableList()
+            for (game in needsImage) {
+                try {
+                    val imageUrl = epic.fetchGameImage(game.name)
+                    if (!imageUrl.isNullOrEmpty()) {
+                        val idx = currentGames.indexOfFirst { it.id == game.id }
+                        if (idx >= 0) {
+                            currentGames[idx] = currentGames[idx].copy(imageUrl = imageUrl)
+                            updated = true
+                        }
+                    }
+                } catch (_: Exception) { }
+            }
+            if (updated) {
+                _allGames.value = currentGames
+            }
+        }
     }
 
     fun getGameById(id: Int) {
@@ -230,110 +238,60 @@ class GamesViewModel(
     }
 
     /**
-     * Load real prices from CheapShark API for a game.
-     * Also fetches the Steam header image for better quality.
-     * If online: fetch from API, compare with cached prices, update Room if changed.
-     * If offline: load from Room cache.
+     * Load prices for a game.
+     *
+     * - **Online**: ALWAYS fetch fresh prices from APIs. No stale-cache shortcut.
+     *   Only falls back to cache if the fetch returns empty or fails.
+     * - **Offline**: Show cached prices with a warning.
      */
     fun loadRealPrices(gameName: String, steamAppId: Int? = null) {
-        val service = cheapSharkService ?: return
+        val manager = priceRefreshManager ?: return
         viewModelScope.launch {
             _isLoadingPrices.value = true
-            _realPrices.value = emptyList()
             _pricesFromCache.value = false
-            _steamHeaderImage.value = null
+            _gameDetailImageUrl.value = null
 
-            val online = connectivityObserver?.isConnected() ?: true
+            val online = _isOnline.value
 
             if (online) {
-                // Fetch Steam header image if app ID is known
-                if (steamAppId != null && steamAppId > 0) {
-                    try {
-                        val steamDetails = steamPriceService?.getAppDetails(steamAppId)
-                        if (steamDetails != null && steamDetails.headerImageUrl.isNotEmpty()) {
-                            _steamHeaderImage.value = steamDetails.headerImageUrl
-                        }
-                    } catch (_: Exception) { }
-                }
-
+                // Always fetch fresh data when online
                 try {
-                    val searchResults = service.searchGame(gameName)
-                    if (searchResults.isNotEmpty()) {
-                        val cheapSharkId = searchResults.first().gameID
-                        val prices = service.getGameDeals(cheapSharkId)
-                        _realPrices.value = prices
-
-                        // Cache prices in Room, only update if prices changed
-                        cachePricesIfChanged(gameName, prices)
+                    val fresh = manager.fetchAndCachePrices(gameName, steamAppId)
+                    if (fresh.isNotEmpty()) {
+                        _storePrices.value = fresh
+                        _pricesFromCache.value = false
+                        // Extract image URL from store results (for non-Steam games)
+                        val img = fresh.firstNotNullOfOrNull {
+                            it.imageUrl.takeIf { url -> url.isNotEmpty() }
+                        }
+                        if (img != null) _gameDetailImageUrl.value = img
+                    } else {
+                        // API returned nothing — try cache silently (no warning)
+                        val cached = manager.getCachedPrices(gameName)
+                        _storePrices.value = cached
+                        _pricesFromCache.value = false
                     }
                 } catch (_: Exception) {
-                    // Network failed — try loading from cache
-                    loadCachedPrices(gameName)
+                    // Fetch failed — fall back to cache with warning
+                    val cached = manager.getCachedPrices(gameName)
+                    _storePrices.value = cached
+                    _pricesFromCache.value = cached.isNotEmpty()
                 }
             } else {
-                // Offline — load from cache
-                loadCachedPrices(gameName)
+                // Offline — use cache and show warning
+                val cached = manager.getCachedPrices(gameName)
+                _storePrices.value = cached
+                _pricesFromCache.value = cached.isNotEmpty()
             }
+
             _isLoadingPrices.value = false
         }
     }
 
-    /**
-     * Compare fetched prices with cached ones. Only update Room if there's a difference.
-     */
-    private suspend fun cachePricesIfChanged(gameName: String, newPrices: List<GamePrice>) {
-        val dao = gamePriceDao ?: return
-        try {
-            val cached = dao.getPricesForGameByName(gameName)
-            val cachedMap = cached.associate { it.storeName to it.currentPrice }
-
-            val hasChanges = newPrices.any { price ->
-                cachedMap[price.storeName] != price.currentPrice
-            } || newPrices.size != cached.size
-
-            if (hasChanges) {
-                dao.deletePricesForGameByName(gameName)
-                dao.insertAll(newPrices.map { price ->
-                    GamePriceEntity(
-                        gameId = 0,
-                        gameName = gameName,
-                        storeName = price.storeName,
-                        currentPrice = price.currentPrice,
-                        retailPrice = price.retailPrice,
-                        savings = price.savings,
-                        dealUrl = price.dealUrl
-                    )
-                })
-            }
-        } catch (_: Exception) { }
-    }
-
-    /**
-     * Load prices from Room cache when offline.
-     */
-    private suspend fun loadCachedPrices(gameName: String) {
-        val dao = gamePriceDao ?: return
-        try {
-            val cached = dao.getPricesForGameByName(gameName)
-            if (cached.isNotEmpty()) {
-                _realPrices.value = cached.map { entity ->
-                    GamePrice(
-                        storeName = entity.storeName,
-                        currentPrice = entity.currentPrice,
-                        retailPrice = entity.retailPrice,
-                        savings = entity.savings,
-                        dealUrl = entity.dealUrl
-                    )
-                }
-                _pricesFromCache.value = true
-            }
-        } catch (_: Exception) { }
-    }
-
     fun clearRealPrices() {
-        _realPrices.value = emptyList()
+        _storePrices.value = emptyList()
         _pricesFromCache.value = false
-        _steamHeaderImage.value = null
+        _gameDetailImageUrl.value = null
     }
 
     fun toggleFavorite(game: Game) {
@@ -343,16 +301,12 @@ class GamesViewModel(
                 removeFromFavoritesUseCase(game.id).onSuccess {
                     refreshGames()
                     loadFavorites()
-                }.onFailure { exception ->
-                    _error.value = exception.message
-                }
+                }.onFailure { _error.value = it.message }
             } else {
                 addToFavoritesUseCase(game).onSuccess {
                     refreshGames()
                     loadFavorites()
-                }.onFailure { exception ->
-                    _error.value = exception.message
-                }
+                }.onFailure { _error.value = it.message }
             }
         }
     }
@@ -372,16 +326,11 @@ class GamesViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            getFavoritesUseCase().onSuccess { favorites ->
-                _favorites.value = favorites
-            }.onFailure { exception ->
-                _error.value = exception.message
-            }
+            getFavoritesUseCase().onSuccess { _favorites.value = it }
+                .onFailure { _error.value = it.message }
             _isLoading.value = false
         }
     }
 
-    fun clearError() {
-        _error.value = null
-    }
+    fun clearError() { _error.value = null }
 }

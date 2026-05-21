@@ -2,9 +2,10 @@
     <string name="app_name">DesaAppsAvalosKoOrtuzarVargas</string>
 
     <string name="nav_offers">Offers</string>
-    <string name="nav_catalog">Catalog</string>
+    <string name="nav_catalog">Explore</string>
     <string name="nav_news">News</string>
     <string name="nav_settings">Settings</string>
+    <string name="nav_favorites">Favorites</string>
 
     <string name="action_search">Search</string>
     <string name="action_save">Save</string>
@@ -52,12 +53,23 @@
     <string name="offers_filter_temp_free">Temp. Free</string>
     <string name="offers_filter_f2p">F2P</string>
     <string name="offers_filter_all_free">All Free</string>
-    <string name="offers_no_discounts">No discounts available</string>
+    <string name="offers_no_discounts">None of the games in your catalog have active discounts right now. Check back later!</string>
 
-    <string name="game_available_on">Available on</string>
+    <string name="offers_tab_price_drops">Price Drops</string>
+    <string name="offers_no_price_drops">No permanent price drops detected yet. We track base price changes over time.</string>
+    <string name="badge_price_drop">💰 Price Drop</string>
+    <string name="price_new_base">New price: $%1$.2f</string>
+    <string name="offer_ended">Offer ended</string>
+    <string name="offer_countdown_hours">%1$dh %2$dm remaining</string>
+    <string name="offer_countdown_date">Until %1$s</string>
+    <string name="offer_on_sale">On sale now</string>
+
+    <string name="game_available_on_header">Available on</string>
     <string name="game_release_date">Release Date</string>
-    <string name="game_rating_label">Rating</string>
+    <string name="game_rating_label">Metacritic Rating</string>
     <string name="game_rating_format">%1$.1f / 10</string>
+    <string name="game_rating_star">★ %1$.1f</string>
+    <string name="game_rating_source">Metacritic</string>
     <string name="game_historical_discount">Historical Discount</string>
     <string name="game_description">Description</string>
     <string name="game_prices">Prices</string>
@@ -76,7 +88,8 @@
     <string name="game_historical_discount_short">Historical discount: %1$d%%</string>
     <string name="game_dlcs_available">%1$d DLC(s) available</string>
     <string name="game_price_platform">%1$s: $%2$.2f</string>
-    <string name="game_rating_star">★ %1$.1f</string>
+    <string name="game_available_on">🆓 Available on %1$s</string>
+    <string name="game_free_to_play_label">Free to Play</string>
 
     <string name="badge_f2p">F2P</string>
     <string name="badge_free">FREE</string>
@@ -100,5 +113,28 @@
     <string name="offline_banner">You are offline. Prices may be outdated.</string>
     <string name="prices_from_cache">⚠ Prices loaded from cache (may be outdated)</string>
     <string name="label_coming_soon">coming soon</string>
-    <string name="dolar_tarjeta_rate">💳 Dólar tarjeta: ARS $%1$s (incl. taxes)</string>
+    <string name="dolar_tarjeta_rate">💳 Estimated price with Argentine card (rate: $%1$s)</string>
+    <string name="ars_price_disclaimer">Includes IVA and tax withholdings. Actual price may vary by card.</string>
+    <string name="favorites_empty">No favorites yet. Explore games and add them to your list!</string>
+    <string name="favorites_header">Your Games</string>
+
+    <!-- Regional pricing -->
+    <string name="prices_argentina_header">Prices in Argentina</string>
+    <string name="prices_argentina_subtitle">Real prices fetched directly from each store for Argentina</string>
+    <string name="steam_ar_regional_label">Regional price (publisher-set for Argentina)</string>
+    <string name="steam_ar_tax_note">💳 This is the base price. With card taxes (IVA + Ganancias) the final cost may be higher.</string>
+    <string name="steam_us_reference_label">US price (reference only)</string>
+    <string name="international_prices_header">Other Stores (international prices)</string>
+    <string name="international_prices_disclaimer">These are US/global prices in USD. The actual price in your region may differ.</string>
+
+    <!-- Currency toggle & reference prices -->
+    <string name="currency_display_label">Display currency</string>
+    <string name="game_prices_header">Prices</string>
+    <string name="game_prices_subtitle">Live prices from stores and catalog reference</string>
+    <string name="game_reference_prices">Other Store Prices</string>
+    <string name="game_reference_prices_note">Reference prices from catalog (USD). Actual store prices may differ.</string>
+    <string name="game_price_ars_approx">≈ %1$s</string>
+    <string name="price_regional_label">Regional price (Argentina)</string>
+    <string name="price_currency_label">Price in %1$s</string>
+    <string name="price_ref_label">(ref.)</string>
 </resources>

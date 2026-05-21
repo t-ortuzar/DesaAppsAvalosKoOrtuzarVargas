@@ -195,11 +195,11 @@ class GamesViewModelTest {
     @Test
     fun `loadRealPrices without service does nothing`() = runTest(dispatcher) {
         whenever(getAllGames.invoke()).thenReturn(Result.success(emptyList()))
-        val vm = createViewModel() // no cheapSharkService
+        val vm = createViewModel() // no price services
         advanceUntilIdle()
         vm.loadRealPrices("test")
         advanceUntilIdle()
-        assertTrue(vm.realPrices.value.isEmpty())
+        assertTrue(vm.storePrices.value.isEmpty())
     }
 
     @Test
@@ -208,7 +208,7 @@ class GamesViewModelTest {
         val vm = createViewModel()
         advanceUntilIdle()
         vm.clearRealPrices()
-        assertTrue(vm.realPrices.value.isEmpty())
+        assertTrue(vm.storePrices.value.isEmpty())
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetFavoriteDisco
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetHistoricalLowDiscountsUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetFreeGamesUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetFavoritesUseCase
+import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetPriceDropsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +19,8 @@ class OffersViewModel(
     private val getFavoriteDiscountsUseCase: GetFavoriteDiscountsUseCase,
     private val getHistoricalLowDiscountsUseCase: GetHistoricalLowDiscountsUseCase,
     private val getFreeGamesUseCase: GetFreeGamesUseCase,
-    private val getFavoritesUseCase: GetFavoritesUseCase
+    private val getFavoritesUseCase: GetFavoritesUseCase,
+    private val getPriceDropsUseCase: GetPriceDropsUseCase
 ) : ViewModel() {
 
     private val _currentDiscounts = MutableStateFlow<List<DiscountedGame>>(emptyList())
@@ -33,9 +35,11 @@ class OffersViewModel(
     private val _freeGames = MutableStateFlow<List<DiscountedGame>>(emptyList())
     val freeGames: StateFlow<List<DiscountedGame>> = _freeGames.asStateFlow()
 
+    private val _priceDrops = MutableStateFlow<List<DiscountedGame>>(emptyList())
+    val priceDrops: StateFlow<List<DiscountedGame>> = _priceDrops.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
 
     private val _filterType = MutableStateFlow(FilterType.ALL)
     val filterType: StateFlow<FilterType> = _filterType.asStateFlow()
@@ -52,7 +56,7 @@ class OffersViewModel(
     private var allFreeGamesCache = emptyList<DiscountedGame>()
 
     enum class FilterType {
-        ALL, FAVORITES, HISTORICAL_LOW, FREE
+        ALL, FAVORITES, HISTORICAL_LOW, FREE, PRICE_DROPS
     }
 
     enum class FreeFilter {
@@ -68,7 +72,9 @@ class OffersViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             getCurrentDiscountsUseCase().onSuccess { discounts ->
-                _currentDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
+                _currentDiscounts.value = applyPlatformFilter(
+                    discounts.sortedByDescending { it.discountPercentage }
+                )
                 _filterType.value = FilterType.ALL
             }
             _isLoading.value = false
@@ -81,7 +87,9 @@ class OffersViewModel(
             getFavoritesUseCase().onSuccess { favorites ->
                 val favoriteIds = favorites.map { it.id }
                 getFavoriteDiscountsUseCase(favoriteIds).onSuccess { discounts ->
-                    _favoriteDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
+                    _favoriteDiscounts.value = applyPlatformFilter(
+                        discounts.sortedByDescending { it.discountPercentage }
+                    )
                     _filterType.value = FilterType.FAVORITES
                 }
             }
@@ -93,7 +101,9 @@ class OffersViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             getHistoricalLowDiscountsUseCase().onSuccess { discounts ->
-                _historicalLowDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
+                _historicalLowDiscounts.value = applyPlatformFilter(
+                    discounts.sortedByDescending { it.discountPercentage }
+                )
                 _filterType.value = FilterType.HISTORICAL_LOW
             }
             _isLoading.value = false
@@ -106,6 +116,17 @@ class OffersViewModel(
             getFreeGamesUseCase().onSuccess { freeGames ->
                 allFreeGamesCache = freeGames
                 applyFreeFilter()
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun loadPriceDrops() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            getPriceDropsUseCase().onSuccess { drops ->
+                _priceDrops.value = applyPlatformFilter(drops)
+                _filterType.value = FilterType.PRICE_DROPS
             }
             _isLoading.value = false
         }
@@ -138,6 +159,7 @@ class OffersViewModel(
             FilterType.FAVORITES -> loadFavoriteDiscounts()
             FilterType.HISTORICAL_LOW -> loadHistoricalLowDiscounts()
             FilterType.FREE -> applyFreeFilter()
+            FilterType.PRICE_DROPS -> loadPriceDrops()
         }
     }
 
@@ -151,4 +173,3 @@ class OffersViewModel(
         loadCurrentDiscounts()
     }
 }
-

@@ -12,15 +12,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,23 +39,28 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.OffersVi
 fun OffersScreen(
     viewModel: OffersViewModel,
     onDiscountSelected: (DiscountedGame) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    dolarRate: Double? = null,
+    convertToArs: (Float) -> Float = { it }
 ) {
     val currentDiscounts by viewModel.currentDiscounts.collectAsState()
     val favoriteDiscounts by viewModel.favoriteDiscounts.collectAsState()
     val historicalLowDiscounts by viewModel.historicalLowDiscounts.collectAsState()
     val freeGames by viewModel.freeGames.collectAsState()
+    val priceDrops by viewModel.priceDrops.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val freeFilter by viewModel.freeFilter.collectAsState()
     val selectedPlatform by viewModel.selectedPlatform.collectAsState()
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var showInArs by remember { mutableStateOf(true) }
 
     val tabs = listOf(
         R.string.offers_tab_discounts,
         R.string.offers_tab_favorites,
         R.string.offers_tab_hist_low,
-        R.string.offers_tab_free
+        R.string.offers_tab_free,
+        R.string.offers_tab_price_drops
     )
 
     Column(
@@ -62,7 +68,10 @@ fun OffersScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        TabRow(selectedTabIndex = selectedTabIndex) {
+        ScrollableTabRow(
+            selectedTabIndex = selectedTabIndex,
+            edgePadding = 0.dp
+        ) {
             tabs.forEachIndexed { index, titleRes ->
                 Tab(
                     selected = selectedTabIndex == index,
@@ -73,6 +82,7 @@ fun OffersScreen(
                             1 -> viewModel.loadFavoriteDiscounts()
                             2 -> viewModel.loadHistoricalLowDiscounts()
                             3 -> viewModel.showFreeGames()
+                            4 -> viewModel.loadPriceDrops()
                         }
                     },
                     text = { Text(stringResource(titleRes)) }
@@ -81,6 +91,37 @@ fun OffersScreen(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
+
+        // Currency toggle + Platform filter chips
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Currency toggle
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FilterChip(
+                    selected = showInArs,
+                    onClick = { showInArs = true },
+                    label = { Text("ARS 🇦🇷") }
+                )
+                FilterChip(
+                    selected = !showInArs,
+                    onClick = { showInArs = false },
+                    label = { Text("USD 🇺🇸") }
+                )
+            }
+        }
+
+        if (showInArs && dolarRate != null) {
+            Text(
+                text = stringResource(R.string.dolar_tarjeta_rate, String.format(java.util.Locale.US, "%.2f", dolarRate)),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Platform filter chips
         Row(
@@ -139,19 +180,28 @@ fun OffersScreen(
             1 -> favoriteDiscounts
             2 -> historicalLowDiscounts
             3 -> freeGames
+            4 -> priceDrops
             else -> currentDiscounts
         }
 
         LoadingContent(
             isLoading = isLoading,
             items = displayedDiscounts,
-            emptyMessage = stringResource(R.string.offers_no_discounts)
+            emptyMessage = stringResource(
+                when (selectedTabIndex) {
+                    4 -> R.string.offers_no_price_drops
+                    else -> R.string.offers_no_discounts
+                }
+            )
         ) { discounts ->
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(discounts) { discount ->
                     DiscountCard(
                         discount = discount,
-                        onGameClick = onDiscountSelected
+                        onGameClick = onDiscountSelected,
+                        showInArs = showInArs,
+                        dolarRate = dolarRate,
+                        convertToArs = convertToArs
                     )
                 }
             }

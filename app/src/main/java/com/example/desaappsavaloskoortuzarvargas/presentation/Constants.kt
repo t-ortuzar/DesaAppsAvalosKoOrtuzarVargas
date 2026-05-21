@@ -11,6 +11,7 @@ object AppColors {
     val FreeGreen = Color(0xFF4CAF50)
     val HistoricalGold = Color(0xFFFFD700)
     val UrgentOrange = Color(0xFFFF9800)
+    val PriceDropPurple = Color(0xFF9C27B0)
 }
 
 /**
@@ -25,6 +26,6 @@ val POPULAR_TAGS = listOf(
  * Platform names used as filter chips in the offers screen.
  */
 val STORE_PLATFORMS = listOf(
-    "Steam", "Epic Games", "GOG", "EA Play", "Ubisoft+", "Battle.net", "G2A", "Eneba"
+    "Steam", "Epic Games", "GOG", "Xbox / Microsoft", "EA", "Ubisoft", "Battle.net"
 )
 

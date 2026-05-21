@@ -4,6 +4,11 @@ package com.example.desaappsavaloskoortuzarvargas.data.api
  * Calculates the final price in ARS for Argentine digital purchases,
  * following the same model as Steamcito (https://steamcito.com.ar).
  *
+ * IMPORTANT: This should ONLY be used for converting USD prices (e.g., from
+ * GOG, which may return USD for Argentina) to an approximate ARS equivalent.
+ * For Steam and Epic Games, use their respective services with cc=ar/country=AR
+ * with cc=ar to get the REAL publisher-set regional price in ARS directly.
+ *
  * When paying with credit/debit card in Argentina, digital purchases
  * are subject to multiple taxes on top of the base USD price:
  *
