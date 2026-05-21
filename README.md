@@ -86,6 +86,21 @@ La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
   - `GameCard`: Tarjeta para mostrar un juego
   - `NewsCard`: Tarjeta para mostrar noticia
   - `DiscountCard`: Tarjeta para mostrar descuento
+  - `SharedComponents.kt`: 9 componentes extraídos para reutilización:
+    - `CardHeaderImage`: Imagen header reutilizable para cards
+    - `LoadingContent<T>`: Handler genérico de estados loading/empty/content
+    - `SettingsCard`: Wrapper consistente para secciones de settings
+    - `DetailSection`: Sección título+valor para pantallas de detalle
+    - `SectionHeader`: Título de sección en negrita
+    - `TagChips`: Chips de tags con scroll horizontal
+    - `PriceBadge`: Badge coloreado para precios/descuentos
+    - `LabeledSwitchRow`: Fila con label + switch
+    - `FavoriteButton`: Botón de favoritos reutilizable
+  
+- **Constants**: Constantes centralizadas
+  - `AppColors`: Colores de la app (F2PBlue, FreeGreen, HistoricalGold, UrgentOrange)
+  - `POPULAR_TAGS`: Lista de tags populares
+  - `STORE_PLATFORMS`: Lista de plataformas de tiendas
   
 - **Screens**: Pantallas principales
   - `GamesScreen`: Catálogo de juegos con búsqueda y filtros por tag
@@ -105,10 +120,10 @@ La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
 ### **Capa de Dominio (Domain Layer)**
 - **Models**: Entidades de dominio
   - `Game`: Representa un videojuego
+  - `DLC`: Representa un DLC/expansión
   - `News`: Representa una noticia
   - `DiscountedGame`: Representa un juego en descuento
   - `PriceHistory`: Historial de precios
-  - `Platform`: Información de plataforma
   - `UserSettings`: Configuración del usuario (nombre, email, país, countryCode, notificaciones)
   - `CountryInfo`: Info de país (name, code, steamCc, currency)
   - `InAppNotification`: Notificación in-app
@@ -169,6 +184,9 @@ La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
 - **Kotlinx Serialization**: Serialización JSON
 - **Coil**: Carga de imágenes desde URL (Steam CDN, gaming-cdn.com)
 - **Material Design 3**: Diseño UI con tema oscuro
+- **JaCoCo**: Reporte de cobertura de tests
+- **Mockito-Kotlin**: Mocking para tests unitarios
+- **Kotlinx Coroutines Test**: Testing de coroutines
 
 ## 📁 Estructura del Proyecto
 
@@ -176,29 +194,60 @@ La aplicación sigue el patrón de **Clean Architecture** dividida en 3 capas:
 app/src/main/java/com/example/desaappsavaloskoortuzarvargas/
 ├── data/
 │   ├── api/
-│   │   └── CheapSharkService.kt
-│   ├── db/
-│   │   ├── AppDatabase.kt
-│   │   ├── DatabaseInitializer.kt
-│   │   ├── dao/  (DAOs para cada entidad)
-│   │   └── entity/  (Entidades Room)
+│   │   └── CheapSharkService.kt          # API client + data classes + StoreRegionAvailability
+│   ├── local/
+│   │   └── SettingsDataStore.kt           # DataStore para persistencia de settings
 │   ├── mock/
-│   │   └── MockDataGenerator.kt
-│   ├── mapper/
-│   │   └── Mappers.kt
-│   └── repository/  (Implementaciones)
+│   │   └── MockDataGenerator.kt           # Generador de datos de demo
+│   └── repository/                        # Implementaciones de repositorios
 ├── domain/
-│   ├── model/  (Entidades de dominio + CountryInfo, UserSettings, Tags)
-│   ├── repository/  (Interfaces)
-│   └── usecase/  (Use cases)
+│   ├── model/                             # Entidades de dominio
+│   ├── repository/                        # Interfaces de repositorios
+│   └── usecase/                           # Use cases
 ├── presentation/
-│   ├── component/  (Composables reutilizables)
-│   ├── screen/  (7 pantallas: Games, Offers, News, Settings, GameDetail, NewsDetail, Main)
-│   └── viewmodel/  (4 ViewModels)
+│   ├── component/
+│   │   ├── GameCard.kt
+│   │   ├── NewsCard.kt
+│   │   ├── DiscountCard.kt
+│   │   └── SharedComponents.kt            # 9 componentes reutilizables extraídos
+│   ├── screen/                            # 7 pantallas
+│   ├── viewmodel/                         # 4 ViewModels
+│   └── Constants.kt                       # Colores y constantes centralizadas
 ├── di/
-│   └── Modules.kt  (Configuración Hilt)
+│   └── ServiceLocator.kt                  # Inyección de dependencias
 ├── MainActivity.kt
-└── GameTrackerApp.kt  (Application class)
+└── GameTrackerApp.kt
+
+app/src/test/java/com/example/desaappsavaloskoortuzarvargas/
+├── data/
+│   ├── api/
+│   │   ├── CheapSharkServiceTest.kt       # Tests de getStoreName + data classes
+│   │   ├── CheapSharkDataClassesTest.kt   # Tests de defaults de data classes
+│   │   └── StoreRegionAvailabilityTest.kt # Tests de disponibilidad regional
+│   ├── mock/
+│   │   └── MockDataGeneratorTest.kt       # Tests de generación de datos
+│   └── repository/
+│       ├── GameRepositoryImplTest.kt      # Tests de repositorio de juegos
+│       ├── DiscountRepositoryImplTest.kt  # Tests de repositorio de descuentos
+│       └── NewsRepositoryImplTest.kt      # Tests de repositorio de noticias
+├── domain/
+│   ├── model/
+│   │   ├── UserSettingsTest.kt            # Tests de modelos de settings
+│   │   ├── GameModelTest.kt              # Tests de Game, DLC, PriceHistory
+│   │   ├── DiscountModelTest.kt          # Tests de DiscountedGame
+│   │   └── NewsModelTest.kt             # Tests de News
+│   └── usecase/
+│       ├── GameUseCaseTest.kt            # Tests de use cases de juegos
+│       ├── DiscountUseCaseTest.kt        # Tests de use cases de descuentos
+│       ├── NewsUseCaseTest.kt            # Tests de use cases de noticias
+│       └── SettingsUseCaseTest.kt        # Tests de use cases de settings
+└── presentation/
+    ├── ConstantsTest.kt                  # Tests de constantes
+    └── viewmodel/
+        ├── GamesViewModelTest.kt         # Tests de GamesViewModel
+        ├── OffersViewModelTest.kt        # Tests de OffersViewModel
+        ├── NewsViewModelTest.kt          # Tests de NewsViewModel
+        └── SettingsViewModelTest.kt      # Tests de SettingsViewModel
 ```
 
 ## 🚀 Funcionalidades por Pantalla
@@ -339,7 +388,48 @@ implementation(libs.coil.compose)
 
 // Serialization
 implementation(libs.kotlinx.serialization.json)
+
+// Testing
+testImplementation(libs.junit)
+testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+testImplementation("org.mockito:mockito-core:5.11.0")
+testImplementation("org.mockito.kotlin:mockito-kotlin:5.3.1")
+testImplementation("app.cash.turbine:turbine:1.1.0")
 ```
+
+## 🧪 Tests y Cobertura
+
+### Ejecución de Tests
+```bash
+# Ejecutar todos los tests unitarios
+./gradlew testDebugUnitTest
+
+# Generar reporte de cobertura JaCoCo
+./gradlew jacocoTestReport
+# Reporte HTML en: app/build/reports/jacoco/index.html
+```
+
+### Resultados
+- **194 tests**, 0 failures, 0 errors
+- **94% cobertura de instrucciones**, 71% cobertura de branches
+
+### Cobertura por Paquete
+| Paquete | Instrucciones | Branches |
+|---------|:---:|:---:|
+| `presentation` (Constants) | **100%** | n/a |
+| `data.mock` (MockDataGenerator) | **99%** | 84% |
+| `data.api` (data classes + StoreRegion) | **98%** | **100%** |
+| `domain.model` | **97%** | **100%** |
+| `presentation.viewmodel` | **86%** | 70% |
+| `data.repository` | **80%** | 92% |
+| `domain.usecase` | 79% | 50%* |
+
+\* *El 50% de branches en use cases es una limitación conocida de JaCoCo con Kotlin coroutines — genera branches del state machine del compilador que no se pueden cubrir desde código de usuario.*
+
+### Clases Excluidas de Cobertura (requieren tests de integración)
+- UI/Compose: screens, components, themes
+- Android Context: `ServiceLocator`, `SettingsDataStore`, `UserSettingsRepositoryImpl`
+- Red HTTP: métodos de `CheapSharkService` (searchGame, getGameDeals, etc.)
 
 ## 🚀 Próximas Mejoras Potenciales
 
@@ -350,6 +440,8 @@ implementation(libs.kotlinx.serialization.json)
 - [x] Notificaciones in-app
 - [x] Selector de país con banderas emoji
 - [x] Tema oscuro
+- [x] Code cleanup: componentes compartidos, constantes centralizadas, eliminación de código muerto
+- [x] Tests unitarios con 94% de cobertura (JaCoCo)
 - [ ] Pricing regional real (IsThereAnyDeal API o Steam API con parámetro `cc`)
 - [ ] Notificaciones push en tiempo real
 - [ ] Sincronización con la nube
@@ -364,11 +456,14 @@ implementation(libs.kotlinx.serialization.json)
 
 - **Clean Architecture**: La separación en 3 capas permite fácil testing y mantenimiento
 - **MVVM + StateFlow**: Patrón reactivo con Compose
-- **Room + Mock Data**: Los datos se regeneran en cada instalación (para demo)
+- **Mock Data**: Los datos se regeneran en cada instalación (para demo)
 - **Modular**: Fácil de escalar y agregar nuevas funcionalidades
 - **Steam App IDs verificados**: Cada juego tiene su ID real de Steam para mostrar la imagen correcta
 - **Banderas Unicode**: Las banderas se generan con Regional Indicator Symbols, sin necesidad de assets de imágenes
 - **CheapShark API**: Precios reales de tiendas digitales (región US). Para pricing regional se requeriría IsThereAnyDeal API o Steam Store API con parámetro `cc`
+- **Code Cleanup**: Componentes compartidos extraídos (`SharedComponents.kt`), constantes centralizadas (`Constants.kt`), código muerto eliminado
+- **Testing**: 194 tests unitarios con JaCoCo coverage (94% instrucciones). Tests cubren modelos, use cases, ViewModels, repositorios y data classes
+- **Disponibilidad regional de tiendas**: `StoreRegionAvailability` filtra tiendas según el país del usuario
 
 ## 👨‍💻 Equipo
 
@@ -376,5 +471,5 @@ Avalos, Ko, Ortuzar, Vargas
 
 ---
 
-**Versión**: 2.0
+**Versión**: 3.0
 **Última actualización**: Mayo 2026
