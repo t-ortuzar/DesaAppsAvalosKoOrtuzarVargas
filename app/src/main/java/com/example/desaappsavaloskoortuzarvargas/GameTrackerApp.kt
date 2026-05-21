@@ -11,17 +11,17 @@ import kotlinx.coroutines.runBlocking
 
 class GameTrackerApp : Application() {
 
-	override fun onCreate() {
-		super.onCreate()
-		appContext = applicationContext
-		val languageCode = runBlocking {
-			applicationContext.settingsDataStore.data.first()[SettingsKeys.LANGUAGE_CODE] ?: "en"
-		}
-		AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageCode))
-	}
+    override fun onCreate() {
+        super.onCreate()
+        appContext = applicationContext
+        val languageCode = runBlocking {
+            applicationContext.settingsDataStore.data.first()[SettingsKeys.LANGUAGE_CODE] ?: "en"
+        }
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageCode))
+    }
 
-	companion object {
-		lateinit var appContext: Context
-			private set
-	}
+    companion object {
+        lateinit var appContext: Context
+            private set
+    }
 }
