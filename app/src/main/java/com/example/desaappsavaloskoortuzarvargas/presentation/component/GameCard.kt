@@ -1,8 +1,6 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -26,14 +23,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 
@@ -52,21 +46,13 @@ fun GameCard(
         shape = RoundedCornerShape(8.dp)
     ) {
         Column {
-            // Image
-            AsyncImage(
-                model = game.imageUrl,
+            CardHeaderImage(
+                imageUrl = game.imageUrl,
                 contentDescription = game.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
-                contentScale = ContentScale.Crop
+                height = 200.dp
             )
 
-            // Content
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
+            Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -103,40 +89,13 @@ fun GameCard(
                         }
                     }
 
-                    IconButton(
-                        onClick = { onFavoriteClick(game) },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (game.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = stringResource(R.string.content_desc_favorite),
-                            tint = if (game.isFavorite) Color.Red else Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+                    FavoriteButton(game = game, onClick = { onFavoriteClick(game) })
                 }
 
                 // Tags
                 if (game.tags.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        game.tags.forEach { tag ->
-                            Text(
-                                text = tag,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White,
-                                modifier = Modifier
-                                    .background(
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                        shape = RoundedCornerShape(4.dp)
-                                    )
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                    TagChips(tags = game.tags)
                 }
 
                 if (game.historicalDiscount > 0) {
@@ -191,19 +150,14 @@ fun GameCardSmall(
         shape = RoundedCornerShape(6.dp)
     ) {
         Column {
-            AsyncImage(
-                model = game.imageUrl,
+            CardHeaderImage(
+                imageUrl = game.imageUrl,
                 contentDescription = game.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)),
-                contentScale = ContentScale.Crop
+                height = 120.dp,
+                cornerRadius = 6.dp
             )
 
-            Column(
-                modifier = Modifier.padding(8.dp)
-            ) {
+            Column(modifier = Modifier.padding(8.dp)) {
                 Text(
                     text = game.name,
                     style = MaterialTheme.typography.labelMedium,
@@ -220,3 +174,29 @@ fun GameCardSmall(
         }
     }
 }
+
+/**
+ * Reusable favorite toggle button.
+ */
+@Composable
+fun FavoriteButton(
+    game: Game,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.size(40.dp)
+    ) {
+        Icon(
+            imageVector = if (game.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+            contentDescription = stringResource(R.string.content_desc_favorite),
+            tint = if (game.isFavorite) Color.Red else Color.Gray,
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+
+
+

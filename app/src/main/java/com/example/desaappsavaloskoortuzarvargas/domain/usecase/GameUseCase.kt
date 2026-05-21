@@ -31,9 +31,6 @@ class GetFavoritesUseCase(private val gameRepository: GameRepository) {
     suspend operator fun invoke(): Result<List<Game>> = gameRepository.getFavorites()
 }
 
-class IsFavoriteUseCase(private val gameRepository: GameRepository) {
-    suspend operator fun invoke(gameId: Int): Result<Boolean> = gameRepository.isFavorite(gameId)
-}
 
 class GetPriceHistoryUseCase(private val gameRepository: GameRepository) {
     suspend operator fun invoke(gameId: Int) = gameRepository.getPriceHistory(gameId)

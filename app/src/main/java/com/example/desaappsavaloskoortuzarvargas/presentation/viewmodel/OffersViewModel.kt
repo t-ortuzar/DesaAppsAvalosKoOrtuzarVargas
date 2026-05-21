@@ -36,8 +36,6 @@ class OffersViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
 
     private val _filterType = MutableStateFlow(FilterType.ALL)
     val filterType: StateFlow<FilterType> = _filterType.asStateFlow()
@@ -69,12 +67,9 @@ class OffersViewModel(
     fun loadCurrentDiscounts() {
         viewModelScope.launch {
             _isLoading.value = true
-            _error.value = null
             getCurrentDiscountsUseCase().onSuccess { discounts ->
                 _currentDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
                 _filterType.value = FilterType.ALL
-            }.onFailure { exception ->
-                _error.value = exception.message
             }
             _isLoading.value = false
         }
@@ -83,17 +78,12 @@ class OffersViewModel(
     fun loadFavoriteDiscounts() {
         viewModelScope.launch {
             _isLoading.value = true
-            _error.value = null
             getFavoritesUseCase().onSuccess { favorites ->
                 val favoriteIds = favorites.map { it.id }
                 getFavoriteDiscountsUseCase(favoriteIds).onSuccess { discounts ->
                     _favoriteDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
                     _filterType.value = FilterType.FAVORITES
-                }.onFailure { exception ->
-                    _error.value = exception.message
                 }
-            }.onFailure { exception ->
-                _error.value = exception.message
             }
             _isLoading.value = false
         }
@@ -102,12 +92,9 @@ class OffersViewModel(
     fun loadHistoricalLowDiscounts() {
         viewModelScope.launch {
             _isLoading.value = true
-            _error.value = null
             getHistoricalLowDiscountsUseCase().onSuccess { discounts ->
                 _historicalLowDiscounts.value = applyPlatformFilter(discounts.sortedByDescending { it.discountPercentage })
                 _filterType.value = FilterType.HISTORICAL_LOW
-            }.onFailure { exception ->
-                _error.value = exception.message
             }
             _isLoading.value = false
         }
@@ -116,12 +103,9 @@ class OffersViewModel(
     fun loadFreeGames() {
         viewModelScope.launch {
             _isLoading.value = true
-            _error.value = null
             getFreeGamesUseCase().onSuccess { freeGames ->
                 allFreeGamesCache = freeGames
                 applyFreeFilter()
-            }.onFailure { exception ->
-                _error.value = exception.message
             }
             _isLoading.value = false
         }
@@ -165,10 +149,6 @@ class OffersViewModel(
     fun resetFilter() {
         _filterType.value = FilterType.ALL
         loadCurrentDiscounts()
-    }
-
-    fun clearError() {
-        _error.value = null
     }
 }
 

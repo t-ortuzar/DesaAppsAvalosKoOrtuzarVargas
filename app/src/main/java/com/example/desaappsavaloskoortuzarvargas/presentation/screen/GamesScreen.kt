@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -25,13 +24,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
+import com.example.desaappsavaloskoortuzarvargas.presentation.POPULAR_TAGS
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.GameCard
+import com.example.desaappsavaloskoortuzarvargas.presentation.component.LoadingContent
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
 
 @Composable
@@ -44,10 +44,6 @@ fun GamesScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedTag by viewModel.selectedTag.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
-
-    // Popular tags to show as filters
-    val popularTags = listOf("Action", "RPG", "FPS", "Open World", "Horror", "Survival",
-        "Co-op", "Indie", "Puzzle", "Racing", "Sports", "Souls-like", "Roguelike", "Strategy")
 
     Column(
         modifier = modifier
@@ -86,14 +82,11 @@ fun GamesScreen(
                 label = { Text(stringResource(R.string.label_all)) },
                 selected = selectedTag == null
             )
-            popularTags.forEach { tag ->
+            POPULAR_TAGS.forEach { tag ->
                 FilterChip(
                     onClick = {
-                        if (selectedTag == tag) {
-                            viewModel.clearTagFilter()
-                        } else {
-                            viewModel.filterByTag(tag)
-                        }
+                        if (selectedTag == tag) viewModel.clearTagFilter()
+                        else viewModel.filterByTag(tag)
                     },
                     label = { Text(tag) },
                     selected = selectedTag == tag
@@ -103,30 +96,18 @@ fun GamesScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        when {
-            isLoading -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) { CircularProgressIndicator() }
-            }
-            allGames.isEmpty() -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) { Text(stringResource(R.string.games_no_results)) }
-            }
-            else -> {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(allGames) { game ->
-                        GameCard(
-                            game = game,
-                            onGameClick = onGameSelected,
-                            onFavoriteClick = { viewModel.toggleFavorite(it) }
-                        )
-                    }
+        LoadingContent(
+            isLoading = isLoading,
+            items = allGames,
+            emptyMessage = stringResource(R.string.games_no_results)
+        ) { games ->
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(games) { game ->
+                    GameCard(
+                        game = game,
+                        onGameClick = onGameSelected,
+                        onFavoriteClick = { viewModel.toggleFavorite(it) }
+                    )
                 }
             }
         }

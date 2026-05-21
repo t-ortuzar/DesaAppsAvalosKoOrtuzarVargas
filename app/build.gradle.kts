@@ -2,6 +2,11 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    jacoco
+}
+
+jacoco {
+    toolVersion = "0.8.12"
 }
 
 android {
@@ -28,6 +33,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
@@ -69,10 +77,41 @@ dependencies {
     implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.3.1")
+    testImplementation("app.cash.turbine:turbine:1.1.0")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco"))
+    }
+    val kotlinClasses = fileTree(layout.buildDirectory.dir("intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes")) {
+        exclude(
+            "**/R.class", "**/R\$*.class", "**/BuildConfig.*",
+            "**/Manifest*.*", "**/*Test*.*", "**/ComposableSingletons*.*",
+            "**/presentation/screen/**", "**/presentation/component/**",
+            "**/ui/theme/**", "**/MainActivity*", "**/GameTrackerApp*",
+            // Android-dependent classes (require Context/DataStore) - not unit testable
+            "**/di/ServiceLocator*", "**/data/local/**",
+            "**/data/repository/UserSettingsRepositoryImpl*",
+            // Network service with HTTP calls - requires integration tests
+            "**/data/api/CheapSharkService.class", "**/data/api/CheapSharkService\$*.class",
+            // Interfaces have no executable code
+            "**/domain/repository/**"
+        )
+    }
+    classDirectories.setFrom(kotlinClasses)
+    sourceDirectories.setFrom(files("src/main/java"))
+    executionData.setFrom(fileTree(layout.buildDirectory) { include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec") })
 }
