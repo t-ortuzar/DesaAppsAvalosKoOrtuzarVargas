@@ -326,6 +326,7 @@ fun MainScreen() {
             )
             2 -> FavoritesScreen(
                 viewModel = gamesViewModel,
+                settingsViewModel = settingsViewModel,
                 onGameSelected = { selectedGame = it },
                 modifier = Modifier.padding(paddingValues)
             )
@@ -342,7 +343,6 @@ fun MainScreen() {
             )
             4 -> SettingsScreen(
                 settingsViewModel = settingsViewModel,
-                gamesViewModel = gamesViewModel,
                 modifier = Modifier.padding(paddingValues)
             )
         }
