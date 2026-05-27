@@ -12,21 +12,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,14 +36,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.R
-import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
-import com.example.desaappsavaloskoortuzarvargas.domain.model.GameNotificationPref
 import com.example.desaappsavaloskoortuzarvargas.domain.model.NotificationType
 import com.example.desaappsavaloskoortuzarvargas.domain.model.SUPPORTED_COUNTRIES
 import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.LabeledSwitchRow
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.SettingsCard
-import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
 import android.app.Activity
 import androidx.appcompat.app.AppCompatDelegate
@@ -61,13 +52,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
-    gamesViewModel: GamesViewModel,
     modifier: Modifier = Modifier
 ) {
     val userSettings by settingsViewModel.userSettings.collectAsState()
     val notifications by settingsViewModel.notifications.collectAsState()
     val unreadCount by settingsViewModel.unreadCount.collectAsState()
-    val favorites by gamesViewModel.favorites.collectAsState()
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -78,12 +67,8 @@ fun SettingsScreen(
     var tempEmail by remember { mutableStateOf(userSettings.email) }
     var showCountryDropdown by remember { mutableStateOf(false) }
     var showLanguageDropdown by remember { mutableStateOf(false) }
-    var showNotifPrefs by remember { mutableStateOf<Game?>(null) }
     var showLanguageConfirm by remember { mutableStateOf(false) }
     var pendingLanguageCode by remember { mutableStateOf<String?>(null) }
-
-    // Load favorites on first composition
-    remember { gamesViewModel.loadFavorites(); true }
 
     LazyColumn(
         modifier = modifier
@@ -320,113 +305,9 @@ fun SettingsScreen(
             }
         }
 
-        // Favorites management
-        item {
-            Text(stringResource(R.string.label_favorites_count, favorites.size), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        }
-
-        if (favorites.isEmpty()) {
-            item {
-                Text(stringResource(R.string.label_no_favorites), style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-            }
-        }
-
-        items(favorites) { game ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(2.dp),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(game.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                        Text(
-                            text = game.tags.joinToString(", "),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.Gray
-                        )
-                    }
-
-                    // Per-game notification settings
-                    IconButton(onClick = { showNotifPrefs = game }) {
-                        Icon(
-                            Icons.Filled.Notifications,
-                            stringResource(R.string.label_notification_prefs),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    // Remove from favorites
-                    IconButton(onClick = { gamesViewModel.toggleFavorite(game) }) {
-                        Icon(Icons.Filled.Delete, stringResource(R.string.action_remove), tint = Color.Red)
-                    }
-                }
-            }
-        }
-
         item { Spacer(modifier = Modifier.height(32.dp)) }
     }
 
-    // Per-game notification preference dialog
-    showNotifPrefs?.let { game ->
-        val currentPref = userSettings.gameNotificationPrefs[game.id]
-            ?: GameNotificationPref(game.id, game.name)
-
-        var notifyOffers by remember(game.id) { mutableStateOf(currentPref.notifyOffers) }
-        var notifyNews by remember(game.id) { mutableStateOf(currentPref.notifyNews) }
-        var notifyHistorical by remember(game.id) { mutableStateOf(currentPref.notifyHistoricalLow) }
-
-        AlertDialog(
-            onDismissRequest = { showNotifPrefs = null },
-            title = { Text(stringResource(R.string.label_notifications_for_game, game.name)) },
-            text = {
-                Column {
-                    LabeledSwitchRow(
-                        label = stringResource(R.string.label_offers),
-                        checked = notifyOffers,
-                        onCheckedChange = { notifyOffers = it }
-                    )
-                    LabeledSwitchRow(
-                        label = stringResource(R.string.label_news),
-                        checked = notifyNews,
-                        onCheckedChange = { notifyNews = it }
-                    )
-                    LabeledSwitchRow(
-                        label = stringResource(R.string.label_historical_low),
-                        checked = notifyHistorical,
-                        onCheckedChange = { notifyHistorical = it }
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    settingsViewModel.updateGameNotificationPref(
-                        GameNotificationPref(
-                            gameId = game.id,
-                            gameName = game.name,
-                            notifyOffers = notifyOffers,
-                            notifyNews = notifyNews,
-                            notifyHistoricalLow = notifyHistorical
-                        )
-                    )
-                    showNotifPrefs = null
-                }) {
-                    Text(stringResource(R.string.action_save))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showNotifPrefs = null }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
-        )
-    }
 
     if (showLanguageConfirm && pendingLanguageCode != null) {
         AlertDialog(
