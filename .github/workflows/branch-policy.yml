@@ -1,0 +1,49 @@
+name: Branch Policy
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+    branches:
+      - develop
+      - main
+
+permissions: {}
+
+jobs:
+  validate-branch-policy:
+    name: Validate source branch naming
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR source branch against target branch
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "Pull Request: $HEAD_REF -> $BASE_REF"
+
+          case "$BASE_REF" in
+            develop)
+              if [[ "$HEAD_REF" =~ ^(feature|bugfix)/.+ ]]; then
+                echo "✅ Allowed: only feature/* or bugfix/* branches can be merged into develop."
+                exit 0
+              else
+                echo "❌ Not allowed: only branches named 'feature/*' or 'bugfix/*' can be merged into 'develop'."
+                echo "   Current source branch: '$HEAD_REF'"
+                exit 1
+              fi
+              ;;
+            main)
+              if [[ "$HEAD_REF" =~ ^(release|hotfix)/.+ ]]; then
+                echo "✅ Allowed: only release/* or hotfix/* branches can be merged into main."
+                exit 0
+              else
+                echo "❌ Not allowed: only branches named 'release/*' or 'hotfix/*' can be merged into 'main'."
+                echo "   Current source branch: '$HEAD_REF'"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "ℹ️ No branch policy defined for target '$BASE_REF'. Skipping."
+              exit 0
+              ;;
+          esac
