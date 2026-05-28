@@ -3,6 +3,7 @@ package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -29,10 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,8 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.rememberLazyListState
 import com.example.desaappsavaloskoortuzarvargas.di.ServiceLocator
-import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
-import com.example.desaappsavaloskoortuzarvargas.domain.model.News
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.AddToFavoritesUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetAllGamesUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetAllNewsUseCase
@@ -74,13 +70,15 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesVie
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.NewsViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.OffersViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
+import com.example.desaappsavaloskoortuzarvargas.presentation.navigation.NavigationStateManager
 import com.example.desaappsavaloskoortuzarvargas.R
 
 @Composable
 fun MainScreen() {
-    var currentTab by remember { mutableIntStateOf(1) } // Catalog in the middle
-    var selectedGame by remember { mutableStateOf<Game?>(null) }
-    var selectedNews by remember { mutableStateOf<News?>(null) }
+    val navState = remember { NavigationStateManager() }
+    val currentTab by navState.currentTab.collectAsState()
+    val selectedGame by navState.selectedGame.collectAsState()
+    val selectedNews by navState.selectedNews.collectAsState()
 
     val gameRepository = ServiceLocator.gameRepository
     val newsRepository = ServiceLocator.newsRepository
@@ -174,16 +172,21 @@ fun MainScreen() {
     // Preserve catalog scroll position across detail screen navigation
     val catalogListState = rememberLazyListState()
 
+    // Back navigation: from detail screens go back to list, from non-home tabs go to home (Catalog)
+    BackHandler(enabled = navState.isBackEnabled) {
+        navState.handleBack()
+    }
+
     // Detail screens
     when {
         selectedGame != null -> {
             GameDetailScreen(
                 game = selectedGame!!,
                 viewModel = gamesViewModel,
-                onBackClick = { selectedGame = null },
+                onBackClick = { navState.clearSelectedGame() },
                 onFavoriteClick = { game ->
                     gamesViewModel.toggleFavorite(game)
-                    selectedGame = game.copy(isFavorite = !game.isFavorite)
+                    navState.updateSelectedGame(game.copy(isFavorite = !game.isFavorite))
                 }
             )
             return
@@ -191,7 +194,7 @@ fun MainScreen() {
         selectedNews != null -> {
             NewsDetailScreen(
                 news = selectedNews!!,
-                onBackClick = { selectedNews = null }
+                onBackClick = { navState.clearSelectedNews() }
             )
             return
         }
@@ -240,8 +243,8 @@ fun MainScreen() {
                         )
                     },
                     label = { Text(stringResource(R.string.nav_offers)) },
-                    selected = currentTab == 0,
-                    onClick = { currentTab = 0 }
+                    selected = currentTab == NavigationStateManager.TAB_OFFERS,
+                    onClick = { navState.selectTab(NavigationStateManager.TAB_OFFERS) }
                 )
                 NavigationBarItem(
                     icon = {
@@ -251,8 +254,8 @@ fun MainScreen() {
                         )
                     },
                     label = { Text(stringResource(R.string.nav_catalog)) },
-                    selected = currentTab == 1,
-                    onClick = { currentTab = 1 }
+                    selected = currentTab == NavigationStateManager.TAB_CATALOG,
+                    onClick = { navState.selectTab(NavigationStateManager.TAB_CATALOG) }
                 )
                 NavigationBarItem(
                     icon = {
@@ -262,9 +265,9 @@ fun MainScreen() {
                         )
                     },
                     label = { Text(stringResource(R.string.nav_favorites)) },
-                    selected = currentTab == 2,
+                    selected = currentTab == NavigationStateManager.TAB_FAVORITES,
                     onClick = {
-                        currentTab = 2
+                        navState.selectTab(NavigationStateManager.TAB_FAVORITES)
                         gamesViewModel.loadFavorites()
                     }
                 )
@@ -276,8 +279,8 @@ fun MainScreen() {
                         )
                     },
                     label = { Text(stringResource(R.string.nav_news)) },
-                    selected = currentTab == 3,
-                    onClick = { currentTab = 3 }
+                    selected = currentTab == NavigationStateManager.TAB_NEWS,
+                    onClick = { navState.selectTab(NavigationStateManager.TAB_NEWS) }
                 )
                 NavigationBarItem(
                     icon = {
@@ -295,9 +298,9 @@ fun MainScreen() {
                         }
                     },
                     label = { Text(stringResource(R.string.nav_settings)) },
-                    selected = currentTab == 4,
+                    selected = currentTab == NavigationStateManager.TAB_SETTINGS,
                     onClick = {
-                        currentTab = 4
+                        navState.selectTab(NavigationStateManager.TAB_SETTINGS)
                         settingsViewModel.refreshNotifications()
                     }
                 )
@@ -306,42 +309,42 @@ fun MainScreen() {
     ) { paddingValues ->
         val dolarRate by gamesViewModel.dolarTarjetaRate.collectAsState()
         when (currentTab) {
-            0 -> OffersScreen(
+            NavigationStateManager.TAB_OFFERS -> OffersScreen(
                 viewModel = offersViewModel,
                 onDiscountSelected = { discount ->
                     val game = gamesViewModel.allGames.value.find { it.id == discount.gameId }
                     if (game != null) {
-                        selectedGame = game
+                        navState.selectGame(game)
                     }
                 },
                 modifier = Modifier.padding(paddingValues),
                 dolarRate = dolarRate,
                 convertToArs = { gamesViewModel.convertToArs(it) }
             )
-            1 -> GamesScreen(
+            NavigationStateManager.TAB_CATALOG -> GamesScreen(
                 viewModel = gamesViewModel,
-                onGameSelected = { selectedGame = it },
+                onGameSelected = { navState.selectGame(it) },
                 modifier = Modifier.padding(paddingValues),
                 listState = catalogListState
             )
-            2 -> FavoritesScreen(
+            NavigationStateManager.TAB_FAVORITES -> FavoritesScreen(
                 viewModel = gamesViewModel,
                 settingsViewModel = settingsViewModel,
-                onGameSelected = { selectedGame = it },
+                onGameSelected = { navState.selectGame(it) },
                 modifier = Modifier.padding(paddingValues)
             )
-            3 -> NewsScreen(
+            NavigationStateManager.TAB_NEWS -> NewsScreen(
                 viewModel = newsViewModel,
-                onNewsSelected = { selectedNews = it },
+                onNewsSelected = { navState.selectNews(it) },
                 onGameClicked = { gameId ->
                     val game = gamesViewModel.allGames.value.find { it.id == gameId }
                     if (game != null) {
-                        selectedGame = game
+                        navState.selectGame(game)
                     }
                 },
                 modifier = Modifier.padding(paddingValues)
             )
-            4 -> SettingsScreen(
+            NavigationStateManager.TAB_SETTINGS -> SettingsScreen(
                 settingsViewModel = settingsViewModel,
                 modifier = Modifier.padding(paddingValues)
             )
