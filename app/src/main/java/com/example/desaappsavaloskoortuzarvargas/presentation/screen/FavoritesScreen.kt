@@ -1,5 +1,6 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -92,7 +93,9 @@ fun FavoritesScreen(
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(favorites) { game ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onGameSelected(game) },
                         elevation = CardDefaults.cardElevation(2.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {

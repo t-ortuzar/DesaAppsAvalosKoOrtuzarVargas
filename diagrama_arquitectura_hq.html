@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagrama de Arquitectura - Game Deals Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    padding: 40px 50px;
+    color: #1a1a2e;
+    min-width: 1300px;
+  }
+
+  /* ========== HEADER ========== */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1a1a2e;
+    letter-spacing: -0.5px;
+  }
+  .header h1 span { color: #6c5ce7; }
+  .header .subtitle {
+    font-size: 15px;
+    color: #888;
+    margin-top: 6px;
+    font-weight: 400;
+    letter-spacing: 1px;
+  }
+
+  /* ========== MAIN ARCH ROW ========== */
+  .arch-row {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 28px;
+  }
+
+  /* ========== LAYER CARD ========== */
+  .layer {
+    border-radius: 16px;
+    padding: 22px 18px 18px;
+    min-width: 195px;
+    max-width: 215px;
+    flex: 1;
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  .layer-wide {
+    min-width: 230px;
+    max-width: 250px;
+  }
+  .layer-header {
+    text-align: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(0,0,0,0.06);
+  }
+  .layer-header h2 {
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .layer-section { margin-bottom: 10px; }
+  .layer-section:last-child { margin-bottom: 0; }
+  .layer-section h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 5px;
+    opacity: 0.7;
+  }
+  .layer-section ul {
+    list-style: none;
+    font-size: 12px;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+  .layer-section ul li {
+    padding-left: 14px;
+    position: relative;
+  }
+  .layer-section ul li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
+  /* Sub-box inside data layer */
+  .sub-box {
+    background: rgba(255,255,255,0.6);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .sub-box:last-child { margin-bottom: 0; }
+  .sub-box h4 {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .sub-box ul {
+    font-size: 11.5px;
+    line-height: 1.55;
+    list-style: none;
+  }
+  .sub-box ul li {
+    padding-left: 12px;
+    position: relative;
+  }
+  .sub-box ul li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #aaa;
+  }
+
+  /* ========== LAYER COLORS ========== */
+  .layer-ui { background: #e8f5e9; border: 2px solid #66bb6a; }
+  .layer-ui .layer-header h2 { color: #2e7d32; }
+  .layer-ui .layer-section h3 { color: #388e3c; }
+  .layer-ui .layer-section ul li::before { background: #4caf50; }
+  .layer-ui .accent-text { color: #2e7d32; font-weight: 600; font-size: 11.5px; margin-top: 4px; }
+
+  .layer-logic { background: #e3f2fd; border: 2px solid #42a5f5; }
+  .layer-logic .layer-header h2 { color: #1565c0; }
+  .layer-logic .layer-section h3 { color: #1976d2; }
+  .layer-logic .layer-section ul li::before { background: #2196f3; }
+
+  .layer-domain { background: #fff3e0; border: 2px solid #ffa726; }
+  .layer-domain .layer-header h2 { color: #e65100; }
+  .layer-domain .layer-section h3 { color: #ef6c00; }
+  .layer-domain .layer-section ul li::before { background: #ff9800; }
+
+  .layer-data { background: #fce4ec; border: 2px solid #ef5350; }
+  .layer-data .layer-header h2 { color: #c62828; }
+  .layer-data .sub-box h4 { color: #c62828; }
+  .layer-data .sub-box ul li::before { background: #e57373; }
+
+  .layer-external { background: #f3e5f5; border: 2.5px dashed #ab47bc; }
+  .layer-external .layer-header h2 { color: #7b1fa2; }
+  .layer-external .layer-section h3 { color: #8e24aa; }
+  .layer-external .layer-section ul li::before { background: #ab47bc; }
+
+  /* ========== ARROW CONNECTOR ========== */
+  .arrow-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    min-width: 40px;
+  }
+  .arrow-connector svg { width: 32px; height: 32px; }
+
+  /* ========== HORIZONTAL BARS ========== */
+  .bar-row {
+    display: flex;
+    gap: 16px;
+    max-width: 1140px;
+    margin: 0 auto 20px;
+    justify-content: center;
+  }
+  .bar {
+    flex: 1;
+    border-radius: 12px;
+    padding: 16px 24px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .bar h3 { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+  .bar p { font-size: 12px; line-height: 1.5; font-weight: 400; }
+  .bar-state {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+    color: white;
+  }
+  .bar-state h3 { color: #90cdf4; }
+  .bar-state p { color: #bee3f8; }
+  .bar-state strong { color: #fff; }
+  .bar-di {
+    background: linear-gradient(135deg, #44337a 0%, #6b46c1 100%);
+    color: white;
+  }
+  .bar-di h3 { color: #d6bcfa; }
+  .bar-di p { color: #e9d8fd; }
+  .bar-di strong { color: #fff; }
+  .bar-test {
+    background: linear-gradient(135deg, #22543d 0%, #38a169 100%);
+    color: white;
+  }
+  .bar-test h3 { color: #9ae6b4; }
+  .bar-test p { color: #c6f6d5; }
+  .bar-test strong { color: #fff; }
+
+  /* ========== SEPARATOR ========== */
+  .sep {
+    border: none;
+    border-top: 2px dashed #d0d0d0;
+    margin: 32px auto;
+    max-width: 1140px;
+  }
+
+  /* ========== TECH SECTION ========== */
+  .tech-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    color: #1a1a2e;
+  }
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+  .tech-card {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px 14px 14px;
+    text-align: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .tech-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    border-color: #cbd5e0;
+  }
+  .tech-card .icon { font-size: 32px; margin-bottom: 8px; display: block; }
+  .tech-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 5px; color: #2d3748; }
+  .tech-card p { font-size: 11px; color: #718096; line-height: 1.45; font-weight: 400; }
+
+  .tc-kotlin { border-top: 3px solid #7F52FF; }
+  .tc-compose { border-top: 3px solid #4285F4; }
+  .tc-nav { border-top: 3px solid #0097A7; }
+  .tc-room { border-top: 3px solid #E91E63; }
+  .tc-datastore { border-top: 3px solid #FF9800; }
+  .tc-http { border-top: 3px solid #607D8B; }
+  .tc-material { border-top: 3px solid #6200EE; }
+  .tc-coil { border-top: 3px solid #FF6F00; }
+  .tc-androidx { border-top: 3px solid #4CAF50; }
+  .tc-ksp { border-top: 3px solid #795548; }
+  .tc-test { border-top: 3px solid #00BCD4; }
+  .tc-gradle { border-top: 3px solid #02303A; }
+
+  .footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 11px;
+    color: #aaa;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🎮 <span>Game Deals Tracker</span> — Diagrama de Arquitectura</h1>
+  <p class="subtitle">CLEAN ARCHITECTURE &nbsp;·&nbsp; MVVM &nbsp;·&nbsp; ANDROID &nbsp;/&nbsp; KOTLIN</p>
+</div>
+
+<!-- MAIN ARCHITECTURE ROW -->
+<div class="arch-row">
+
+  <!-- CAPA UI -->
+  <div class="layer layer-ui">
+    <div class="layer-header"><h2>Capa de<br>Presentación (UI)</h2></div>
+    <div class="layer-section">
+      <h3>Screens</h3>
+      <ul>
+        <li>MainScreen</li>
+        <li>GamesScreen</li>
+        <li>GameDetailScreen</li>
+        <li>OffersScreen</li>
+        <li>NewsScreen</li>
+        <li>NewsDetailScreen</li>
+        <li>FavoritesScreen</li>
+        <li>SettingsScreen</li>
+      </ul>
+    </div>
+    <div class="layer-section">
+      <h3>Componentes</h3>
+      <ul>
+        <li>GameCard</li>
+        <li>DiscountCard</li>
+        <li>NewsCard</li>
+        <li>SharedComponents</li>
+        <li>Constants</li>
+      </ul>
+    </div>
+    <p class="accent-text">✦ Jetpack Compose</p>
+    <p class="accent-text">✦ Navigation Compose</p>
+  </div>
+
+  <div class="arrow-connector">
+    <svg viewBox="0 0 32 32" fill="none"><path d="M6 16h18M20 10l6 6-6 6" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- CAPA LÓGICA -->
+  <div class="layer layer-logic">
+    <div class="layer-header"><h2>Capa de Presentación<br>Lógica</h2></div>
+    <div class="layer-section">
+      <h3>ViewModels</h3>
+      <ul>
+        <li>GamesViewModel</li>
+        <li>OffersViewModel</li>
+        <li>NewsViewModel</li>
+        <li>SettingsViewModel</li>
+      </ul>
+    </div>
+    <div class="layer-section">
+      <h3>Responsabilidades</h3>
+      <ul>
+        <li>Estado UI (StateFlow)</li>
+        <li>Filtrado y búsqueda</li>
+        <li>Toggle USD / ARS</li>
+        <li>Gestión de favoritos</li>
+        <li>Monitoreo de red</li>
+        <li>Carga progresiva</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="arrow-connector">
+    <svg viewBox="0 0 32 32" fill="none"><path d="M6 16h18M20 10l6 6-6 6" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- CAPA DOMINIO -->
+  <div class="layer layer-domain">
+    <div class="layer-header"><h2>Capa de<br>Dominio</h2></div>
+    <div class="layer-section">
+      <h3>Use Cases</h3>
+      <ul>
+        <li>GameUseCase</li>
+        <li>DiscountUseCase</li>
+        <li>NewsUseCase</li>
+        <li>SettingsUseCase</li>
+      </ul>
+    </div>
+    <div class="layer-section">
+      <h3>Modelos</h3>
+      <ul>
+        <li>Game / DLC</li>
+        <li>Discount</li>
+        <li>News</li>
+        <li>UserSettings</li>
+        <li>CountryInfo</li>
+        <li>StorePrice</li>
+      </ul>
+    </div>
+    <div class="layer-section">
+      <h3>Repository Interfaces</h3>
+      <ul>
+        <li>GameRepository</li>
+        <li>DiscountRepository</li>
+        <li>NewsRepository</li>
+        <li>UserSettingsRepository</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="arrow-connector">
+    <svg viewBox="0 0 32 32" fill="none"><path d="M6 16h18M20 10l6 6-6 6" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- CAPA DATOS -->
+  <div class="layer layer-data layer-wide">
+    <div class="layer-header"><h2>Capa de<br>Datos</h2></div>
+    <div class="sub-box">
+      <h4>🗄️ Room Database</h4>
+      <ul>
+        <li>GameTrackerDatabase</li>
+        <li>GamePriceEntity / DAO</li>
+        <li>GameImageEntity / DAO</li>
+        <li>FavoriteGameEntity / DAO</li>
+        <li>PriceHistoryEntity / DAO</li>
+      </ul>
+    </div>
+    <div class="sub-box">
+      <h4>💾 DataStore</h4>
+      <ul>
+        <li>SettingsDataStore</li>
+        <li>Idioma y preferencias</li>
+      </ul>
+    </div>
+    <div class="sub-box">
+      <h4>🌐 API Services</h4>
+      <ul>
+        <li>SteamPriceService</li>
+        <li>EpicPriceService</li>
+        <li>GogPriceService</li>
+        <li>XboxPriceService</li>
+        <li>EAPriceService</li>
+        <li>UbisoftPriceService</li>
+        <li>BattleNetPriceService</li>
+        <li>DolarService</li>
+      </ul>
+    </div>
+    <div class="sub-box">
+      <h4>📦 Utilidades</h4>
+      <ul>
+        <li>PriceRefreshManager</li>
+        <li>ArgentineTaxCalculator</li>
+        <li>ConnectivityObserver</li>
+        <li>GameCatalog</li>
+        <li>Repository Impls ×4</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="arrow-connector">
+    <svg viewBox="0 0 32 32" fill="none"><path d="M6 16h18M20 10l6 6-6 6" stroke="#bbb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- SERVICIOS EXTERNOS -->
+  <div class="layer layer-external">
+    <div class="layer-header"><h2>Servicios<br>Externos</h2></div>
+    <div class="layer-section">
+      <h3>APIs de Tiendas</h3>
+      <ul>
+        <li>Steam Store API</li>
+        <li>Epic Games Store</li>
+        <li>GOG.com</li>
+        <li>Xbox / Microsoft</li>
+        <li>EA App</li>
+        <li>Ubisoft Connect</li>
+        <li>Battle.net</li>
+      </ul>
+    </div>
+    <div class="layer-section">
+      <h3>APIs de Datos</h3>
+      <ul>
+        <li>DolarAPI (dólar tarjeta)</li>
+      </ul>
+    </div>
+    <div class="layer-section">
+      <h3>CDN de Imágenes</h3>
+      <ul>
+        <li>Steam CDN</li>
+        <li>PlayStation CDN</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- CROSS-CUTTING BARS -->
+<div class="bar-row">
+  <div class="bar bar-state">
+    <h3>📡 Manejo de Estado y Flujos</h3>
+    <p><strong>StateFlow / MutableStateFlow</strong> — Manejo reactivo de estados UI.<br>
+    Coroutines con <strong>viewModelScope</strong> para operaciones asíncronas.<br>
+    ConnectivityObserver monitorea la red. PriceRefreshManager emite actualizaciones progresivas por lotes de 5 juegos.</p>
+  </div>
+  <div class="bar bar-di">
+    <h3>🔧 Inyección de Dependencias</h3>
+    <p><strong>ServiceLocator</strong> (Manual DI)<br>
+    Inicializa y provee: Database, DAOs, DataStore, Repositories, UseCases, API Services y ConnectivityObserver.<br>
+    Inicializado en <strong>GameTrackerApp</strong> (Application).</p>
+  </div>
+  <div class="bar bar-test">
+    <h3>🧪 Testing</h3>
+    <p><strong>~200 tests unitarios</strong> con JUnit + Mockito-Kotlin.<br>
+    Turbine para testing de Flows. <strong>JaCoCo: 94%</strong> cobertura de instrucciones.<br>
+    Cubre modelos, use cases, ViewModels, repos y servicios.</p>
+  </div>
+</div>
+
+<hr class="sep">
+
+<!-- TECNOLOGÍAS -->
+<h2 class="tech-title">Tecnologías Utilizadas</h2>
+<div class="tech-grid">
+  <div class="tech-card tc-kotlin">
+    <span class="icon">🟣</span>
+    <h4>Kotlin</h4>
+    <p>Lenguaje principal de desarrollo. Coroutines para asincronismo.</p>
+  </div>
+  <div class="tech-card tc-compose">
+    <span class="icon">🎨</span>
+    <h4>Jetpack Compose</h4>
+    <p>UI declarativa moderna. Composables reutilizables.</p>
+  </div>
+  <div class="tech-card tc-nav">
+    <span class="icon">🧭</span>
+    <h4>Navigation Compose</h4>
+    <p>Navegación entre pantallas y pestañas con tipado.</p>
+  </div>
+  <div class="tech-card tc-room">
+    <span class="icon">🗄️</span>
+    <h4>Room</h4>
+    <p>Base de datos SQLite local. Cache de precios, imágenes, favoritos e historial.</p>
+  </div>
+  <div class="tech-card tc-datastore">
+    <span class="icon">💾</span>
+    <h4>DataStore</h4>
+    <p>Preferencias persistentes: idioma, país, notificaciones.</p>
+  </div>
+  <div class="tech-card tc-http">
+    <span class="icon">🌐</span>
+    <h4>HttpURLConnection</h4>
+    <p>Cliente HTTP nativo de Java para consumo de APIs REST.</p>
+  </div>
+  <div class="tech-card tc-material">
+    <span class="icon">📐</span>
+    <h4>Material 3</h4>
+    <p>Sistema de diseño. Tema oscuro con paleta personalizada.</p>
+  </div>
+  <div class="tech-card tc-coil">
+    <span class="icon">🖼️</span>
+    <h4>Coil</h4>
+    <p>Carga asíncrona de imágenes con AsyncImage desde CDN.</p>
+  </div>
+  <div class="tech-card tc-androidx">
+    <span class="icon">📱</span>
+    <h4>AndroidX</h4>
+    <p>ViewModel, Lifecycle, Activity Compose, Core KTX.</p>
+  </div>
+  <div class="tech-card tc-ksp">
+    <span class="icon">🔗</span>
+    <h4>KSP</h4>
+    <p>Kotlin Symbol Processing para generación de código Room.</p>
+  </div>
+  <div class="tech-card tc-test">
+    <span class="icon">🧪</span>
+    <h4>JUnit + Mockito</h4>
+    <p>Tests unitarios, mocks, coroutines-test y Turbine para Flows.</p>
+  </div>
+  <div class="tech-card tc-gradle">
+    <span class="icon">🏗️</span>
+    <h4>Gradle Kotlin DSL</h4>
+    <p>Build system. JaCoCo, version catalog (libs.versions.toml).</p>
+  </div>
+</div>
+
+<p class="footer">Game Deals Tracker · Clean Architecture · 2024-2026</p>
+
+</body>
+</html>
+

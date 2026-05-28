@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagrama de Arquitectura - Game Deals Tracker</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f8f9fa;
+    padding: 30px;
+    color: #333;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 8px;
+    color: #1a1a2e;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 30px;
+  }
+
+  /* ========== ARCHITECTURE LAYERS ========== */
+  .arch-container {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    margin-bottom: 20px;
+  }
+  .layer {
+    border-radius: 14px;
+    padding: 18px 16px;
+    min-width: 185px;
+    max-width: 210px;
+    flex: 1;
+    position: relative;
+  }
+  .layer h2 {
+    font-size: 15px;
+    text-align: center;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .layer h3 {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 8px 0 4px 0;
+    color: #444;
+  }
+  .layer ul {
+    list-style: none;
+    padding-left: 0;
+    font-size: 11.5px;
+    line-height: 1.6;
+  }
+  .layer ul li::before {
+    content: "•";
+    margin-right: 5px;
+    font-weight: bold;
+  }
+  .layer .file {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 10.5px;
+    color: #555;
+    background: rgba(255,255,255,0.5);
+    padding: 1px 5px;
+    border-radius: 3px;
+    display: inline-block;
+    margin: 1px 0;
+  }
+
+  /* Layer colors */
+  .layer-ui {
+    background: #e8f5e9;
+    border: 2.5px solid #4caf50;
+  }
+  .layer-ui h2 { color: #2e7d32; }
+
+  .layer-logic {
+    background: #e3f2fd;
+    border: 2.5px solid #2196f3;
+  }
+  .layer-logic h2 { color: #1565c0; }
+
+  .layer-domain {
+    background: #fff3e0;
+    border: 2.5px solid #ff9800;
+  }
+  .layer-domain h2 { color: #e65100; }
+
+  .layer-data {
+    background: #fce4ec;
+    border: 2.5px solid #e91e63;
+  }
+  .layer-data h2 { color: #c2185b; }
+
+  .layer-external {
+    background: #f3e5f5;
+    border: 2.5px dashed #9c27b0;
+  }
+  .layer-external h2 { color: #7b1fa2; }
+
+  /* Arrows between layers */
+  .arrow-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 0px;
+    position: relative;
+  }
+  .arrow-col {
+    min-width: 185px;
+    max-width: 210px;
+    flex: 1;
+    text-align: center;
+    font-size: 22px;
+    color: #999;
+    line-height: 1;
+  }
+  .arrow-col.right-arrow {
+    font-size: 28px;
+  }
+
+  /* ========== STATE MANAGEMENT BAR ========== */
+  .state-bar {
+    background: linear-gradient(135deg, #263238, #37474f);
+    color: white;
+    border-radius: 10px;
+    padding: 14px 24px;
+    text-align: center;
+    margin: 24px auto;
+    max-width: 900px;
+  }
+  .state-bar h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: #80cbc4;
+  }
+  .state-bar p {
+    font-size: 12px;
+    color: #b0bec5;
+  }
+
+  /* ========== DI BAR ========== */
+  .di-bar {
+    background: linear-gradient(135deg, #4a148c, #6a1b9a);
+    color: white;
+    border-radius: 10px;
+    padding: 14px 24px;
+    text-align: center;
+    margin: 12px auto 30px;
+    max-width: 900px;
+  }
+  .di-bar h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: #ce93d8;
+  }
+  .di-bar p {
+    font-size: 12px;
+    color: #e1bee7;
+  }
+
+  /* ========== TECH SECTION ========== */
+  .tech-title {
+    text-align: center;
+    font-size: 22px;
+    margin: 10px 0 20px;
+    color: #1a1a2e;
+  }
+  .tech-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .tech-card {
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 14px 16px;
+    width: 155px;
+    text-align: center;
+    background: white;
+    transition: transform 0.2s;
+  }
+  .tech-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .tech-card .icon { font-size: 28px; margin-bottom: 6px; }
+  .tech-card h4 { font-size: 13px; margin-bottom: 4px; color: #333; }
+  .tech-card p { font-size: 10.5px; color: #777; line-height: 1.4; }
+
+  /* ========== FLOW ARROWS IN ARCH ========== */
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: #aaa;
+    padding: 0 2px;
+    min-width: 30px;
+  }
+
+  /* Separator */
+  hr.sep {
+    border: none;
+    border-top: 2px dashed #ccc;
+    margin: 30px auto;
+    max-width: 900px;
+  }
+
+  /* Sub-layers inside data */
+  .sub-section {
+    background: rgba(255,255,255,0.55);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 6px 0;
+  }
+  .sub-section h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: #c2185b;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎮 Game Deals Tracker</h1>
+<p class="subtitle">Arquitectura Clean Architecture · MVVM · Android / Kotlin</p>
+
+<!-- ==================== MAIN ARCHITECTURE ==================== -->
+<div class="arch-container">
+
+  <!-- CAPA UI -->
+  <div class="layer layer-ui">
+    <h2>Capa de<br>Presentación (UI)</h2>
+    <h3>Screens</h3>
+    <ul>
+      <li>MainScreen</li>
+      <li>GamesScreen</li>
+      <li>GameDetailScreen</li>
+      <li>OffersScreen</li>
+      <li>NewsScreen / Detail</li>
+      <li>FavoritesScreen</li>
+      <li>SettingsScreen</li>
+    </ul>
+    <h3>Componentes</h3>
+    <ul>
+      <li>GameCard</li>
+      <li>DiscountCard</li>
+      <li>NewsCard</li>
+      <li>SharedComponents</li>
+    </ul>
+    <h3 style="margin-top:8px; color: #388e3c;">Jetpack Compose</h3>
+    <h3 style="color: #388e3c;">Navigation Compose</h3>
+  </div>
+
+  <div class="flow-arrow">➜</div>
+
+  <!-- CAPA LÓGICA -->
+  <div class="layer layer-logic">
+    <h2>Capa de Presentación<br>Lógica</h2>
+    <h3>ViewModels</h3>
+    <ul>
+      <li>GamesViewModel</li>
+      <li>OffersViewModel</li>
+      <li>NewsViewModel</li>
+      <li>SettingsViewModel</li>
+    </ul>
+    <h3 style="margin-top: 10px;">Responsabilidades</h3>
+    <ul>
+      <li>Estado UI (StateFlow)</li>
+      <li>Lógica de filtrado</li>
+      <li>Búsqueda</li>
+      <li>Toggle USD/ARS</li>
+      <li>Gestión de favoritos</li>
+      <li>Conectividad</li>
+    </ul>
+  </div>
+
+  <div class="flow-arrow">➜</div>
+
+  <!-- CAPA DOMINIO -->
+  <div class="layer layer-domain">
+    <h2>Capa de<br>Dominio</h2>
+    <h3>Use Cases</h3>
+    <ul>
+      <li>GameUseCase</li>
+      <li>DiscountUseCase</li>
+      <li>NewsUseCase</li>
+      <li>SettingsUseCase</li>
+    </ul>
+    <h3>Modelos</h3>
+    <ul>
+      <li>Game / DLC</li>
+      <li>Discount</li>
+      <li>News</li>
+      <li>UserSettings</li>
+      <li>CountryInfo</li>
+      <li>StorePrice</li>
+    </ul>
+    <h3>Interfaces Repository</h3>
+    <ul>
+      <li>GameRepository</li>
+      <li>DiscountRepository</li>
+      <li>NewsRepository</li>
+      <li>UserSettingsRepository</li>
+    </ul>
+  </div>
+
+  <div class="flow-arrow">➜</div>
+
+  <!-- CAPA DATOS -->
+  <div class="layer layer-data" style="min-width: 220px; max-width: 240px;">
+    <h2>Capa de<br>Datos</h2>
+
+    <div class="sub-section">
+      <h4>🗄️ Room Database</h4>
+      <ul>
+        <li>GameTrackerDatabase</li>
+        <li>GamePriceEntity / Dao</li>
+        <li>GameImageEntity / Dao</li>
+        <li>FavoriteGameEntity / Dao</li>
+        <li>PriceHistoryEntity / Dao</li>
+      </ul>
+    </div>
+
+    <div class="sub-section">
+      <h4>⚙️ DataStore</h4>
+      <ul>
+        <li>SettingsDataStore</li>
+        <li>Idioma y preferencias</li>
+      </ul>
+    </div>
+
+    <div class="sub-section">
+      <h4>🌐 API Services</h4>
+      <ul>
+        <li>SteamPriceService</li>
+        <li>EpicPriceService</li>
+        <li>GogPriceService</li>
+        <li>XboxPriceService</li>
+        <li>EAPriceService</li>
+        <li>UbisoftPriceService</li>
+        <li>BattleNetPriceService</li>
+        <li>DolarService</li>
+      </ul>
+    </div>
+
+    <div class="sub-section">
+      <h4>📦 Otros</h4>
+      <ul>
+        <li>PriceRefreshManager</li>
+        <li>ArgentineTaxCalculator</li>
+        <li>ConnectivityObserver</li>
+        <li>GameCatalog</li>
+        <li>Repositories Impl</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="flow-arrow">➜</div>
+
+  <!-- SERVICIOS EXTERNOS -->
+  <div class="layer layer-external">
+    <h2>Servicios<br>Externos</h2>
+    <h3>APIs de Tiendas</h3>
+    <ul>
+      <li>Steam Store API</li>
+      <li>Epic Games Store</li>
+      <li>GOG.com</li>
+      <li>Xbox/Microsoft</li>
+      <li>EA App</li>
+      <li>Ubisoft Connect</li>
+      <li>Battle.net</li>
+    </ul>
+    <h3 style="margin-top: 8px;">APIs de Datos</h3>
+    <ul>
+      <li>DolarAPI (dólar tarjeta)</li>
+    </ul>
+    <h3 style="margin-top: 8px;">Imágenes</h3>
+    <ul>
+      <li>Steam CDN</li>
+      <li>PlayStation CDN</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ==================== STATE MANAGEMENT BAR ==================== -->
+<div class="state-bar">
+  <h3>📡 Manejo de Estado y Flujos</h3>
+  <p><strong>StateFlow / MutableStateFlow</strong> · Manejo reactivo de estados entre capas. Coroutines para operaciones asíncronas (viewModelScope).
+  <br>ConnectivityObserver monitorea la red en tiempo real. PriceRefreshManager emite actualizaciones progresivas por lotes.</p>
+</div>
+
+<!-- ==================== DI BAR ==================== -->
+<div class="di-bar">
+  <h3>🔧 Inyección de Dependencias</h3>
+  <p><strong>ServiceLocator</strong> (Manual DI) · Inicializa y provee todas las dependencias: Database, DAOs, DataStore, Repositories, UseCases, API Services, ConnectivityObserver.</p>
+</div>
+
+<hr class="sep">
+
+<!-- ==================== TECHNOLOGIES ==================== -->
+<h2 class="tech-title">Tecnologías Utilizadas</h2>
+
+<div class="tech-grid">
+  <div class="tech-card">
+    <div class="icon">🟣</div>
+    <h4>Kotlin</h4>
+    <p>Lenguaje principal de desarrollo.</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">🎨</div>
+    <h4>Jetpack Compose</h4>
+    <p>Construcción de la UI de forma declarativa.</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">🧭</div>
+    <h4>Navigation Compose</h4>
+    <p>Navegación entre pantallas y pestañas.</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">🗄️</div>
+    <h4>Room</h4>
+    <p>Base de datos local SQLite. Cache de precios, imágenes, favoritos e historial.</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">💾</div>
+    <h4>DataStore</h4>
+    <p>Almacenamiento de preferencias (idioma, país, notificaciones).</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">🌐</div>
+    <h4>HttpURLConnection</h4>
+    <p>Cliente HTTP nativo para consumo de APIs REST de tiendas.</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">📐</div>
+    <h4>Material 3</h4>
+    <p>Sistema de diseño para la interfaz. Tema oscuro.</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">🖼️</div>
+    <h4>Coil</h4>
+    <p>Carga asíncrona de imágenes desde URLs (Steam/PS CDN).</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">📱</div>
+    <h4>AndroidX</h4>
+    <p>Librerías modernas de Jetpack (ViewModel, Lifecycle, etc.).</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">🔗</div>
+    <h4>KSP</h4>
+    <p>Procesador de símbolos de Kotlin para generación de código Room.</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">🧪</div>
+    <h4>JUnit + Mockito</h4>
+    <p>Testing unitario con ~200 tests. Turbine para Flows. JaCoCo 94%.</p>
+  </div>
+  <div class="tech-card">
+    <div class="icon">🏗️</div>
+    <h4>Gradle KTS</h4>
+    <p>Automatización de builds, dependencias y tareas (JaCoCo).</p>
+  </div>
+</div>
+
+<br><br>
+</body>
+</html>
+
