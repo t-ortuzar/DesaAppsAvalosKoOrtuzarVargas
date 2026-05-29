@@ -283,7 +283,7 @@
 
 <!-- HEADER -->
 <div class="header">
-  <h1>🎮 <span>Game Deals Tracker</span> — Diagrama de Arquitectura</h1>
+  <h1> <span>Game Deals Tracker</span> — Diagrama de Arquitectura</h1>
   <p class="subtitle">CLEAN ARCHITECTURE &nbsp;·&nbsp; MVVM &nbsp;·&nbsp; ANDROID &nbsp;/&nbsp; KOTLIN</p>
 </div>
 
@@ -395,7 +395,7 @@
   <div class="layer layer-data layer-wide">
     <div class="layer-header"><h2>Capa de<br>Datos</h2></div>
     <div class="sub-box">
-      <h4>🗄️ Room Database</h4>
+      <h4>️ Room Database</h4>
       <ul>
         <li>GameTrackerDatabase</li>
         <li>GamePriceEntity / DAO</li>
@@ -405,14 +405,14 @@
       </ul>
     </div>
     <div class="sub-box">
-      <h4>💾 DataStore</h4>
+      <h4> DataStore</h4>
       <ul>
         <li>SettingsDataStore</li>
         <li>Idioma y preferencias</li>
       </ul>
     </div>
     <div class="sub-box">
-      <h4>🌐 API Services</h4>
+      <h4> API Services</h4>
       <ul>
         <li>SteamPriceService</li>
         <li>EpicPriceService</li>
@@ -425,7 +425,7 @@
       </ul>
     </div>
     <div class="sub-box">
-      <h4>📦 Utilidades</h4>
+      <h4> Utilidades</h4>
       <ul>
         <li>PriceRefreshManager</li>
         <li>ArgentineTaxCalculator</li>
@@ -475,19 +475,19 @@
 <!-- CROSS-CUTTING BARS -->
 <div class="bar-row">
   <div class="bar bar-state">
-    <h3>📡 Manejo de Estado y Flujos</h3>
+    <h3> Manejo de Estado y Flujos</h3>
     <p><strong>StateFlow / MutableStateFlow</strong> — Manejo reactivo de estados UI.<br>
     Coroutines con <strong>viewModelScope</strong> para operaciones asíncronas.<br>
     ConnectivityObserver monitorea la red. PriceRefreshManager emite actualizaciones progresivas por lotes de 5 juegos.</p>
   </div>
   <div class="bar bar-di">
-    <h3>🔧 Inyección de Dependencias</h3>
+    <h3> Inyección de Dependencias</h3>
     <p><strong>ServiceLocator</strong> (Manual DI)<br>
     Inicializa y provee: Database, DAOs, DataStore, Repositories, UseCases, API Services y ConnectivityObserver.<br>
     Inicializado en <strong>GameTrackerApp</strong> (Application).</p>
   </div>
   <div class="bar bar-test">
-    <h3>🧪 Testing</h3>
+    <h3> Testing</h3>
     <p><strong>~200 tests unitarios</strong> con JUnit + Mockito-Kotlin.<br>
     Turbine para testing de Flows. <strong>JaCoCo: 94%</strong> cobertura de instrucciones.<br>
     Cubre modelos, use cases, ViewModels, repos y servicios.</p>
@@ -500,62 +500,62 @@
 <h2 class="tech-title">Tecnologías Utilizadas</h2>
 <div class="tech-grid">
   <div class="tech-card tc-kotlin">
-    <span class="icon">🟣</span>
+    <span class="icon"></span>
     <h4>Kotlin</h4>
     <p>Lenguaje principal de desarrollo. Coroutines para asincronismo.</p>
   </div>
   <div class="tech-card tc-compose">
-    <span class="icon">🎨</span>
+    <span class="icon"></span>
     <h4>Jetpack Compose</h4>
     <p>UI declarativa moderna. Composables reutilizables.</p>
   </div>
   <div class="tech-card tc-nav">
-    <span class="icon">🧭</span>
+    <span class="icon"></span>
     <h4>Navigation Compose</h4>
     <p>Navegación entre pantallas y pestañas con tipado.</p>
   </div>
   <div class="tech-card tc-room">
-    <span class="icon">🗄️</span>
+    <span class="icon">️</span>
     <h4>Room</h4>
     <p>Base de datos SQLite local. Cache de precios, imágenes, favoritos e historial.</p>
   </div>
   <div class="tech-card tc-datastore">
-    <span class="icon">💾</span>
+    <span class="icon"></span>
     <h4>DataStore</h4>
     <p>Preferencias persistentes: idioma, país, notificaciones.</p>
   </div>
   <div class="tech-card tc-http">
-    <span class="icon">🌐</span>
+    <span class="icon"></span>
     <h4>HttpURLConnection</h4>
     <p>Cliente HTTP nativo de Java para consumo de APIs REST.</p>
   </div>
   <div class="tech-card tc-material">
-    <span class="icon">📐</span>
+    <span class="icon"></span>
     <h4>Material 3</h4>
     <p>Sistema de diseño. Tema oscuro con paleta personalizada.</p>
   </div>
   <div class="tech-card tc-coil">
-    <span class="icon">🖼️</span>
+    <span class="icon">️</span>
     <h4>Coil</h4>
     <p>Carga asíncrona de imágenes con AsyncImage desde CDN.</p>
   </div>
   <div class="tech-card tc-androidx">
-    <span class="icon">📱</span>
+    <span class="icon"></span>
     <h4>AndroidX</h4>
     <p>ViewModel, Lifecycle, Activity Compose, Core KTX.</p>
   </div>
   <div class="tech-card tc-ksp">
-    <span class="icon">🔗</span>
+    <span class="icon"></span>
     <h4>KSP</h4>
     <p>Kotlin Symbol Processing para generación de código Room.</p>
   </div>
   <div class="tech-card tc-test">
-    <span class="icon">🧪</span>
+    <span class="icon"></span>
     <h4>JUnit + Mockito</h4>
     <p>Tests unitarios, mocks, coroutines-test y Turbine para Flows.</p>
   </div>
   <div class="tech-card tc-gradle">
-    <span class="icon">🏗️</span>
+    <span class="icon">️</span>
     <h4>Gradle Kotlin DSL</h4>
     <p>Build system. JaCoCo, version catalog (libs.versions.toml).</p>
   </div>
@@ -565,4 +565,3 @@
 
 </body>
 </html>
-
