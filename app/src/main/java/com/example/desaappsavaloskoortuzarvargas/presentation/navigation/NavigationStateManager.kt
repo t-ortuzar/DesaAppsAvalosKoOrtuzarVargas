@@ -86,4 +86,3 @@ class NavigationStateManager(
         const val DEFAULT_HOME_TAB = TAB_CATALOG
     }
 }
-
