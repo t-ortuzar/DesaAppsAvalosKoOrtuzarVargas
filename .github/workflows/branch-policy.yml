@@ -33,11 +33,11 @@ jobs:
               fi
               ;;
             main)
-              if [[ "$HEAD_REF" =~ ^(release|hotfix)/.+ ]]; then
-                echo "✅ Allowed: only release/* or hotfix/* branches can be merged into main."
+              if [[ "$HEAD_REF" =~ ^(release|hotfix)/.+ ]] || [[ "$HEAD_REF" == "design" ]]; then
+                echo "✅ Allowed: only release/*, hotfix/*, or the design branch can be merged into main."
                 exit 0
               else
-                echo "❌ Not allowed: only branches named 'release/*' or 'hotfix/*' can be merged into 'main'."
+                echo "❌ Not allowed: only branches named 'release/*', 'hotfix/*', or 'design' can be merged into 'main'."
                 echo "   Current source branch: '$HEAD_REF'"
                 exit 1
               fi
