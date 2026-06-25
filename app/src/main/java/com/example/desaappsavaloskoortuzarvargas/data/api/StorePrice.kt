@@ -16,7 +16,8 @@ data class StorePrice(
     val formattedPrice: String = "",     // Pre-formatted by the store (e.g., "ARS$ 8.799,00")
     val formattedOriginal: String = "",  // Pre-formatted original price
     val imageUrl: String = "",           // Game image from this store's CDN (landscape preferred)
-    val discountEndTimestamp: Long? = null  // Epoch millis when the discount/free period ends (null = unknown)
+    val discountEndTimestamp: Long? = null,  // Epoch millis when the discount/free period ends (null = unknown)
+    val isGamePass: Boolean = false      // True when included in Xbox Game Pass (price shown is standalone purchase price)
 ) {
     val isDiscounted: Boolean get() = discountPercent > 0
     val isArs: Boolean get() = currency == "ARS"

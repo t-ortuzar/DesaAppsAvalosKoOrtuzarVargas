@@ -31,7 +31,8 @@ class UserSettingsRepositoryImpl(
             countryCode = prefs[SettingsKeys.COUNTRY_CODE] ?: "AR",
             languageCode = prefs[SettingsKeys.LANGUAGE_CODE] ?: "en",
             globalNotificationsEnabled = prefs[SettingsKeys.GLOBAL_NOTIFICATIONS] ?: true,
-            gameNotificationPrefs = gamePrefs.toMap()
+            gameNotificationPrefs = gamePrefs.toMap(),
+            darkMode = prefs[SettingsKeys.DARK_MODE] ?: true
         )
         return userSettings
     }
@@ -62,6 +63,11 @@ class UserSettingsRepositoryImpl(
     override suspend fun setGlobalNotifications(enabled: Boolean) {
         context.settingsDataStore.edit { it[SettingsKeys.GLOBAL_NOTIFICATIONS] = enabled }
         userSettings = userSettings.copy(globalNotificationsEnabled = enabled)
+    }
+
+    override suspend fun updateDarkMode(isDark: Boolean) {
+        context.settingsDataStore.edit { it[SettingsKeys.DARK_MODE] = isDark }
+        userSettings = userSettings.copy(darkMode = isDark)
     }
 
     override suspend fun updateGameNotificationPref(pref: GameNotificationPref) {

@@ -4,17 +4,53 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.desaappsavaloskoortuzarvargas.data.local.SettingsKeys
+import com.example.desaappsavaloskoortuzarvargas.data.local.settingsDataStore
+import com.example.desaappsavaloskoortuzarvargas.data.remote.MongoAuthService
+import com.example.desaappsavaloskoortuzarvargas.presentation.screen.LoginScreen
 import com.example.desaappsavaloskoortuzarvargas.presentation.screen.MainScreen
+import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.AuthState
+import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.AuthViewModel
 import com.example.desaappsavaloskoortuzarvargas.ui.theme.DesaAppsAvalosKoOrtuzarVargasTheme
+import kotlinx.coroutines.flow.map
 
 class MainActivity : AppCompatActivity() {
+
+    private val mongoAuthService by lazy { MongoAuthService() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            DesaAppsAvalosKoOrtuzarVargasTheme {
-                MainScreen()
+            // Observe dark mode preference reactively — theme switches instantly
+            // Use remember so the flow mapping is not re-created on every recomposition
+            val isDark by remember { settingsDataStore.data.map { prefs -> prefs[SettingsKeys.DARK_MODE] ?: true } }
+                .collectAsState(initial = true)
+
+            DesaAppsAvalosKoOrtuzarVargasTheme(darkTheme = isDark) {
+                val authViewModel: AuthViewModel = viewModel {
+                    AuthViewModel(mongoAuthService, applicationContext)
+                }
+                val authState by authViewModel.authState.collectAsState()
+
+                when (authState) {
+                    is AuthState.Loading -> { /* Splash / blank screen while checking session */ }
+                    is AuthState.Authenticated -> MainScreen()
+                    else -> LoginScreen(
+                        authViewModel = authViewModel,
+                        onAuthSuccess = { /* authState will update → recompose to MainScreen */ }
+                    )
+                }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mongoAuthService.close()
     }
 }

@@ -6,6 +6,7 @@ import com.example.desaappsavaloskoortuzarvargas.data.api.EAPriceService
 import com.example.desaappsavaloskoortuzarvargas.data.api.EpicPriceService
 import com.example.desaappsavaloskoortuzarvargas.data.api.GogPriceService
 import com.example.desaappsavaloskoortuzarvargas.data.api.PriceRefreshManager
+import com.example.desaappsavaloskoortuzarvargas.data.api.SteamNewsService
 import com.example.desaappsavaloskoortuzarvargas.data.api.SteamPriceService
 import com.example.desaappsavaloskoortuzarvargas.data.api.UbisoftPriceService
 import com.example.desaappsavaloskoortuzarvargas.data.api.XboxPriceService
@@ -23,6 +24,7 @@ import com.example.desaappsavaloskoortuzarvargas.GameTrackerApp
 
 object ServiceLocator {
     val steamPriceService: SteamPriceService by lazy { SteamPriceService() }
+    val steamNewsService: SteamNewsService by lazy { SteamNewsService() }
     val epicPriceService: EpicPriceService by lazy { EpicPriceService() }
     val gogPriceService: GogPriceService by lazy { GogPriceService() }
     val xboxPriceService: XboxPriceService by lazy { XboxPriceService() }
@@ -55,11 +57,12 @@ object ServiceLocator {
     }
 
     val gameRepository: GameRepository by lazy { GameRepositoryImpl() }
-    val newsRepository: NewsRepository by lazy { NewsRepositoryImpl() }
+    val newsRepository: NewsRepository by lazy { NewsRepositoryImpl(steamNewsService) }
     val discountRepository: DiscountRepository by lazy {
         DiscountRepositoryImpl(
             gamePriceDao = database.gamePriceDao(),
-            priceRefreshManager = priceRefreshManager
+            priceRefreshManager = priceRefreshManager,
+            gameImageDao = database.gameImageDao()
         )
     }
     val userSettingsRepository: UserSettingsRepository by lazy {

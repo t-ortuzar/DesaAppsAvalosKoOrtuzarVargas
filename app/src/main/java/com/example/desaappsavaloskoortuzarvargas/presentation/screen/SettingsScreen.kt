@@ -1,6 +1,5 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,11 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -36,7 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.R
-import com.example.desaappsavaloskoortuzarvargas.domain.model.NotificationType
 import com.example.desaappsavaloskoortuzarvargas.domain.model.SUPPORTED_COUNTRIES
 import com.example.desaappsavaloskoortuzarvargas.domain.model.countryCodeToFlag
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.LabeledSwitchRow
@@ -55,8 +49,6 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val userSettings by settingsViewModel.userSettings.collectAsState()
-    val notifications by settingsViewModel.notifications.collectAsState()
-    val unreadCount by settingsViewModel.unreadCount.collectAsState()
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -245,63 +237,22 @@ fun SettingsScreen(
             }
         }
 
-        // In-app notifications
-        if (notifications.isNotEmpty()) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        stringResource(R.string.label_alerts_unread, unreadCount),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+        // Appearance section
+        item {
+            Text(
+                "Appearance",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-            items(notifications.take(10)) { notification ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { settingsViewModel.markAsRead(notification.id) },
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (notification.isRead)
-                            MaterialTheme.colorScheme.surface
-                        else
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    ),
-                    elevation = CardDefaults.cardElevation(1.dp),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        val title = when (notification.type) {
-                            NotificationType.HISTORICAL_LOW -> stringResource(R.string.notif_title_historical_low)
-                            NotificationType.DISCOUNT -> stringResource(R.string.notif_title_discount)
-                            NotificationType.NEWS -> stringResource(R.string.nav_news)
-                            NotificationType.FREE_GAME -> stringResource(R.string.offers_tab_free)
-                        }
-                        val message = when (notification.type) {
-                            NotificationType.HISTORICAL_LOW -> stringResource(
-                                R.string.notif_message_historical_low,
-                                notification.gameName,
-                                notification.discountPercentage,
-                                notification.platform
-                            )
-                            NotificationType.DISCOUNT -> stringResource(
-                                R.string.notif_message_discount,
-                                notification.gameName,
-                                notification.discountPercentage,
-                                notification.platform
-                            )
-                            NotificationType.NEWS -> notification.gameName
-                            NotificationType.FREE_GAME -> notification.gameName
-                        }
-                        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        Text(message, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    }
-                }
+        item {
+            SettingsCard {
+                LabeledSwitchRow(
+                    label = stringResource(R.string.label_dark_mode),
+                    checked = userSettings.darkMode,
+                    onCheckedChange = { settingsViewModel.updateDarkMode(it) }
+                )
             }
         }
 

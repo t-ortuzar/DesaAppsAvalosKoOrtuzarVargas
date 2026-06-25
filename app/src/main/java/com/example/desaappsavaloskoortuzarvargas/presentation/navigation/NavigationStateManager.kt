@@ -80,9 +80,12 @@ class NavigationStateManager(
     companion object {
         const val TAB_OFFERS = 0
         const val TAB_CATALOG = 1
-        const val TAB_FAVORITES = 2
+        const val TAB_NOTIFICATIONS = 2  // replaces Favorites tab
+        const val TAB_FAVORITES = 2      // kept as alias
         const val TAB_NEWS = 3
         const val TAB_SETTINGS = 4
         const val DEFAULT_HOME_TAB = TAB_CATALOG
     }
 }
+
+

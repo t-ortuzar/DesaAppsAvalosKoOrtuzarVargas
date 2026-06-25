@@ -1,5 +1,10 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,9 +20,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -35,6 +42,8 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.POPULAR_TAGS
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.GameCard
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.LoadingContent
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
+import com.example.desaappsavaloskoortuzarvargas.ui.theme.AccentCyan
+import java.util.Locale
 
 @Composable
 fun GamesScreen(
@@ -48,12 +57,27 @@ fun GamesScreen(
     val selectedTag by viewModel.selectedTag.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
+    // Voice recognition launcher — uses Google's built-in speech-to-text
+    val voiceLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!spoken.isNullOrBlank()) {
+                searchQuery = spoken
+                viewModel.searchGames(spoken)
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Search bar
+        // Search bar with mic button
         TextField(
             value = searchQuery,
             onValueChange = { query ->
@@ -67,6 +91,23 @@ fun GamesScreen(
                     imageVector = Icons.Filled.Search,
                     contentDescription = stringResource(R.string.action_search)
                 )
+            },
+            trailingIcon = {
+                IconButton(onClick = {
+                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                        putExtra(RecognizerIntent.EXTRA_PROMPT, "Buscá un juego por voz")
+                        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                    }
+                    voiceLauncher.launch(intent)
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Mic,
+                        contentDescription = "Búsqueda por voz",
+                        tint = AccentCyan
+                    )
+                }
             },
             singleLine = true
         )

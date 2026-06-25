@@ -84,6 +84,11 @@ class GamesViewModel(
     private val _gameDetailImageUrl = MutableStateFlow<String?>(null)
     val gameDetailImageUrl: StateFlow<String?> = _gameDetailImageUrl.asStateFlow()
 
+    // Persistent cache of fetched image URLs (gameId → imageUrl).
+    // Populated by fetchMissingImages() and applied to search/filter results so that
+    // non-Steam games (e.g. Alan Wake 2) always display their image in the catalog list.
+    private val _imageCache = mutableMapOf<Int, String>()
+
     init {
         loadAllGames()
         observeConnectivity()
@@ -131,6 +136,12 @@ class GamesViewModel(
                     games.filter { it.steamAppId > 0 }
                         .associate { it.name to it.steamAppId }
                 )
+                // Populate platform map so the background refresh only queries
+                // stores where each game is actually sold (prevents GOG from being
+                // called for Steam-only games, etc.)
+                priceRefreshManager?.setGamePlatforms(
+                    games.associate { it.name to it.availablePlatforms }
+                )
                 // Fetch images for non-Steam games from their available stores
                 fetchMissingImages(games)
             }.onFailure { exception ->
@@ -165,6 +176,8 @@ class GamesViewModel(
                 try {
                     val imageUrl = epic.fetchGameImage(game.name)
                     if (!imageUrl.isNullOrEmpty()) {
+                        // Store in persistent cache so search/filter results also get the image
+                        _imageCache[game.id] = imageUrl
                         val idx = currentGames.indexOfFirst { it.id == game.id }
                         if (idx >= 0) {
                             currentGames[idx] = currentGames[idx].copy(imageUrl = imageUrl)
@@ -176,6 +189,21 @@ class GamesViewModel(
             if (updated) {
                 _allGames.value = currentGames
             }
+        }
+    }
+
+    /**
+     * Apply any cached image URLs (fetched at startup) to a list of games.
+     * Ensures that non-Steam games (e.g. Alan Wake 2) always show their image
+     * even when the list came from a search/filter that bypasses the in-memory update.
+     */
+    private fun applyImageCache(games: List<Game>): List<Game> {
+        if (_imageCache.isEmpty()) return games
+        return games.map { game ->
+            if (game.imageUrl.isEmpty()) {
+                val cached = _imageCache[game.id]
+                if (!cached.isNullOrEmpty()) game.copy(imageUrl = cached) else game
+            } else game
         }
     }
 
@@ -204,9 +232,10 @@ class GamesViewModel(
                 }
             } else {
                 searchGamesUseCase(query).onSuccess { games ->
+                    val enriched = applyImageCache(games)
                     _allGames.value = if (_selectedTag.value != null) {
-                        games.filter { it.tags.contains(_selectedTag.value) }
-                    } else games
+                        enriched.filter { it.tags.contains(_selectedTag.value) }
+                    } else enriched
                 }.onFailure { exception ->
                     _error.value = exception.message
                 }
@@ -220,7 +249,7 @@ class GamesViewModel(
             _isLoading.value = true
             _selectedTag.value = tag
             getGamesByTagUseCase(tag).onSuccess { games ->
-                _allGames.value = games
+                _allGames.value = applyImageCache(games)
             }.onFailure { exception ->
                 _error.value = exception.message
             }
@@ -237,14 +266,7 @@ class GamesViewModel(
         _showDLCs.value = !_showDLCs.value
     }
 
-    /**
-     * Load prices for a game.
-     *
-     * - **Online**: ALWAYS fetch fresh prices from APIs. No stale-cache shortcut.
-     *   Only falls back to cache if the fetch returns empty or fails.
-     * - **Offline**: Show cached prices with a warning.
-     */
-    fun loadRealPrices(gameName: String, steamAppId: Int? = null) {
+    fun loadRealPrices(gameName: String, steamAppId: Int? = null, platforms: List<String>? = null) {
         val manager = priceRefreshManager ?: return
         viewModelScope.launch {
             _isLoadingPrices.value = true
@@ -254,31 +276,27 @@ class GamesViewModel(
             val online = _isOnline.value
 
             if (online) {
-                // Always fetch fresh data when online
+                // Always fetch fresh data when online, filtered by platforms
                 try {
-                    val fresh = manager.fetchAndCachePrices(gameName, steamAppId)
+                    val fresh = manager.fetchAndCachePrices(gameName, steamAppId, platforms)
                     if (fresh.isNotEmpty()) {
                         _storePrices.value = fresh
                         _pricesFromCache.value = false
-                        // Extract image URL from store results (for non-Steam games)
                         val img = fresh.firstNotNullOfOrNull {
                             it.imageUrl.takeIf { url -> url.isNotEmpty() }
                         }
                         if (img != null) _gameDetailImageUrl.value = img
                     } else {
-                        // API returned nothing — try cache silently (no warning)
                         val cached = manager.getCachedPrices(gameName)
                         _storePrices.value = cached
                         _pricesFromCache.value = false
                     }
                 } catch (_: Exception) {
-                    // Fetch failed — fall back to cache with warning
                     val cached = manager.getCachedPrices(gameName)
                     _storePrices.value = cached
                     _pricesFromCache.value = cached.isNotEmpty()
                 }
             } else {
-                // Offline — use cache and show warning
                 val cached = manager.getCachedPrices(gameName)
                 _storePrices.value = cached
                 _pricesFromCache.value = cached.isNotEmpty()
@@ -315,9 +333,9 @@ class GamesViewModel(
         viewModelScope.launch {
             val tag = _selectedTag.value
             if (tag != null) {
-                getGamesByTagUseCase(tag).onSuccess { _allGames.value = it }
+                getGamesByTagUseCase(tag).onSuccess { _allGames.value = applyImageCache(it) }
             } else {
-                getAllGamesUseCase().onSuccess { _allGames.value = it }
+                getAllGamesUseCase().onSuccess { _allGames.value = applyImageCache(it) }
             }
         }
     }

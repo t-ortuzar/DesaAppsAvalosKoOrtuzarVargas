@@ -42,14 +42,14 @@ class PriceRefreshManager(
     private val connectivityObserver: ConnectivityObserver
 ) {
     companion object {
-        /** Cache is "stale" for individual game detail after 10 minutes. */
-        const val DETAIL_STALE_MS = 10 * 60 * 1000L   // 10 min
+        /** Cache is "stale" for individual game detail after 5 minutes. */
+        const val DETAIL_STALE_MS = 5 * 60 * 1000L    // 5 min
 
-        /** Offers refresh cycle: every 30 minutes. */
-        const val OFFERS_REFRESH_INTERVAL_MS = 30 * 60 * 1000L  // 30 min
+        /** Offers refresh cycle: every 15 minutes. */
+        const val OFFERS_REFRESH_INTERVAL_MS = 15 * 60 * 1000L  // 15 min
 
-        /** General catalog refresh cycle: every 2 hours. */
-        const val CATALOG_REFRESH_INTERVAL_MS = 2 * 60 * 60 * 1000L  // 2 h
+        /** General catalog refresh cycle: every 1 hour. */
+        const val CATALOG_REFRESH_INTERVAL_MS = 60 * 60 * 1000L  // 1 h
 
         /** Number of games to refresh per batch. */
         const val BATCH_SIZE = 5
@@ -68,12 +68,40 @@ class PriceRefreshManager(
     // Steam App IDs for quick lookup (populated from GameCatalog)
     private var steamAppIdMap: Map<String, Int> = emptyMap()
 
+    // Platform lists per game — limits which stores are queried in background refresh.
+    private var gamePlatformsMap: Map<String, List<String>> = emptyMap()
+
+    // Xbox product IDs per game (name → productId) — enables direct product lookup.
+    private var xboxProductIdMap: Map<String, String> = emptyMap()
+
+    // Xbox title hints per game (name → localized title for search matching).
+    private var xboxTitleHintMap: Map<String, String> = emptyMap()
+
     /**
      * Set the mapping from game name → Steam App ID.
      * Called once when the game catalog is loaded.
      */
     fun setSteamAppIds(map: Map<String, Int>) {
         steamAppIdMap = map
+    }
+
+    /**
+     * Set the mapping from game name → available store platforms.
+     * When set, background refresh only queries stores where the game is actually sold.
+     * This prevents GOG from being called for Steam-only games, etc.
+     */
+    fun setGamePlatforms(map: Map<String, List<String>>) {
+        gamePlatformsMap = map
+    }
+
+    /** Set the mapping from game name → Xbox product ID for direct lookups. */
+    fun setXboxProductIds(map: Map<String, String>) {
+        xboxProductIdMap = map
+    }
+
+    /** Set the mapping from game name → localized Xbox title hint for better search matching. */
+    fun setXboxTitleHints(map: Map<String, String>) {
+        xboxTitleHintMap = map
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -126,14 +154,16 @@ class PriceRefreshManager(
     /**
      * Fetch fresh prices for a single game from all stores.
      * Saves to cache. Returns the fetched prices.
+     * [platforms] limits which stores are queried (null = all stores).
      */
     suspend fun fetchAndCachePrices(
         gameName: String,
-        steamAppId: Int? = null
+        steamAppId: Int? = null,
+        platforms: List<String>? = null
     ): List<StorePrice> {
         if (!(connectivityObserver.isConnected())) return emptyList()
 
-        val prices = fetchAllStorePrices(gameName, steamAppId)
+        val prices = fetchAllStorePrices(gameName, steamAppId, platforms)
         if (prices.isNotEmpty()) {
             savePricesToCache(gameName, prices)
         }
@@ -178,7 +208,11 @@ class PriceRefreshManager(
             for (gameName in batch) {
                 try {
                     val steamAppId = steamAppIdMap[gameName]
-                    fetchAndCachePrices(gameName, steamAppId)
+                    // Use the platform list from the catalog so we only query stores
+                    // where the game is actually sold. Null = query all stores (fallback
+                    // when the platform map hasn't been populated yet).
+                    val platforms = gamePlatformsMap[gameName]
+                    fetchAndCachePrices(gameName, steamAppId, platforms)
                 } catch (e: CancellationException) { throw e }
                 catch (_: Exception) { /* skip failed game, continue batch */ }
                 delay(INTRA_BATCH_DELAY_MS)
@@ -268,15 +302,19 @@ class PriceRefreshManager(
 
     /**
      * Fetch prices from all 7 stores in parallel for a single game.
+     * [platforms] filters which stores to query — only stores in this list are called.
+     * Null means "query all stores".
      */
     private suspend fun fetchAllStorePrices(
         gameName: String,
-        steamAppId: Int? = null
+        steamAppId: Int? = null,
+        platforms: List<String>? = null
     ): List<StorePrice> = kotlinx.coroutines.coroutineScope {
         val prices = mutableListOf<StorePrice>()
+        val callAll = platforms == null
 
         val steamJob = async {
-            if (steamAppId != null && steamAppId > 0) {
+            if ((callAll || "Steam" in platforms!!) && steamAppId != null && steamAppId > 0) {
                 try {
                     steamPriceService.getArgentinePrice(steamAppId)?.let { arPrice ->
                         StorePrice(
@@ -295,27 +333,49 @@ class PriceRefreshManager(
         }
 
         val epicJob = async {
-            try { epicPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "Epic Games" in platforms!!) {
+                try { epicPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val gogJob = async {
-            try { gogPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "GOG" in platforms!!) {
+                try { gogPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val xboxJob = async {
-            try { xboxPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "Xbox / Microsoft" in platforms!!) {
+                try {
+                    val productId = xboxProductIdMap[gameName]
+                    val titleHint = xboxTitleHintMap[gameName]
+                    if (productId != null) {
+                        // Direct product lookup by known ID — most accurate
+                        xboxPriceService.fetchProductPrice(productId, gameName)
+                            ?: xboxPriceService.searchGamePrice(gameName, titleHint)
+                    } else {
+                        xboxPriceService.searchGamePrice(gameName, titleHint)
+                    }
+                } catch (_: Exception) { null }
+            } else null
         }
 
         val ubisoftJob = async {
-            try { ubisoftPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "Ubisoft" in platforms!!) {
+                try { ubisoftPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val battleNetJob = async {
-            try { battleNetPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "Battle.net" in platforms!!) {
+                try { battleNetPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val eaJob = async {
-            try { eaPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "EA" in platforms!!) {
+                try { eaPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         steamJob.await()?.let { prices.add(it) }
