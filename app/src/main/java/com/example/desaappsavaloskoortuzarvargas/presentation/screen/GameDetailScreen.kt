@@ -527,14 +527,12 @@ private fun CatalogPriceRow(
     val storeUrl = when (platform) {
         "Steam" -> if (steamAppId > 0) "https://store.steampowered.com/app/$steamAppId" else ""
         "GOG" -> {
-            val slug = gameName.lowercase()
-                .replace("'", "").replace("`", "").replace(".", "")
-                .replace(":", " ").replace("-", " ").trim()
-                .replace(Regex("\\s+"), "_")
-                .replace(Regex("[^a-z0-9_]"), "")
-                .replace(Regex("_+"), "_").trim('_')
-            if (slug.isNotEmpty()) "https://www.gog.com/game/$slug" else "https://www.gog.com"
-        }
+                // We CANNOT reliably derive the GOG slug from the title — GOG uses
+                // Roman numerals, abbreviations, etc. (e.g., "3" → "iii").
+                // Use search URL so the user can find the game manually if the live
+                // API price isn't available.
+                "https://www.gog.com/games?search=${java.net.URLEncoder.encode(gameName, "UTF-8")}"
+            }
         "Epic Games" -> {
             val slug = gameName.lowercase()
                 .replace("'", "").replace(":", "").trim()

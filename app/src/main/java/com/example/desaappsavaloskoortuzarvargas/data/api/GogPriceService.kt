@@ -71,22 +71,28 @@ class GogPriceService {
             if (finalPrice == 0f && !isFree) return@withContext null
 
             // ── URL extraction ──
+            // Correct GOG URL format (confirmed): https://www.gog.com/es/game/{slug}
+            // The slug from the API is reliable (e.g., "baldurs_gate_iii" for BG3).
+            // NEVER use a title-derived slug — GOG uses Roman numerals, abbreviations, etc.
+            // that cannot be reliably derived from the title ("3" ≠ "iii").
             val storeLink = match["storeLink"]?.jsonPrimitive?.contentOrNull ?: ""
             val apiSlug   = match["slug"]?.jsonPrimitive?.contentOrNull ?: ""
 
             val storeUrl = when {
-                storeLink.startsWith("http") -> storeLink      // Full URL from API
-                storeLink.isNotEmpty() -> {                    // Relative path from API
+                storeLink.startsWith("http") -> {
+                    // The API may return /en/ or another locale; replace with /es/ for consistency
+                    storeLink
+                        .replace(Regex("/[a-z]{2}/game/"), "/es/game/")
+                        .replace("/game/", "/es/game/")
+                        .replace("https://www.gog.com/es/es/game/", "https://www.gog.com/es/game/") // avoid double
+                }
+                storeLink.isNotEmpty() -> {
                     val path = if (storeLink.startsWith("/")) storeLink else "/$storeLink"
                     "https://www.gog.com$path"
                 }
-                apiSlug.isNotEmpty() -> "https://www.gog.com/game/$apiSlug"
-                else -> {
-                    // Derive slug from title: "Baldur's Gate 3" → "baldurs_gate_3"
-                    val derived = deriveGogSlug(title)
-                    if (derived.isNotEmpty()) "https://www.gog.com/game/$derived"
-                    else "https://www.gog.com/games?search=${URLEncoder.encode(title, "UTF-8")}"
-                }
+                apiSlug.isNotEmpty() -> "https://www.gog.com/es/game/$apiSlug"
+                // Fallback: search page — do NOT use derived slug (unreliable, e.g. "3" vs "iii")
+                else -> "https://www.gog.com/games?search=${URLEncoder.encode(title, "UTF-8")}"
             }
 
             StorePrice(
@@ -131,19 +137,4 @@ class GogPriceService {
         }
         return 0
     }
-
-    /**
-     * Derives a likely GOG slug from a game title.
-     * Examples: "Baldur's Gate 3" → "baldurs_gate_3"
-     *           "The Witcher 3: Wild Hunt" → "the_witcher_3_wild_hunt"
-     */
-    private fun deriveGogSlug(title: String): String =
-        title.lowercase()
-            .replace("'", "").replace("`", "").replace(".", "")
-            .replace(":", " ").replace("-", " ")
-            .trim()
-            .replace(Regex("\\s+"), "_")
-            .replace(Regex("[^a-z0-9_]"), "")
-            .replace(Regex("_+"), "_")
-            .trim('_')
 }
