@@ -86,11 +86,20 @@ class GogPriceService {
                 // a paid game as "FREE".
                 if (finalPrice == 0f && !priceData.isFree) return@withContext null
 
-                // Build the store URL: prefer storeLink, then slug, then homepage
+                // Build the store URL.  GOG's API returns a `slug` field (e.g. "what_remains_of_edith_finch").
+                // The product page is at gog.com/game/{slug}.
+                // storeLink (if present) is a relative path like "/game/slug" – preferred when available.
+                // Fallback: title search so the user at least lands near the game.
                 val storeUrl = when {
-                    match.storeLink.isNotEmpty() -> "https://www.gog.com${match.storeLink}"
+                    match.storeLink.isNotEmpty() -> {
+                        val link = if (match.storeLink.startsWith("/")) match.storeLink else "/${match.storeLink}"
+                        "https://www.gog.com$link"
+                    }
                     match.slug.isNotEmpty() -> "https://www.gog.com/game/${match.slug}"
-                    else -> "https://www.gog.com"
+                    else -> {
+                        val encoded = URLEncoder.encode(title, "UTF-8")
+                        "https://www.gog.com/games?search=$encoded"
+                    }
                 }
 
                 StorePrice(

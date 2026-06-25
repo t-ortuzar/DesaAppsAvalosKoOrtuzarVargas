@@ -68,7 +68,6 @@ class EAPriceService {
                     ?.toFloatOrNull()
                     ?: priceObj?.get("originalPrice")?.jsonPrimitive?.content?.toFloatOrNull()
                 val currency = priceObj?.get("currency")?.jsonPrimitive?.content ?: "USD"
-                val offerId = firstOffer["offerId"]?.jsonPrimitive?.content ?: ""
 
                 if (currentPrice == null) return@withContext null
 
@@ -87,7 +86,12 @@ class EAPriceService {
                     discountPercent = discountPct,
                     currency = currency,
                     isFree = currentPriceFloat == 0f,
-                    storeUrl = "https://www.ea.com/es-ar/games/$offerId"
+                    storeUrl = run {
+                        // offerId from Origin API (e.g. "Origin.OFR.50.0001066") is not a URL slug.
+                        // Use EA App's search instead so the user lands near the game.
+                        val encoded = URLEncoder.encode(gameName.ifBlank { title }, "UTF-8")
+                        "https://www.ea.com/search#category=mlbgame&q=$encoded"
+                    }
                 )
             } else null
         } catch (_: Exception) {

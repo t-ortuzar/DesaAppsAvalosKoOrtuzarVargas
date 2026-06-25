@@ -205,6 +205,16 @@ class EpicPriceService {
                     } else null
                 } catch (_: Exception) { null }
 
+                // Build the store URL.  Epic does NOT support es-AR in the URL path;
+                // the correct format is /p/{slug} without a locale prefix.
+                // If urlSlug is empty, fall back to a search page.
+                val storeUrl = if (match.urlSlug.isNotEmpty()) {
+                    "https://store.epicgames.com/p/${match.urlSlug}"
+                } else {
+                    val encoded = java.net.URLEncoder.encode(title, "UTF-8")
+                    "https://store.epicgames.com/browse?q=$encoded"
+                }
+
                 StorePrice(
                     storeName = "Epic Games",
                     currentPrice = totalPrice.discountPrice / 100f,
@@ -212,7 +222,7 @@ class EpicPriceService {
                     discountPercent = discountPct,
                     currency = totalPrice.currencyCode,
                     isFree = isFree,
-                    storeUrl = "https://store.epicgames.com/es-AR/p/${match.urlSlug}",
+                    storeUrl = storeUrl,
                     formattedPrice = totalPrice.fmtPrice?.discountPrice ?: "",
                     formattedOriginal = totalPrice.fmtPrice?.originalPrice ?: "",
                     imageUrl = epicImageUrl,

@@ -53,7 +53,6 @@ class BattleNetPriceService {
                 if (products.isEmpty()) return@withContext null
 
                 val firstProduct = products[0].jsonObject
-                val productTitle = firstProduct["name"]?.jsonPrimitive?.content ?: title
                 val priceObj = firstProduct["price"]?.jsonObject
 
                 val currentPrice = priceObj?.get("amount")?.jsonPrimitive?.content
@@ -77,7 +76,12 @@ class BattleNetPriceService {
                     discountPercent = discountPct,
                     currency = currency,
                     isFree = currentPrice == 0f,
-                    storeUrl = "https://us.shop.battle.net/es-ar/product/$productSlug"
+                    storeUrl = if (productSlug.isNotEmpty()) {
+                        "https://us.shop.battle.net/es-ar/product/$productSlug"
+                    } else {
+                        val encoded = URLEncoder.encode(title, "UTF-8")
+                        "https://us.shop.battle.net/es-ar?q=$encoded"
+                    }
                 )
             } else null
         } catch (_: Exception) {

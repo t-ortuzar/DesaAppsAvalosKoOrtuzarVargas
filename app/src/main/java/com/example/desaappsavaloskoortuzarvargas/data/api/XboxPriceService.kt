@@ -118,8 +118,6 @@ class XboxPriceService {
                     isPcGame && productTitle.contains(title.split(" ").first(), ignoreCase = true)
                 } ?: parsed.Products.firstOrNull() ?: return@withContext null
 
-                val productTitle = match.LocalizedProperties.firstOrNull()?.ProductTitle ?: title
-
                 // Get the first available price (prefer PC availability)
                 val price = match.DisplaySkuAvailabilities
                     .flatMap { it.Availabilities }
@@ -141,7 +139,13 @@ class XboxPriceService {
                     discountPercent = discountPct,
                     currency = price.CurrencyCode,
                     isFree = isFree,
-                    storeUrl = "https://www.xbox.com/es-AR/games/store/${match.ProductId}"
+                    storeUrl = if (match.ProductId.isNotEmpty()) {
+                        // Xbox Store deep-link using the product ID (bigId)
+                        "https://www.xbox.com/games/store/-/${match.ProductId}"
+                    } else {
+                        val encoded = URLEncoder.encode(title, "UTF-8")
+                        "https://www.xbox.com/search?q=$encoded"
+                    }
                 )
             } else null
         } catch (_: Exception) {
