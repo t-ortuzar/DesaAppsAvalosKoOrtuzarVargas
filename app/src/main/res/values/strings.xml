@@ -137,4 +137,11 @@
     <string name="price_regional_label">Regional price (Argentina)</string>
     <string name="price_currency_label">Price in %1$s</string>
     <string name="price_ref_label">(ref.)</string>
+
+    <!-- Store redirect buttons -->
+    <string name="btn_buy_now">Buy on Store</string>
+    <string name="btn_get_free">Get for Free</string>
+    <string name="btn_play_free">Play for Free</string>
+
+
 </resources>

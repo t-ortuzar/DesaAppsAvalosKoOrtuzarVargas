@@ -140,7 +140,35 @@ object GameCatalog {
         GameInfo(108, "Counter-Strike 2", "The definitive competitive tactical FPS, successor to CS:GO.", listOf("Free2Play", "FPS", "Tactical"), listOf("Steam"), isF2P = true),
         GameInfo(109, "Warframe", "A cooperative free-to-play third-person online action game set in an evolving sci-fi world.", listOf("Free2Play", "TPS", "Co-op", "Action"), listOf("Steam"), isF2P = true),
         GameInfo(110, "Path of Exile", "A free-to-play dark fantasy action RPG with deep character customization.", listOf("Free2Play", "RPG", "Action"), listOf("Steam"), isF2P = true),
-        GameInfo(112, "Fall Guys", "A massively multiplayer party game with hilarious obstacle courses.", listOf("Free2Play", "Platformer", "Party"), listOf("Steam", "Epic Games"), isF2P = true)
+        GameInfo(112, "Fall Guys", "A massively multiplayer party game with hilarious obstacle courses.", listOf("Free2Play", "Platformer", "Party"), listOf("Steam", "Epic Games"), isF2P = true),
+        // ═══ New 2024-2025 releases ═══
+        GameInfo(115, "Monster Hunter Wilds", "Hunt breathtaking monsters in expansive biomes that change with the weather.", listOf("Action", "RPG", "Co-op")),
+        GameInfo(116, "Clair Obscur: Expedition 33", "A stunning French RPG set in a surreal Art Deco world facing extinction.", listOf("RPG", "Turn-Based", "Adventure")),
+        GameInfo(117, "Kingdom Come: Deliverance 2", "Continue Henry's journey in a breathtaking medieval open world.", listOf("RPG", "Open World", "Adventure", "Action"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(118, "Warhammer 40K: Space Marine 2", "Don your power armor and fight the alien swarms threatening humanity.", listOf("Action", "TPS", "Co-op"), listOf("Steam")),
+        GameInfo(119, "Silent Hill 2 Remake", "A faithful remake of the psychological horror masterpiece.", listOf("Horror", "Survival", "TPS"), listOf("Steam")),
+        GameInfo(120, "Dragon Age: The Veilguard", "Lead a crew of seven heroes to save the world of Thedas.", listOf("RPG", "Action", "Adventure"), listOf("Steam", "EA", "Epic Games")),
+        GameInfo(121, "Avowed", "Explore the Living Lands — a dark, magic-infused open world.", listOf("RPG", "FPS", "Action", "Open World"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(122, "The Elder Scrolls IV: Oblivion Remastered", "The iconic RPG classic rebuilt with stunning next-gen visuals.", listOf("RPG", "Open World", "Action", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(123, "Path of Exile 2", "A next-gen dark fantasy action RPG with deep build depth.", listOf("Action", "RPG"), listOf("Steam")),
+        GameInfo(124, "Helldivers 2", "Squad up and fight for democracy against overwhelming alien forces.", listOf("Action", "TPS", "Co-op"), listOf("Steam")),
+        GameInfo(125, "Doom: The Dark Ages", "Return to the roots of DOOM with medieval brutality and power fantasy.", listOf("FPS", "Action"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(126, "Age of Mythology: Retold", "The classic real-time strategy game reimagined with modern visuals.", listOf("Strategy", "RTS"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(127, "Like a Dragon: Pirate Yakuza in Hawaii", "Kiryu and Majima together in a swashbuckling Hawaiian adventure.", listOf("Action", "RPG", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(128, "Civilization VII", "Lead humanity from the ancient era to the modern age.", listOf("Strategy", "Turn-Based"), listOf("Steam", "Epic Games")),
+        GameInfo(129, "Assassin's Creed Shadows", "Live the fantasy of the shinobi and the samurai in feudal Japan.", listOf("Action", "Stealth", "Open World", "Adventure"), listOf("Steam", "Xbox / Microsoft", "Ubisoft")),
+        GameInfo(130, "Balatro", "A hypnotic roguelike card game — poker meets Slay the Spire.", listOf("Roguelike", "Card Game", "Indie")),
+        GameInfo(131, "Hades II", "The sequel to the award-winning rogue-like dungeon crawler.", listOf("Roguelike", "Action", "Indie")),
+        // ═══ Classic popular games ═══
+        GameInfo(132, "Half-Life: Alyx", "Valve's VR return to the Half-Life universe — a masterpiece.", listOf("FPS", "VR", "Horror", "Action"), listOf("Steam")),
+        GameInfo(133, "Prey (2017)", "Explore a space station overrun by shapeshifting aliens in this immersive sim.", listOf("FPS", "Horror", "Action", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(134, "Dishonored 2", "Master Emily and Corvo's supernatural powers in a beautifully crafted steampunk world.", listOf("Action", "Stealth", "FPS", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(135, "Batman: Arkham Knight", "The epic conclusion to the Arkham trilogy — with the Batmobile.", listOf("Action", "Adventure", "TPS"), listOf("Steam")),
+        GameInfo(136, "Mass Effect Legendary Edition", "The complete legendary sci-fi trilogy remastered in 4K.", listOf("RPG", "Action", "Sci-fi", "Adventure"), listOf("Steam", "EA", "Xbox / Microsoft")),
+        GameInfo(137, "BioShock Remastered", "Descend into the underwater dystopia of Rapture.", listOf("FPS", "Horror", "Action", "Adventure"), listOf("Steam")),
+        GameInfo(138, "Star Wars Jedi: Fallen Order", "Cal Kestis hunts for a Jedi holocron in this action-adventure.", listOf("Action", "Adventure", "TPS"), listOf("Steam", "EA")),
+        GameInfo(139, "Titanfall 2", "Best-in-class FPS multiplayer and one of gaming's greatest single-player campaigns.", listOf("FPS", "Action"), listOf("Steam", "EA")),
+        GameInfo(140, "Warhammer 40K: Boltgun", "A love letter to classic arena shooters set in the 40K universe.", listOf("FPS", "Action", "Indie"), listOf("Steam"))
     )
 
     private val platforms = listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft", "EA", "Ubisoft", "Battle.net")
@@ -170,7 +198,35 @@ object GameCatalog {
         96 to 632470, 97 to 435150, 98 to 560130, 99 to 1659040, 100 to 782330,
         // F2P games that ARE on Steam
         104 to 2767030, 105 to 570, 106 to 1172470,
-        108 to 730, 109 to 230410, 110 to 238960, 112 to 1097150
+        108 to 730, 109 to 230410, 110 to 238960, 112 to 1097150,
+        // 2024-2025 new releases
+        115 to 2246340, // Monster Hunter Wilds
+        116 to 2787650, // Clair Obscur: Expedition 33
+        117 to 1771300, // Kingdom Come: Deliverance 2
+        118 to 2183900, // Warhammer 40K: Space Marine 2
+        119 to 2823510, // Silent Hill 2 Remake
+        120 to 1845910, // Dragon Age: The Veilguard
+        121 to 2457220, // Avowed
+        122 to 2623190, // The Elder Scrolls IV: Oblivion Remastered
+        123 to 2694490, // Path of Exile 2
+        124 to 553850,  // Helldivers 2
+        125 to 3063310, // Doom: The Dark Ages
+        126 to 1934680, // Age of Mythology: Retold
+        127 to 2858920, // Like a Dragon: Pirate Yakuza in Hawaii
+        128 to 1895870, // Civilization VII
+        129 to 3059450, // Assassin's Creed Shadows
+        130 to 2379780, // Balatro
+        131 to 1145350, // Hades II
+        // Classics
+        132 to 546560,  // Half-Life: Alyx
+        133 to 480490,  // Prey (2017)
+        134 to 403640,  // Dishonored 2
+        135 to 208650,  // Batman: Arkham Knight
+        136 to 1328670, // Mass Effect Legendary Edition
+        137 to 409710,  // BioShock Remastered
+        138 to 1172380, // Star Wars Jedi: Fallen Order
+        139 to 1237970, // Titanfall 2
+        140 to 1824580  // Warhammer 40K: Boltgun
     )
 
     // Games NOT on Steam — image will be fetched at runtime from their store API.
@@ -371,8 +427,36 @@ object GameCatalog {
         96 to 90,   // Disco Elysium: The Final Cut — 90%
         97 to 85,   // Divinity: Original Sin 2 — 85%
         98 to 80,   // Pillars of Eternity II — 80%
-        99 to 80,   // Hitman: World of Assassination — 80%
-        100 to 80   // Doom Eternal — 80%
+        99 to 80,    // Hitman: World of Assassination — 80%
+        100 to 80,   // Doom Eternal — 80%
+        // ── 2024-2025 new releases ──
+        115 to 0,    // Monster Hunter Wilds — too new
+        116 to 0,    // Clair Obscur: Expedition 33 — too new
+        117 to 20,   // Kingdom Come: Deliverance 2 — 20%
+        118 to 25,   // Warhammer 40K: Space Marine 2 — 25%
+        119 to 30,   // Silent Hill 2 Remake — 30%
+        120 to 40,   // Dragon Age: The Veilguard — 40%
+        121 to 20,   // Avowed — 20%
+        122 to 0,    // Oblivion Remastered — too new
+        123 to 0,    // Path of Exile 2 — Early Access
+        124 to 33,   // Helldivers 2 — 33%
+        125 to 0,    // Doom: The Dark Ages — too new
+        126 to 33,   // Age of Mythology: Retold — 33%
+        127 to 20,   // Like a Dragon: Pirate Yakuza in Hawaii — 20%
+        128 to 20,   // Civilization VII — 20%
+        129 to 20,   // Assassin's Creed Shadows — 20%
+        130 to 20,   // Balatro — 20%
+        131 to 0,    // Hades II — Early Access
+        // ── Classics ──
+        132 to 40,   // Half-Life: Alyx — 40%
+        133 to 90,   // Prey (2017) — 90%
+        134 to 90,   // Dishonored 2 — 90%
+        135 to 90,   // Batman: Arkham Knight — 90%
+        136 to 75,   // Mass Effect Legendary Edition — 75%
+        137 to 90,   // BioShock Remastered — 90%
+        138 to 90,   // Star Wars Jedi: Fallen Order — 90%
+        139 to 90,   // Titanfall 2 — 90%
+        140 to 60    // Warhammer 40K: Boltgun — 60%
     )
 
     /**
@@ -526,7 +610,35 @@ object GameCatalog {
         111 to 8.6,  // Rocket League — Metacritic 86
         112 to 8.0,  // Fall Guys — Metacritic 80
         113 to 7.6,  // Teamfight Tactics — Metacritic 76
-        114 to 8.6   // Honkai: Star Rail — Metacritic 86
+        114 to 8.6,  // Honkai: Star Rail — Metacritic 86
+        // ── 2024-2025 new releases ──
+        115 to 9.0,  // Monster Hunter Wilds — Metacritic 90
+        116 to 9.2,  // Clair Obscur: Expedition 33 — Metacritic 92
+        117 to 8.8,  // Kingdom Come: Deliverance 2 — Metacritic 88
+        118 to 8.2,  // Warhammer 40K: Space Marine 2 — Metacritic 82
+        119 to 8.8,  // Silent Hill 2 Remake — Metacritic 88
+        120 to 7.4,  // Dragon Age: The Veilguard — Metacritic 74
+        121 to 7.8,  // Avowed — Metacritic 78
+        122 to 9.0,  // The Elder Scrolls IV: Oblivion Remastered — Metacritic 90
+        123 to 8.5,  // Path of Exile 2 (EA) — Metacritic 85
+        124 to 8.8,  // Helldivers 2 — Metacritic 88
+        125 to 8.7,  // Doom: The Dark Ages — Metacritic 87
+        126 to 8.3,  // Age of Mythology: Retold — Metacritic 83
+        127 to 8.5,  // Like a Dragon: Pirate Yakuza in Hawaii — Metacritic 85
+        128 to 7.3,  // Civilization VII — Metacritic 73
+        129 to 8.0,  // Assassin's Creed Shadows — Metacritic 80
+        130 to 9.0,  // Balatro — Metacritic 90
+        131 to 9.3,  // Hades II (EA) — Metacritic 93
+        // ── Classics ──
+        132 to 9.7,  // Half-Life: Alyx — Metacritic 93 (PC VR)
+        133 to 8.5,  // Prey (2017) — Metacritic 85
+        134 to 8.6,  // Dishonored 2 — Metacritic 86
+        135 to 8.7,  // Batman: Arkham Knight — Metacritic 87
+        136 to 9.7,  // Mass Effect Legendary Edition — Metacritic 97
+        137 to 9.5,  // BioShock Remastered — Metacritic 97
+        138 to 8.3,  // Star Wars Jedi: Fallen Order — Metacritic 83
+        139 to 8.9,  // Titanfall 2 — Metacritic 89
+        140 to 8.1   // Warhammer 40K: Boltgun — Metacritic 81
     )
 
     /**
@@ -653,7 +765,35 @@ object GameCatalog {
         111 to "2015-07-07",  // Rocket League
         112 to "2020-08-04",  // Fall Guys
         113 to "2019-06-26",  // Teamfight Tactics
-        114 to "2023-04-26"   // Honkai: Star Rail
+        114 to "2023-04-26",  // Honkai: Star Rail
+        // ── 2024-2025 new releases ──
+        115 to "2025-02-28",  // Monster Hunter Wilds
+        116 to "2025-04-24",  // Clair Obscur: Expedition 33
+        117 to "2025-02-04",  // Kingdom Come: Deliverance 2
+        118 to "2024-09-09",  // Warhammer 40K: Space Marine 2
+        119 to "2024-10-08",  // Silent Hill 2 Remake
+        120 to "2024-10-31",  // Dragon Age: The Veilguard
+        121 to "2025-02-18",  // Avowed
+        122 to "2025-04-22",  // The Elder Scrolls IV: Oblivion Remastered
+        123 to "2024-12-06",  // Path of Exile 2 (Early Access)
+        124 to "2024-02-08",  // Helldivers 2
+        125 to "2025-05-15",  // Doom: The Dark Ages
+        126 to "2024-09-04",  // Age of Mythology: Retold
+        127 to "2025-02-21",  // Like a Dragon: Pirate Yakuza in Hawaii
+        128 to "2025-02-11",  // Civilization VII
+        129 to "2025-03-20",  // Assassin's Creed Shadows
+        130 to "2024-02-20",  // Balatro
+        131 to "2024-05-06",  // Hades II (Early Access)
+        // ── Classics ──
+        132 to "2020-03-23",  // Half-Life: Alyx
+        133 to "2017-05-05",  // Prey (2017)
+        134 to "2016-11-11",  // Dishonored 2
+        135 to "2015-06-23",  // Batman: Arkham Knight
+        136 to "2021-05-14",  // Mass Effect Legendary Edition
+        137 to "2016-09-16",  // BioShock Remastered
+        138 to "2019-11-15",  // Star Wars Jedi: Fallen Order
+        139 to "2016-10-28",  // Titanfall 2
+        140 to "2023-05-23"   // Warhammer 40K: Boltgun
     )
 
     private fun dlcImg(dlcId: Int): String {

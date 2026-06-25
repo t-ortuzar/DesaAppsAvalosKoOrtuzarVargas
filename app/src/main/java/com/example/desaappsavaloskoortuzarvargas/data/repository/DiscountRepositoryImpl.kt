@@ -70,11 +70,19 @@ class DiscountRepositoryImpl(
         val f2pGames = catalogGames.filter {
             it.currentPrices.isEmpty() && it.availablePlatforms.isNotEmpty()
         }.map { game ->
+            val platform = game.availablePlatforms.firstOrNull() ?: "PC"
+            val storeUrl = when {
+                game.steamAppId > 0 -> "https://store.steampowered.com/app/${game.steamAppId}"
+                platform == "Epic Games" -> "https://store.epicgames.com"
+                platform == "Riot Games" -> "https://www.riotgames.com"
+                platform == "HoYoverse" -> "https://www.hoyoverse.com"
+                else -> ""
+            }
             DiscountedGame(
                 gameId = game.id,
                 gameName = game.name,
                 imageUrl = game.imageUrl,
-                platform = game.availablePlatforms.firstOrNull() ?: "PC",
+                platform = platform,
                 originalPrice = 0f,
                 currentPrice = 0f,
                 discountPercentage = 100,
@@ -82,7 +90,8 @@ class DiscountRepositoryImpl(
                 isF2P = true,
                 isTemporarilyFree = false,
                 offerType = OfferType.F2P,
-                tags = game.tags
+                tags = game.tags,
+                storeUrl = storeUrl
             )
         }
 
@@ -142,7 +151,8 @@ class DiscountRepositoryImpl(
             } else {
                 OfferType.SALE
             },
-            endTimestamp = entity.discountEndTimestamp
+            endTimestamp = entity.discountEndTimestamp,
+            storeUrl = entity.dealUrl
         )
     }
 }

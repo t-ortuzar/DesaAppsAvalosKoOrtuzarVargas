@@ -1,5 +1,7 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.component
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,8 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,10 +55,26 @@ fun DiscountCard(
     dolarRate: Double? = null,
     convertToArs: (Float) -> Float = { it }
 ) {
+    val context = LocalContext.current
+
+    fun openStoreUrl(url: String) {
+        if (url.isNotEmpty()) {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
+        }
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onGameClick(discount) },
+            .clickable {
+                if (discount.storeUrl.isNotEmpty()) {
+                    openStoreUrl(discount.storeUrl)
+                } else {
+                    onGameClick(discount)
+                }
+            },
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
@@ -206,6 +230,33 @@ fun DiscountCard(
                                 )
                             }
                         }
+                    }
+                }
+
+                // "Ver en tienda" buy button — shown when a store URL is available
+                if (discount.storeUrl.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Button(
+                        onClick = { openStoreUrl(discount.storeUrl) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(6.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ShoppingCart,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 6.dp)
+                        )
+                        Text(
+                            text = when {
+                                discount.isF2P -> stringResource(R.string.btn_play_free)
+                                discount.isTemporarilyFree || discount.isFree -> stringResource(R.string.btn_get_free)
+                                else -> stringResource(R.string.btn_buy_now)
+                            },
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

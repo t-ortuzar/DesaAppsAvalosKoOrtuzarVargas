@@ -42,14 +42,14 @@ class PriceRefreshManager(
     private val connectivityObserver: ConnectivityObserver
 ) {
     companion object {
-        /** Cache is "stale" for individual game detail after 10 minutes. */
-        const val DETAIL_STALE_MS = 10 * 60 * 1000L   // 10 min
+        /** Cache is "stale" for individual game detail after 5 minutes. */
+        const val DETAIL_STALE_MS = 5 * 60 * 1000L    // 5 min
 
-        /** Offers refresh cycle: every 30 minutes. */
-        const val OFFERS_REFRESH_INTERVAL_MS = 30 * 60 * 1000L  // 30 min
+        /** Offers refresh cycle: every 15 minutes. */
+        const val OFFERS_REFRESH_INTERVAL_MS = 15 * 60 * 1000L  // 15 min
 
-        /** General catalog refresh cycle: every 2 hours. */
-        const val CATALOG_REFRESH_INTERVAL_MS = 2 * 60 * 60 * 1000L  // 2 h
+        /** General catalog refresh cycle: every 1 hour. */
+        const val CATALOG_REFRESH_INTERVAL_MS = 60 * 60 * 1000L  // 1 h
 
         /** Number of games to refresh per batch. */
         const val BATCH_SIZE = 5

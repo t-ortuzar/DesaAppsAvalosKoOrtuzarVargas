@@ -34,6 +34,7 @@ data class DiscountedGame(
     val tags: List<String> = emptyList(),
     val offerType: OfferType = OfferType.SALE,
     val endTimestamp: Long? = null,         // epoch millis when deal ends
-    val previousBasePrice: Float? = null    // for PERMANENT_PRICE_DROP: what the old base price was
+    val previousBasePrice: Float? = null,   // for PERMANENT_PRICE_DROP: what the old base price was
+    val storeUrl: String = ""               // direct URL to the store product page for purchase
 )
 
