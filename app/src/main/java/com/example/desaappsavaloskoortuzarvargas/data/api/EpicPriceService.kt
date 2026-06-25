@@ -170,10 +170,11 @@ class EpicPriceService {
                 val parsed = json.decodeFromString<EpicGraphQLResponse>(response)
                 val elements = parsed.data?.Catalog?.searchStore?.elements ?: return@withContext null
 
-                // Find the best match by title
+                // Only use an exact title match — do NOT fall back to first result.
+                // Returning a wrong game (e.g. a Steam-exclusive) is worse than null.
                 val match = elements.firstOrNull { element ->
                     element.title.equals(title, ignoreCase = true)
-                } ?: elements.firstOrNull() ?: return@withContext null
+                } ?: return@withContext null
 
                 val totalPrice = match.price?.totalPrice ?: return@withContext null
 
@@ -277,7 +278,7 @@ class EpicPriceService {
                 val elements = parsed.data?.Catalog?.searchStore?.elements ?: return@withContext null
 
                 val match = elements.firstOrNull { it.title.equals(title, ignoreCase = true) }
-                    ?: elements.firstOrNull() ?: return@withContext null
+                    ?: return@withContext null
 
                 // Prefer wide/landscape images (like Steam headers)
                 match.keyImages.firstOrNull {

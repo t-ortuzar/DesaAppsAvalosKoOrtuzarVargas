@@ -19,6 +19,7 @@ data class GogCatalogResponse(
 data class GogProduct(
     val id: Long = 0,
     val title: String = "",
+    val slug: String = "",
     val price: GogPriceData? = null,
     val storeLink: String = ""
 )
@@ -69,10 +70,11 @@ class GogPriceService {
 
                 if (catalog.products.isEmpty()) return@withContext null
 
-                // Find the best title match
+                // Only use an exact title match — do NOT fall back to first result.
+                // Returning a wrong game is worse than returning null.
                 val match = catalog.products.firstOrNull { product ->
                     product.title.equals(title, ignoreCase = true)
-                } ?: catalog.products.firstOrNull() ?: return@withContext null
+                } ?: return@withContext null
 
                 val priceData = match.price ?: return@withContext null
 
@@ -84,6 +86,13 @@ class GogPriceService {
                 // a paid game as "FREE".
                 if (finalPrice == 0f && !priceData.isFree) return@withContext null
 
+                // Build the store URL: prefer storeLink, then slug, then homepage
+                val storeUrl = when {
+                    match.storeLink.isNotEmpty() -> "https://www.gog.com${match.storeLink}"
+                    match.slug.isNotEmpty() -> "https://www.gog.com/game/${match.slug}"
+                    else -> "https://www.gog.com"
+                }
+
                 StorePrice(
                     storeName = "GOG",
                     currentPrice = finalPrice,
@@ -91,11 +100,7 @@ class GogPriceService {
                     discountPercent = priceData.discountPercentage,
                     currency = priceData.currency,
                     isFree = priceData.isFree,
-                    storeUrl = if (match.storeLink.isNotEmpty()) {
-                        "https://www.gog.com${match.storeLink}"
-                    } else {
-                        "https://www.gog.com"
-                    }
+                    storeUrl = storeUrl
                 )
             } else null
         } catch (_: Exception) {

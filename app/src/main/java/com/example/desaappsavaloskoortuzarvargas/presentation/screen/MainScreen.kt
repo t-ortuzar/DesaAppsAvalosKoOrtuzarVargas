@@ -250,8 +250,8 @@ fun MainScreen() {
                     label = { Text(stringResource(R.string.nav_offers)) },
                     selected = currentTab == NavigationStateManager.TAB_OFFERS,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AccentYellow,
-                        unselectedIconColor = AccentYellow,
+                        selectedIconColor = AccentCyan,
+                        unselectedIconColor = AccentCyan,
                         selectedTextColor = NavItemLabelSelectedColor,
                         unselectedTextColor = NavItemLabelColor
                     ),
@@ -284,8 +284,8 @@ fun MainScreen() {
                     label = { Text(stringResource(R.string.nav_favorites)) },
                     selected = currentTab == NavigationStateManager.TAB_FAVORITES,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AccentYellow,
-                        unselectedIconColor = AccentYellow,
+                        selectedIconColor = AccentCyan,
+                        unselectedIconColor = AccentCyan,
                         selectedTextColor = NavItemLabelSelectedColor,
                         unselectedTextColor = NavItemLabelColor
                     ),
@@ -329,8 +329,8 @@ fun MainScreen() {
                     label = { Text(stringResource(R.string.nav_settings)) },
                     selected = currentTab == NavigationStateManager.TAB_SETTINGS,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = NavItemLabelColor,
-                        unselectedIconColor = NavItemLabelColor,
+                        selectedIconColor = AccentCyan,
+                        unselectedIconColor = AccentCyan,
                         selectedTextColor = NavItemLabelSelectedColor,
                         unselectedTextColor = NavItemLabelColor
                     ),
