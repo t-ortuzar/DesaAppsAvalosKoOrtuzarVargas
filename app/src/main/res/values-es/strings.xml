@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DesaAppsAvalosKoOrtuzarVargas</string>
+    <string name="app_name">ArgenGamer</string>
 
     <string name="nav_offers">Ofertas</string>
     <string name="nav_catalog">Explorar</string>
@@ -36,7 +36,7 @@
     <string name="label_news">Noticias</string>
     <string name="label_historical_low">Mínimo histórico</string>
 
-    <string name="games_search_placeholder">Buscar juegos o etiquetas...</string>
+    <string name="games_search_placeholder">Buscar juegos o etiquetas…</string>
     <string name="games_no_results">No se encontraron juegos</string>
 
     <string name="news_filter_all_categories">Todas las categorías</string>

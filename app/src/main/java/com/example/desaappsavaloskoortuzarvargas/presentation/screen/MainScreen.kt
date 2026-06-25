@@ -17,13 +17,14 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalWifiOff
-import androidx.compose.material.icons.filled.VideogameAsset
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,6 +73,10 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.OffersVi
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.navigation.NavigationStateManager
 import com.example.desaappsavaloskoortuzarvargas.R
+import com.example.desaappsavaloskoortuzarvargas.ui.theme.AccentCyan
+import com.example.desaappsavaloskoortuzarvargas.ui.theme.AccentYellow
+import com.example.desaappsavaloskoortuzarvargas.ui.theme.NavItemLabelColor
+import com.example.desaappsavaloskoortuzarvargas.ui.theme.NavItemLabelSelectedColor
 
 @Composable
 fun MainScreen() {
@@ -244,17 +249,29 @@ fun MainScreen() {
                     },
                     label = { Text(stringResource(R.string.nav_offers)) },
                     selected = currentTab == NavigationStateManager.TAB_OFFERS,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AccentYellow,
+                        unselectedIconColor = AccentYellow,
+                        selectedTextColor = NavItemLabelSelectedColor,
+                        unselectedTextColor = NavItemLabelColor
+                    ),
                     onClick = { navState.selectTab(NavigationStateManager.TAB_OFFERS) }
                 )
                 NavigationBarItem(
                     icon = {
                         Icon(
-                            Icons.Filled.VideogameAsset,
+                            Icons.Filled.Search,
                             contentDescription = stringResource(R.string.nav_catalog)
                         )
                     },
                     label = { Text(stringResource(R.string.nav_catalog)) },
                     selected = currentTab == NavigationStateManager.TAB_CATALOG,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AccentCyan,
+                        unselectedIconColor = AccentCyan,
+                        selectedTextColor = NavItemLabelSelectedColor,
+                        unselectedTextColor = NavItemLabelColor
+                    ),
                     onClick = { navState.selectTab(NavigationStateManager.TAB_CATALOG) }
                 )
                 NavigationBarItem(
@@ -266,6 +283,12 @@ fun MainScreen() {
                     },
                     label = { Text(stringResource(R.string.nav_favorites)) },
                     selected = currentTab == NavigationStateManager.TAB_FAVORITES,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AccentYellow,
+                        unselectedIconColor = AccentYellow,
+                        selectedTextColor = NavItemLabelSelectedColor,
+                        unselectedTextColor = NavItemLabelColor
+                    ),
                     onClick = {
                         navState.selectTab(NavigationStateManager.TAB_FAVORITES)
                         gamesViewModel.loadFavorites()
@@ -280,6 +303,12 @@ fun MainScreen() {
                     },
                     label = { Text(stringResource(R.string.nav_news)) },
                     selected = currentTab == NavigationStateManager.TAB_NEWS,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AccentCyan,
+                        unselectedIconColor = AccentCyan,
+                        selectedTextColor = NavItemLabelSelectedColor,
+                        unselectedTextColor = NavItemLabelColor
+                    ),
                     onClick = { navState.selectTab(NavigationStateManager.TAB_NEWS) }
                 )
                 NavigationBarItem(
@@ -299,6 +328,12 @@ fun MainScreen() {
                     },
                     label = { Text(stringResource(R.string.nav_settings)) },
                     selected = currentTab == NavigationStateManager.TAB_SETTINGS,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = NavItemLabelColor,
+                        unselectedIconColor = NavItemLabelColor,
+                        selectedTextColor = NavItemLabelSelectedColor,
+                        unselectedTextColor = NavItemLabelColor
+                    ),
                     onClick = {
                         navState.selectTab(NavigationStateManager.TAB_SETTINGS)
                         settingsViewModel.refreshNotifications()
