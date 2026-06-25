@@ -56,7 +56,7 @@ class GogPriceService {
         try {
             val encoded = URLEncoder.encode(title, "UTF-8")
             val url = URL(
-                "https://catalog.gog.com/v1/catalog?limit=5&query=$encoded&countryCode=AR&locale=es-AR&currencyCode=ARS"
+                "https://catalog.gog.com/v1/catalog?limit=5&query=$encoded&countryCode=AR&locale=es-AR&currencyCode=USD"
             )
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
