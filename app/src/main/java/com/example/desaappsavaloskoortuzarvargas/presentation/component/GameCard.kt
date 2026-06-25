@@ -1,6 +1,8 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -127,31 +130,34 @@ fun GameCard(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Price info
+                // Platform chips — show available stores for all games (F2P and paid).
+                // Real prices are fetched from store APIs on the detail screen.
                 val isF2P = game.tags.contains("Free2Play")
-                if (isF2P && game.currentPrices.isEmpty()) {
-                    // F2P game: show "Disponible en [platform]"
+                if (isF2P) {
                     Text(
                         text = stringResource(R.string.game_free_to_play_label),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFF4CAF50),
                         fontWeight = FontWeight.Bold
                     )
-                    game.availablePlatforms.forEach { platform ->
-                        Text(
-                            text = stringResource(R.string.game_available_on, platform),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else {
-                    val prices = game.currentPrices.entries.take(2)
-                    prices.forEach { (platform, price) ->
-                        if (price > 0) {
+                }
+                if (game.availablePlatforms.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        game.availablePlatforms.forEach { platform ->
                             Text(
-                                text = stringResource(R.string.game_price_platform, platform, price),
+                                text = platform,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier
+                                    .background(
+                                        color = MaterialTheme.colorScheme.secondaryContainer,
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
                     }
@@ -221,7 +227,4 @@ fun FavoriteButton(
         )
     }
 }
-
-
-
 

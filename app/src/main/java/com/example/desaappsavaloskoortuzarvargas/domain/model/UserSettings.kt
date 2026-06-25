@@ -7,7 +7,8 @@ data class UserSettings(
     val countryCode: String = "AR",
     val languageCode: String = "en",
     val globalNotificationsEnabled: Boolean = true,
-    val gameNotificationPrefs: Map<Int, GameNotificationPref> = emptyMap()
+    val gameNotificationPrefs: Map<Int, GameNotificationPref> = emptyMap(),
+    val darkMode: Boolean = true   // true = dark theme (default)
 )
 
 data class GameNotificationPref(

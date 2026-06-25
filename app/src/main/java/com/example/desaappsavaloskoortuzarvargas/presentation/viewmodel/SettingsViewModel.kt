@@ -13,6 +13,7 @@ import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetUserSettingsU
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.MarkNotificationReadUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.SetGlobalNotificationsUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateCountryUseCase
+import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateDarkModeUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateEmailUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateGameNotificationPrefUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateLanguageUseCase
@@ -34,7 +35,8 @@ class SettingsViewModel(
     private val getUnreadNotificationCountUseCase: GetUnreadNotificationCountUseCase,
     private val markNotificationReadUseCase: MarkNotificationReadUseCase,
     private val generateDiscountNotificationsUseCase: GenerateDiscountNotificationsUseCase,
-    private val getFavoritesUseCase: GetFavoritesUseCase
+    private val getFavoritesUseCase: GetFavoritesUseCase,
+    private val updateDarkModeUseCase: UpdateDarkModeUseCase? = null
 ) : ViewModel() {
 
     private val _userSettings = MutableStateFlow(UserSettings())
@@ -90,6 +92,13 @@ class SettingsViewModel(
         }
     }
 
+    fun updateDarkMode(isDark: Boolean) {
+        viewModelScope.launch {
+            updateDarkModeUseCase?.invoke(isDark)
+            _userSettings.value = _userSettings.value.copy(darkMode = isDark)
+        }
+    }
+
     fun updateGameNotificationPref(pref: GameNotificationPref) {
         viewModelScope.launch {
             updateGameNotificationPrefUseCase(pref)
@@ -115,5 +124,14 @@ class SettingsViewModel(
             _unreadCount.value = getUnreadNotificationCountUseCase()
         }
     }
-}
 
+    fun markAllAsRead() {
+        viewModelScope.launch {
+            _notifications.value.forEach { notif ->
+                if (!notif.isRead) markNotificationReadUseCase(notif.id)
+            }
+            _notifications.value = getInAppNotificationsUseCase()
+            _unreadCount.value = getUnreadNotificationCountUseCase()
+        }
+    }
+}

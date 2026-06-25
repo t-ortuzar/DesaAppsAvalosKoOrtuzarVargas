@@ -6,18 +6,18 @@ import org.junit.Test
 class PriceRefreshManagerConstantsTest {
 
     @Test
-    fun `DETAIL_STALE_MS is 10 minutes`() {
-        assertEquals(10 * 60 * 1000L, PriceRefreshManager.DETAIL_STALE_MS)
+    fun `DETAIL_STALE_MS is 5 minutes`() {
+        assertEquals(5 * 60 * 1000L, PriceRefreshManager.DETAIL_STALE_MS)
     }
 
     @Test
-    fun `OFFERS_REFRESH_INTERVAL_MS is 30 minutes`() {
-        assertEquals(30 * 60 * 1000L, PriceRefreshManager.OFFERS_REFRESH_INTERVAL_MS)
+    fun `OFFERS_REFRESH_INTERVAL_MS is 15 minutes`() {
+        assertEquals(15 * 60 * 1000L, PriceRefreshManager.OFFERS_REFRESH_INTERVAL_MS)
     }
 
     @Test
-    fun `CATALOG_REFRESH_INTERVAL_MS is 2 hours`() {
-        assertEquals(2 * 60 * 60 * 1000L, PriceRefreshManager.CATALOG_REFRESH_INTERVAL_MS)
+    fun `CATALOG_REFRESH_INTERVAL_MS is 1 hour`() {
+        assertEquals(60 * 60 * 1000L, PriceRefreshManager.CATALOG_REFRESH_INTERVAL_MS)
     }
 
     @Test
@@ -50,4 +50,3 @@ class PriceRefreshManagerConstantsTest {
         assertTrue(PriceRefreshManager.INTRA_BATCH_DELAY_MS < PriceRefreshManager.BATCH_DELAY_MS)
     }
 }
-

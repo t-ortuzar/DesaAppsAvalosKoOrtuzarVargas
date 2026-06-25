@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalOffer
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalWifiOff
 import androidx.compose.material.icons.filled.Search
@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.lazy.rememberLazyListState
 import com.example.desaappsavaloskoortuzarvargas.di.ServiceLocator
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.AddToFavoritesUseCase
@@ -63,6 +64,7 @@ import com.example.desaappsavaloskoortuzarvargas.domain.usecase.RemoveFromFavori
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.SearchGamesUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.SetGlobalNotificationsUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateCountryUseCase
+import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateDarkModeUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateEmailUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateGameNotificationPrefUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.UpdateLanguageUseCase
@@ -73,10 +75,6 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.OffersVi
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.SettingsViewModel
 import com.example.desaappsavaloskoortuzarvargas.presentation.navigation.NavigationStateManager
 import com.example.desaappsavaloskoortuzarvargas.R
-import com.example.desaappsavaloskoortuzarvargas.ui.theme.AccentCyan
-import com.example.desaappsavaloskoortuzarvargas.ui.theme.AccentYellow
-import com.example.desaappsavaloskoortuzarvargas.ui.theme.NavItemLabelColor
-import com.example.desaappsavaloskoortuzarvargas.ui.theme.NavItemLabelSelectedColor
 
 @Composable
 fun MainScreen() {
@@ -85,18 +83,18 @@ fun MainScreen() {
     val selectedGame by navState.selectedGame.collectAsState()
     val selectedNews by navState.selectedNews.collectAsState()
 
-    val gameRepository = ServiceLocator.gameRepository
-    val newsRepository = ServiceLocator.newsRepository
-    val discountRepository = ServiceLocator.discountRepository
+    val gameRepository        = ServiceLocator.gameRepository
+    val newsRepository        = ServiceLocator.newsRepository
+    val discountRepository    = ServiceLocator.discountRepository
     val userSettingsRepository = ServiceLocator.userSettingsRepository
-    val priceRefreshManager = ServiceLocator.priceRefreshManager
-    val dolarService = ServiceLocator.dolarService
-    val epicPriceService = ServiceLocator.epicPriceService
-    val database = ServiceLocator.database
-    val connectivityObserver = ServiceLocator.connectivityObserver
+    val priceRefreshManager   = ServiceLocator.priceRefreshManager
+    val dolarService          = ServiceLocator.dolarService
+    val epicPriceService      = ServiceLocator.epicPriceService
+    val database              = ServiceLocator.database
+    val connectivityObserver  = ServiceLocator.connectivityObserver
 
-
-    val gamesViewModel = remember {
+    // Use viewModel() so ViewModels survive configuration changes (rotation etc.)
+    val gamesViewModel: GamesViewModel = viewModel {
         GamesViewModel(
             GetAllGamesUseCase(gameRepository),
             GetGameByIdUseCase(gameRepository),
@@ -114,7 +112,7 @@ fun MainScreen() {
         )
     }
 
-    val newsViewModel = remember {
+    val newsViewModel: NewsViewModel = viewModel {
         NewsViewModel(
             GetAllNewsUseCase(newsRepository),
             GetNewsByGameIdUseCase(newsRepository),
@@ -123,7 +121,7 @@ fun MainScreen() {
         )
     }
 
-    val offersViewModel = remember {
+    val offersViewModel: OffersViewModel = viewModel {
         OffersViewModel(
             GetCurrentDiscountsUseCase(discountRepository),
             GetFavoriteDiscountsUseCase(discountRepository),
@@ -134,7 +132,7 @@ fun MainScreen() {
         )
     }
 
-    val settingsViewModel = remember {
+    val settingsViewModel: SettingsViewModel = viewModel {
         SettingsViewModel(
             GetUserSettingsUseCase(userSettingsRepository),
             UpdateUserNameUseCase(userSettingsRepository),
@@ -147,37 +145,35 @@ fun MainScreen() {
             GetUnreadNotificationCountUseCase(userSettingsRepository),
             MarkNotificationReadUseCase(userSettingsRepository),
             GenerateDiscountNotificationsUseCase(userSettingsRepository),
-            GetFavoritesUseCase(gameRepository)
+            GetFavoritesUseCase(gameRepository),
+            UpdateDarkModeUseCase(userSettingsRepository)
         )
     }
 
     val unreadCount by settingsViewModel.unreadCount.collectAsState()
-    val isOnline by gamesViewModel.isOnline.collectAsState()
+    val isOnline    by gamesViewModel.isOnline.collectAsState()
 
-    // Start periodic background price refresh and ensure all games are cached
+    // Start periodic background price refresh and populate all lookup maps
     LaunchedEffect(Unit) {
-        val steamIdMap = com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog.getSteamAppIdsByName()
-        priceRefreshManager.setSteamAppIds(steamIdMap)
+        val catalog = com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog
+        priceRefreshManager.setSteamAppIds(catalog.getSteamAppIdsByName())
+        priceRefreshManager.setGamePlatforms(catalog.getGamePlatformsByName())
+        priceRefreshManager.setXboxProductIds(catalog.getXboxProductIdsByName())
+        priceRefreshManager.setXboxTitleHints(catalog.getXboxTitleHintsByName())
         priceRefreshManager.startPeriodicRefresh()
-        // Ensure all catalog games have prices cached (for offers section)
-        val allNames = com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog.generateGames()
+        val allNames = catalog.generateGames()
             .filter { !it.tags.contains("Free2Play") }
             .map { it.name }
         priceRefreshManager.ensureAllGamesCached(allNames) {
-            // Reload offers progressively after each batch so the user
-            // sees results appearing instead of an empty screen
             offersViewModel.loadCurrentDiscounts()
             offersViewModel.loadFreeGames()
         }
-        // Final reload when everything is done
         offersViewModel.loadCurrentDiscounts()
         offersViewModel.loadFreeGames()
     }
 
-    // Preserve catalog scroll position across detail screen navigation
     val catalogListState = rememberLazyListState()
 
-    // Back navigation: from detail screens go back to list, from non-home tabs go to home (Catalog)
     BackHandler(enabled = navState.isBackEnabled) {
         navState.handleBack()
     }
@@ -208,7 +204,6 @@ fun MainScreen() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            // Offline banner
             AnimatedVisibility(
                 visible = !isOnline,
                 enter = expandVertically(),
@@ -240,77 +235,33 @@ fun MainScreen() {
         },
         bottomBar = {
             NavigationBar {
+                val iconColor = MaterialTheme.colorScheme.primary
+
                 NavigationBarItem(
-                    icon = {
-                        Icon(
-                            Icons.Filled.LocalOffer,
-                            contentDescription = stringResource(R.string.nav_offers)
-                        )
-                    },
+                    icon = { Icon(Icons.Filled.LocalOffer, stringResource(R.string.nav_offers)) },
                     label = { Text(stringResource(R.string.nav_offers)) },
                     selected = currentTab == NavigationStateManager.TAB_OFFERS,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AccentYellow,
-                        unselectedIconColor = AccentYellow,
-                        selectedTextColor = NavItemLabelSelectedColor,
-                        unselectedTextColor = NavItemLabelColor
+                        selectedIconColor   = iconColor,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedTextColor   = iconColor,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     onClick = { navState.selectTab(NavigationStateManager.TAB_OFFERS) }
                 )
                 NavigationBarItem(
-                    icon = {
-                        Icon(
-                            Icons.Filled.Search,
-                            contentDescription = stringResource(R.string.nav_catalog)
-                        )
-                    },
+                    icon = { Icon(Icons.Filled.Search, stringResource(R.string.nav_catalog)) },
                     label = { Text(stringResource(R.string.nav_catalog)) },
                     selected = currentTab == NavigationStateManager.TAB_CATALOG,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AccentCyan,
-                        unselectedIconColor = AccentCyan,
-                        selectedTextColor = NavItemLabelSelectedColor,
-                        unselectedTextColor = NavItemLabelColor
+                        selectedIconColor   = iconColor,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedTextColor   = iconColor,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     onClick = { navState.selectTab(NavigationStateManager.TAB_CATALOG) }
                 )
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            Icons.Filled.Favorite,
-                            contentDescription = stringResource(R.string.nav_favorites)
-                        )
-                    },
-                    label = { Text(stringResource(R.string.nav_favorites)) },
-                    selected = currentTab == NavigationStateManager.TAB_FAVORITES,
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AccentYellow,
-                        unselectedIconColor = AccentYellow,
-                        selectedTextColor = NavItemLabelSelectedColor,
-                        unselectedTextColor = NavItemLabelColor
-                    ),
-                    onClick = {
-                        navState.selectTab(NavigationStateManager.TAB_FAVORITES)
-                        gamesViewModel.loadFavorites()
-                    }
-                )
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            Icons.Filled.Newspaper,
-                            contentDescription = stringResource(R.string.nav_news)
-                        )
-                    },
-                    label = { Text(stringResource(R.string.nav_news)) },
-                    selected = currentTab == NavigationStateManager.TAB_NEWS,
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = AccentCyan,
-                        unselectedIconColor = AccentCyan,
-                        selectedTextColor = NavItemLabelSelectedColor,
-                        unselectedTextColor = NavItemLabelColor
-                    ),
-                    onClick = { navState.selectTab(NavigationStateManager.TAB_NEWS) }
-                )
+                // ── Notifications tab (replaces Favorites) ──
                 NavigationBarItem(
                     icon = {
                         BadgedBox(
@@ -321,18 +272,46 @@ fun MainScreen() {
                             }
                         ) {
                             Icon(
-                                Icons.Filled.Settings,
-                                contentDescription = stringResource(R.string.nav_settings)
+                                Icons.Filled.Notifications,
+                                contentDescription = stringResource(R.string.nav_notifications)
                             )
                         }
                     },
+                    label = { Text(stringResource(R.string.nav_notifications)) },
+                    selected = currentTab == NavigationStateManager.TAB_NOTIFICATIONS,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor   = iconColor,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedTextColor   = iconColor,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    onClick = {
+                        navState.selectTab(NavigationStateManager.TAB_NOTIFICATIONS)
+                        gamesViewModel.loadFavorites()
+                        settingsViewModel.refreshNotifications()
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Newspaper, stringResource(R.string.nav_news)) },
+                    label = { Text(stringResource(R.string.nav_news)) },
+                    selected = currentTab == NavigationStateManager.TAB_NEWS,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor   = iconColor,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedTextColor   = iconColor,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    onClick = { navState.selectTab(NavigationStateManager.TAB_NEWS) }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_settings)) },
                     label = { Text(stringResource(R.string.nav_settings)) },
                     selected = currentTab == NavigationStateManager.TAB_SETTINGS,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = NavItemLabelColor,
-                        unselectedIconColor = NavItemLabelColor,
-                        selectedTextColor = NavItemLabelSelectedColor,
-                        unselectedTextColor = NavItemLabelColor
+                        selectedIconColor   = iconColor,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        selectedTextColor   = iconColor,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     onClick = {
                         navState.selectTab(NavigationStateManager.TAB_SETTINGS)
@@ -348,9 +327,7 @@ fun MainScreen() {
                 viewModel = offersViewModel,
                 onDiscountSelected = { discount ->
                     val game = gamesViewModel.allGames.value.find { it.id == discount.gameId }
-                    if (game != null) {
-                        navState.selectGame(game)
-                    }
+                    if (game != null) navState.selectGame(game)
                 },
                 modifier = Modifier.padding(paddingValues),
                 dolarRate = dolarRate,
@@ -362,8 +339,8 @@ fun MainScreen() {
                 modifier = Modifier.padding(paddingValues),
                 listState = catalogListState
             )
-            NavigationStateManager.TAB_FAVORITES -> FavoritesScreen(
-                viewModel = gamesViewModel,
+            NavigationStateManager.TAB_NOTIFICATIONS -> NotificationsScreen(
+                gamesViewModel = gamesViewModel,
                 settingsViewModel = settingsViewModel,
                 onGameSelected = { navState.selectGame(it) },
                 modifier = Modifier.padding(paddingValues)
@@ -373,9 +350,7 @@ fun MainScreen() {
                 onNewsSelected = { navState.selectNews(it) },
                 onGameClicked = { gameId ->
                     val game = gamesViewModel.allGames.value.find { it.id == gameId }
-                    if (game != null) {
-                        navState.selectGame(game)
-                    }
+                    if (game != null) navState.selectGame(game)
                 },
                 modifier = Modifier.padding(paddingValues)
             )

@@ -16,45 +16,45 @@ object GameCatalog {
         val name: String,
         val description: String,
         val tags: List<String> = emptyList(),
-        val platforms: List<String> = listOf("Steam", "Epic Games", "GOG"),
+        val platforms: List<String> = listOf("Steam"),  // default: Steam-only
         val isF2P: Boolean = false
     )
 
     private val popularGames = listOf(
         GameInfo(1, "Elden Ring", "An action role-playing game developed by FromSoftware and published by Bandai Namco.", listOf("Action", "RPG", "Open World", "Souls-like")),
-        GameInfo(2, "Baldur's Gate 3", "A role-playing game based on the Dungeons & Dragons tabletop role-playing system.", listOf("RPG", "Adventure", "Strategy")),
-        GameInfo(3, "The Witcher 3: Wild Hunt", "An open world action role-playing game set in a fantasy universe.", listOf("RPG", "Open World", "Action", "Adventure")),
-        GameInfo(4, "Cyberpunk 2077", "An open world action-adventure RPG set in the megalopolis of Night City.", listOf("RPG", "FPS", "Open World", "Action")),
-        GameInfo(5, "Red Dead Redemption 2", "An epic tale of outlaw life in America's heartland.", listOf("Action", "Adventure", "Open World", "TPS")),
+        GameInfo(2, "Baldur's Gate 3", "A role-playing game based on the Dungeons & Dragons tabletop role-playing system.", listOf("RPG", "Adventure", "Strategy"), listOf("Steam", "GOG")),
+        GameInfo(3, "The Witcher 3: Wild Hunt", "An open world action role-playing game set in a fantasy universe.", listOf("RPG", "Open World", "Action", "Adventure"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
+        GameInfo(4, "Cyberpunk 2077", "An open world action-adventure RPG set in the megalopolis of Night City.", listOf("RPG", "FPS", "Open World", "Action"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
+        GameInfo(5, "Red Dead Redemption 2", "An epic tale of outlaw life in America's heartland.", listOf("Action", "Adventure", "Open World", "TPS"), listOf("Steam", "Epic Games")),
         GameInfo(6, "God of War Ragnarök", "Kratos and Atreus embark on a mythic journey for answers.", listOf("Action", "Adventure"), listOf("Steam", "Epic Games")),
         GameInfo(7, "Starfield", "An epic space-faring RPG by Bethesda Game Studios.", listOf("RPG", "Open World", "Action", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(8, "Diablo IV", "A genre-defining action-RPG experience with endless evil to slaughter.", listOf("Action", "RPG", "Co-op"), listOf("Steam", "Battle.net")),
         // Alan Wake 2 — Epic Games EXCLUSIVE (never on Steam)
         GameInfo(9, "Alan Wake 2", "A survival horror game with a mind-bending story.", listOf("Horror", "Survival", "Action", "Adventure"), listOf("Epic Games")),
-        GameInfo(10, "Hogwarts Legacy", "An open-world action RPG set in the Wizarding World of Harry Potter.", listOf("RPG", "Open World", "Action", "Adventure")),
-        GameInfo(11, "Resident Evil 4 Remake", "A reimagining of the 2005 survival horror classic.", listOf("Horror", "Survival", "Action", "TPS")),
-        GameInfo(12, "Death Stranding", "An action game by Kojima Productions connecting isolated cities.", listOf("Action", "Adventure", "Open World")),
+        GameInfo(10, "Hogwarts Legacy", "An open-world action RPG set in the Wizarding World of Harry Potter.", listOf("RPG", "Open World", "Action", "Adventure"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(11, "Resident Evil 4 Remake", "A reimagining of the 2005 survival horror classic.", listOf("Horror", "Survival", "Action", "TPS"), listOf("Steam", "Epic Games")),
+        GameInfo(12, "Death Stranding", "An action game by Kojima Productions connecting isolated cities.", listOf("Action", "Adventure", "Open World"), listOf("Steam", "Epic Games")),
         GameInfo(13, "Street Fighter 6", "The next evolution of the legendary fighting game series.", listOf("Fighting", "Action")),
-        GameInfo(14, "Tekken 8", "The King of Iron Fist Tournament returns with next-gen visuals.", listOf("Fighting", "Action")),
+        GameInfo(14, "Tekken 8", "The King of Iron Fist Tournament returns with next-gen visuals.", listOf("Fighting", "Action"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(15, "Ghost of Tsushima", "An open-world samurai action-adventure game.", listOf("Action", "Adventure", "Open World"), listOf("Steam", "Epic Games")),
         GameInfo(16, "The Last of Us Part I", "A remake of the post-apocalyptic action-adventure game.", listOf("Action", "Adventure", "Horror", "Survival"), listOf("Steam", "Epic Games")),
         GameInfo(17, "Spider-Man Remastered", "Be the Marvel superhero Spider-Man in a new open-world adventure.", listOf("Action", "Adventure", "Open World"), listOf("Steam", "Epic Games")),
         GameInfo(18, "Horizon Zero Dawn", "Explore a vibrant world populated by mysterious machines.", listOf("Action", "RPG", "Open World", "Adventure"), listOf("Steam", "Epic Games", "GOG")),
-        GameInfo(19, "Dead Space Remake", "A sci-fi survival horror classic rebuilt from the ground up.", listOf("Horror", "Survival", "Action", "TPS")),
-        GameInfo(20, "Like a Dragon: Infinite Wealth", "A globe-trotting action-adventure RPG.", listOf("RPG", "Action", "Adventure")),
+        GameInfo(19, "Dead Space Remake", "A sci-fi survival horror classic rebuilt from the ground up.", listOf("Horror", "Survival", "Action", "TPS"), listOf("Steam", "EA")),
+        GameInfo(20, "Like a Dragon: Infinite Wealth", "A globe-trotting action-adventure RPG.", listOf("RPG", "Action", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(21, "Final Fantasy VII Rebirth", "The next chapter in the FFVII remake trilogy.", listOf("RPG", "Action", "Adventure"), listOf("Steam", "Epic Games")),
-        GameInfo(22, "Persona 5 Royal", "Don the mask and join the Phantom Thieves of Hearts.", listOf("RPG", "Adventure")),
-        GameInfo(23, "Metaphor: ReFantazio", "A fantasy RPG from the creators of Persona.", listOf("RPG", "Strategy", "Adventure")),
-        GameInfo(24, "Palworld", "A creature-collecting open-world survival crafting game.", listOf("Survival", "Open World", "Co-op", "Action")),
-        GameInfo(25, "Black Myth: Wukong", "An action RPG rooted in Chinese mythology.", listOf("Action", "RPG", "Souls-like")),
-        GameInfo(26, "S.T.A.L.K.E.R. 2", "A first-person shooter set in the Chornobyl Exclusion Zone.", listOf("FPS", "Horror", "Survival", "Open World")),
+        GameInfo(22, "Persona 5 Royal", "Don the mask and join the Phantom Thieves of Hearts.", listOf("RPG", "Adventure"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
+        GameInfo(23, "Metaphor: ReFantazio", "A fantasy RPG from the creators of Persona.", listOf("RPG", "Strategy", "Adventure"), listOf("Steam", "GOG", "Xbox / Microsoft")),
+        GameInfo(24, "Palworld", "A creature-collecting open-world survival crafting game.", listOf("Survival", "Open World", "Co-op", "Action"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(25, "Black Myth: Wukong", "An action RPG rooted in Chinese mythology.", listOf("Action", "RPG", "Souls-like"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(26, "S.T.A.L.K.E.R. 2", "A first-person shooter set in the Chornobyl Exclusion Zone.", listOf("FPS", "Horror", "Survival", "Open World"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(27, "Dragon's Dogma 2", "An open-world action RPG by Capcom.", listOf("RPG", "Action", "Open World", "Adventure")),
-        GameInfo(28, "Sekiro: Shadows Die Twice", "A dark and brutal action-adventure from FromSoftware.", listOf("Action", "Souls-like", "Adventure")),
-        GameInfo(29, "Indiana Jones and the Great Circle", "An action-adventure in first person.", listOf("Action", "Adventure", "FPS")),
-        GameInfo(30, "Senua's Saga: Hellblade II", "An intense action-adventure with stunning visuals.", listOf("Action", "Adventure", "Narrative")),
+        GameInfo(28, "Sekiro: Shadows Die Twice", "A dark and brutal action-adventure from FromSoftware.", listOf("Action", "Souls-like", "Adventure"), listOf("Steam", "GOG")),
+        GameInfo(29, "Indiana Jones and the Great Circle", "An action-adventure in first person.", listOf("Action", "Adventure", "FPS"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(30, "Senua's Saga: Hellblade II", "An intense action-adventure with stunning visuals.", listOf("Action", "Adventure", "Narrative"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(31, "Monster Hunter: World", "Hunt massive monsters in a living, breathing ecosystem.", listOf("Action", "RPG", "Co-op")),
         GameInfo(32, "Dark Souls III", "An action RPG set in a dark fantasy world.", listOf("Action", "RPG", "Souls-like")),
-        GameInfo(33, "Armored Core VI", "Mech combat action from FromSoftware.", listOf("Action", "Simulation")),
+        GameInfo(33, "Armored Core VI", "Mech combat action from FromSoftware.", listOf("Action", "Simulation"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(34, "Jedi: Survivor", "Continue Cal Kestis' journey in this action RPG.", listOf("Action", "Adventure", "RPG"), listOf("Steam", "Epic Games", "EA")),
         GameInfo(35, "EA Sports FC 25", "The latest football simulation game.", listOf("Sports", "Simulation"), listOf("Steam", "Epic Games", "EA")),
         GameInfo(36, "Madden NFL 25", "The premier American football simulation.", listOf("Sports", "Simulation"), listOf("Steam", "EA")),
@@ -64,64 +64,64 @@ object GameCatalog {
         GameInfo(40, "The Crew Motorfest", "A festival open-world racing game.", listOf("Racing", "Open World"), listOf("Steam", "Epic Games", "Ubisoft")),
         GameInfo(41, "Need for Speed Unbound", "Street racing with artistic visual style.", listOf("Racing", "Action"), listOf("Steam", "Epic Games", "EA")),
         GameInfo(42, "Forza Motorsport", "Premium racing simulation with stunning visuals.", listOf("Racing", "Simulation"), listOf("Steam", "Xbox / Microsoft")),
-        GameInfo(43, "Ghostwire: Tokyo", "Save Tokyo from supernatural threats in first person.", listOf("Action", "FPS", "Horror")),
-        GameInfo(44, "Control Ultimate Edition", "A supernatural action-adventure game by Remedy.", listOf("Action", "Adventure", "TPS")),
-        GameInfo(45, "The Callisto Protocol", "A survival horror game set on Jupiter's moon.", listOf("Horror", "Survival", "Action")),
-        GameInfo(46, "Lies of P", "A Soulslike action RPG inspired by Pinocchio.", listOf("Action", "RPG", "Souls-like")),
-        GameInfo(47, "Remnant II", "A co-operative third-person survival shooter.", listOf("Action", "TPS", "Co-op", "Survival")),
-        GameInfo(48, "Resident Evil Village", "Survival horror returns with Ethan Winters.", listOf("Horror", "Survival", "FPS")),
-        GameInfo(49, "Outlast Trials", "A cooperative psychological horror experience.", listOf("Horror", "Co-op", "Survival")),
+        GameInfo(43, "Ghostwire: Tokyo", "Save Tokyo from supernatural threats in first person.", listOf("Action", "FPS", "Horror"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(44, "Control Ultimate Edition", "A supernatural action-adventure game by Remedy.", listOf("Action", "Adventure", "TPS"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
+        GameInfo(45, "The Callisto Protocol", "A survival horror game set on Jupiter's moon.", listOf("Horror", "Survival", "Action"), listOf("Steam", "Epic Games")),
+        GameInfo(46, "Lies of P", "A Soulslike action RPG inspired by Pinocchio.", listOf("Action", "RPG", "Souls-like"), listOf("Steam", "GOG", "Xbox / Microsoft")),
+        GameInfo(47, "Remnant II", "A co-operative third-person survival shooter.", listOf("Action", "TPS", "Co-op", "Survival"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(48, "Resident Evil Village", "Survival horror returns with Ethan Winters.", listOf("Horror", "Survival", "FPS"), listOf("Steam", "Epic Games")),
+        GameInfo(49, "Outlast Trials", "A cooperative psychological horror experience.", listOf("Horror", "Co-op", "Survival"), listOf("Steam", "Epic Games")),
         GameInfo(50, "Phasmophobia", "Cooperative ghost hunting with friends.", listOf("Horror", "Co-op", "Simulation")),
         GameInfo(51, "Lethal Company", "A horror game about scavenging on abandoned moons.", listOf("Horror", "Co-op", "Indie")),
         GameInfo(52, "The Forest", "Survive in a forest after a plane crash.", listOf("Survival", "Horror", "Open World")),
-        GameInfo(53, "Subnautica", "Explore an alien underwater world.", listOf("Survival", "Adventure", "Open World")),
-        GameInfo(54, "No Man's Sky", "Explore an infinite procedurally generated universe.", listOf("Survival", "Adventure", "Open World", "Sandbox")),
-        GameInfo(55, "Deep Rock Galactic", "Co-op FPS about space-mining dwarves.", listOf("FPS", "Co-op", "Action")),
+        GameInfo(53, "Subnautica", "Explore an alien underwater world.", listOf("Survival", "Adventure", "Open World"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(54, "No Man's Sky", "Explore an infinite procedurally generated universe.", listOf("Survival", "Adventure", "Open World", "Sandbox"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(55, "Deep Rock Galactic", "Co-op FPS about space-mining dwarves.", listOf("FPS", "Co-op", "Action"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(56, "Elite Dangerous", "A space simulation MMO.", listOf("Simulation", "MMO", "Open World")),
         GameInfo(57, "Kerbal Space Program", "Build and fly rockets in a realistic space sim.", listOf("Simulation", "Sandbox")),
-        GameInfo(58, "Astroneer", "Explore and reshape distant worlds.", listOf("Sandbox", "Adventure", "Co-op")),
-        GameInfo(59, "Satisfactory", "Build massive automated factories.", listOf("Building", "Simulation", "Sandbox", "Co-op")),
-        GameInfo(60, "Factorio", "Build and maintain factories on an alien planet.", listOf("Building", "Strategy", "Simulation")),
+        GameInfo(58, "Astroneer", "Explore and reshape distant worlds.", listOf("Sandbox", "Adventure", "Co-op"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(59, "Satisfactory", "Build massive automated factories.", listOf("Building", "Simulation", "Sandbox", "Co-op"), listOf("Steam", "Epic Games")),
+        GameInfo(60, "Factorio", "Build and maintain factories on an alien planet.", listOf("Building", "Strategy", "Simulation"), listOf("Steam", "GOG")),
         GameInfo(61, "Terraria", "Dig, fight, explore, build in a 2D world.", listOf("Sandbox", "Action", "Adventure", "Indie")),
-        GameInfo(62, "Valheim", "A brutal Viking survival game.", listOf("Survival", "Co-op", "Open World", "Indie")),
-        GameInfo(63, "Grounded", "A survival adventure where you're shrunk to ant size.", listOf("Survival", "Co-op", "Adventure")),
+        GameInfo(62, "Valheim", "A brutal Viking survival game.", listOf("Survival", "Co-op", "Open World", "Indie"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(63, "Grounded", "A survival adventure where you're shrunk to ant size.", listOf("Survival", "Co-op", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(64, "Rust", "A multiplayer survival game.", listOf("Survival", "FPS", "Open World")),
         GameInfo(65, "DayZ", "Post-apocalyptic open-world survival.", listOf("Survival", "FPS", "Open World")),
         GameInfo(66, "Ark: Survival Evolved", "Survive among dinosaurs on a mysterious island.", listOf("Survival", "Open World", "Co-op")),
         GameInfo(67, "Conan Exiles", "Survive and conquer in the world of Conan the Barbarian.", listOf("Survival", "Open World", "Co-op")),
         GameInfo(68, "Raft", "Survive on a tiny raft in the middle of the ocean.", listOf("Survival", "Co-op", "Adventure")),
-        GameInfo(69, "Stray", "Explore a cybercity as a stray cat.", listOf("Adventure", "Indie", "Platformer")),
-        GameInfo(70, "Kena: Bridge of Spirits", "A story-driven action-adventure.", listOf("Action", "Adventure", "Indie")),
-        GameInfo(71, "It Takes Two", "A crazy fun co-op adventure.", listOf("Co-op", "Adventure", "Platformer")),
-        GameInfo(72, "A Way Out", "A cooperative action-adventure game.", listOf("Co-op", "Adventure", "Action")),
-        GameInfo(73, "Unravel Two", "A charming puzzle-platformer for two.", listOf("Puzzle", "Platformer", "Co-op", "Indie")),
+        GameInfo(69, "Stray", "Explore a cybercity as a stray cat.", listOf("Adventure", "Indie", "Platformer"), listOf("Steam", "Epic Games")),
+        GameInfo(70, "Kena: Bridge of Spirits", "A story-driven action-adventure.", listOf("Action", "Adventure", "Indie"), listOf("Steam", "Epic Games")),
+        GameInfo(71, "It Takes Two", "A crazy fun co-op adventure.", listOf("Co-op", "Adventure", "Platformer"), listOf("Steam", "Epic Games", "EA")),
+        GameInfo(72, "A Way Out", "A cooperative action-adventure game.", listOf("Co-op", "Adventure", "Action"), listOf("Steam", "EA")),
+        GameInfo(73, "Unravel Two", "A charming puzzle-platformer for two.", listOf("Puzzle", "Platformer", "Co-op", "Indie"), listOf("Steam", "EA")),
         GameInfo(74, "Portal 2", "The legendary first-person puzzle game.", listOf("Puzzle", "FPS", "Co-op")),
-        GameInfo(75, "The Talos Principle 2", "A philosophical first-person puzzle game.", listOf("Puzzle", "Adventure")),
-        GameInfo(76, "Tetris Effect: Connected", "Tetris reimagined with stunning visuals.", listOf("Puzzle", "Indie")),
-        GameInfo(77, "Celeste", "A challenging platformer about climbing a mountain.", listOf("Platformer", "Indie")),
-        GameInfo(78, "Hollow Knight", "A challenging 2D action-adventure in a vast world.", listOf("Action", "Platformer", "Indie", "Souls-like")),
-        GameInfo(79, "Hades", "A rogue-like dungeon crawler from Supergiant Games.", listOf("Roguelike", "Action", "Indie")),
-        GameInfo(80, "Dead Cells", "A rogue-lite action-platformer.", listOf("Roguelike", "Action", "Platformer", "Indie")),
+        GameInfo(75, "The Talos Principle 2", "A philosophical first-person puzzle game.", listOf("Puzzle", "Adventure"), listOf("Steam", "GOG")),
+        GameInfo(76, "Tetris Effect: Connected", "Tetris reimagined with stunning visuals.", listOf("Puzzle", "Indie"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(77, "Celeste", "A challenging platformer about climbing a mountain.", listOf("Platformer", "Indie"), listOf("Steam", "Epic Games", "GOG")),
+        GameInfo(78, "Hollow Knight", "A challenging 2D action-adventure in a vast world.", listOf("Action", "Platformer", "Indie", "Souls-like"), listOf("Steam", "Epic Games", "GOG")),
+        GameInfo(79, "Hades", "A rogue-like dungeon crawler from Supergiant Games.", listOf("Roguelike", "Action", "Indie"), listOf("Steam", "Epic Games", "GOG")),
+        GameInfo(80, "Dead Cells", "A rogue-lite action-platformer.", listOf("Roguelike", "Action", "Platformer", "Indie"), listOf("Steam", "Epic Games", "GOG")),
         GameInfo(81, "Risk of Rain 2", "A third-person roguelike shooter.", listOf("Roguelike", "TPS", "Co-op")),
         GameInfo(82, "Gunfire Reborn", "A FPS roguelite with RPG elements.", listOf("FPS", "Roguelike", "Co-op", "RPG")),
-        GameInfo(83, "Slay the Spire", "A roguelike deckbuilding game.", listOf("Roguelike", "Card Game", "Strategy", "Indie")),
+        GameInfo(83, "Slay the Spire", "A roguelike deckbuilding game.", listOf("Roguelike", "Card Game", "Strategy", "Indie"), listOf("Steam", "Epic Games", "GOG")),
         GameInfo(84, "Monster Train", "A strategic roguelike deckbuilder.", listOf("Roguelike", "Card Game", "Strategy")),
         GameInfo(85, "Inscryption", "An inky card-based odyssey.", listOf("Card Game", "Horror", "Puzzle", "Indie")),
         GameInfo(86, "Dave the Diver", "A casual adventure RPG about deep-sea diving.", listOf("Adventure", "RPG", "Indie")),
-        GameInfo(87, "Stardew Valley", "Farm, fish, and build community in a charming RPG.", listOf("RPG", "Simulation", "Indie", "Sandbox")),
-        GameInfo(88, "Unpacking", "A zen puzzle game about the experience of moving.", listOf("Puzzle", "Indie", "Narrative")),
-        GameInfo(89, "Spiritfarer", "A cozy management game about dying.", listOf("Adventure", "Simulation", "Indie", "Narrative")),
-        GameInfo(90, "Outer Wilds", "Explore a solar system stuck in a time loop.", listOf("Adventure", "Puzzle", "Indie", "Open World")),
-        GameInfo(91, "What Remains of Edith Finch", "A collection of stories about a cursed family.", listOf("Adventure", "Narrative", "Indie")),
-        GameInfo(92, "Firewatch", "A mystery adventure in the Wyoming wilderness.", listOf("Adventure", "Narrative", "Indie")),
-        GameInfo(93, "The Stanley Parable: Ultra Deluxe", "A narrative exploration game.", listOf("Adventure", "Narrative", "Indie")),
-        GameInfo(94, "The Witness", "An exploration-puzzle game on a mysterious island.", listOf("Puzzle", "Adventure", "Indie")),
-        GameInfo(95, "Return of the Obra Dinn", "A mystery puzzle game on a ghost ship.", listOf("Puzzle", "Adventure", "Indie", "Narrative")),
-        GameInfo(96, "Disco Elysium: The Final Cut", "A groundbreaking role-playing game.", listOf("RPG", "Narrative", "Adventure")),
-        GameInfo(97, "Divinity: Original Sin 2", "A deep tactical RPG with co-op play.", listOf("RPG", "Strategy", "Co-op")),
-        GameInfo(98, "Pillars of Eternity II", "An epic RPG adventuring on the high seas.", listOf("RPG", "Strategy", "Adventure")),
-        GameInfo(99, "Hitman: World of Assassination", "A stealth assassination sandbox.", listOf("Action", "Adventure", "Open World")),
-        GameInfo(100, "Doom Eternal", "A fast-paced first-person shooter.", listOf("FPS", "Action")),
+        GameInfo(87, "Stardew Valley", "Farm, fish, and build community in a charming RPG.", listOf("RPG", "Simulation", "Indie", "Sandbox"), listOf("Steam", "GOG")),
+        GameInfo(88, "Unpacking", "A zen puzzle game about the experience of moving.", listOf("Puzzle", "Indie", "Narrative"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
+        GameInfo(89, "Spiritfarer", "A cozy management game about dying.", listOf("Adventure", "Simulation", "Indie", "Narrative"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
+        GameInfo(90, "Outer Wilds", "Explore a solar system stuck in a time loop.", listOf("Adventure", "Puzzle", "Indie", "Open World"), listOf("Steam", "Epic Games", "GOG")),
+        GameInfo(91, "What Remains of Edith Finch", "A collection of stories about a cursed family.", listOf("Adventure", "Narrative", "Indie"), listOf("Steam", "Epic Games", "GOG")),
+        GameInfo(92, "Firewatch", "A mystery adventure in the Wyoming wilderness.", listOf("Adventure", "Narrative", "Indie"), listOf("Steam", "GOG")),
+        GameInfo(93, "The Stanley Parable: Ultra Deluxe", "A narrative exploration game.", listOf("Adventure", "Narrative", "Indie"), listOf("Steam", "Epic Games")),
+        GameInfo(94, "The Witness", "An exploration-puzzle game on a mysterious island.", listOf("Puzzle", "Adventure", "Indie"), listOf("Steam", "Epic Games")),
+        GameInfo(95, "Return of the Obra Dinn", "A mystery puzzle game on a ghost ship.", listOf("Puzzle", "Adventure", "Indie", "Narrative"), listOf("Steam", "GOG")),
+        GameInfo(96, "Disco Elysium: The Final Cut", "A groundbreaking role-playing game.", listOf("RPG", "Narrative", "Adventure"), listOf("Steam", "GOG")),
+        GameInfo(97, "Divinity: Original Sin 2", "A deep tactical RPG with co-op play.", listOf("RPG", "Strategy", "Co-op"), listOf("Steam", "Epic Games", "GOG")),
+        GameInfo(98, "Pillars of Eternity II", "An epic RPG adventuring on the high seas.", listOf("RPG", "Strategy", "Adventure"), listOf("Steam", "Epic Games", "GOG")),
+        GameInfo(99, "Hitman: World of Assassination", "A stealth assassination sandbox.", listOf("Action", "Adventure", "Open World"), listOf("Steam", "Epic Games", "GOG")),
+        GameInfo(100, "Doom Eternal", "A fast-paced first-person shooter.", listOf("FPS", "Action"), listOf("Steam", "Xbox / Microsoft", "Battle.net")),
         // ═══ F2P games ═══
         // Riot Games exclusives — NOT on Steam
         GameInfo(101, "League of Legends", "A team-based strategy game where two teams of five champions face off to destroy the other's base.", listOf("Free2Play", "MOBA", "Strategy"), listOf("Riot Games"), isF2P = true),
@@ -140,10 +140,169 @@ object GameCatalog {
         GameInfo(108, "Counter-Strike 2", "The definitive competitive tactical FPS, successor to CS:GO.", listOf("Free2Play", "FPS", "Tactical"), listOf("Steam"), isF2P = true),
         GameInfo(109, "Warframe", "A cooperative free-to-play third-person online action game set in an evolving sci-fi world.", listOf("Free2Play", "TPS", "Co-op", "Action"), listOf("Steam"), isF2P = true),
         GameInfo(110, "Path of Exile", "A free-to-play dark fantasy action RPG with deep character customization.", listOf("Free2Play", "RPG", "Action"), listOf("Steam"), isF2P = true),
-        GameInfo(112, "Fall Guys", "A massively multiplayer party game with hilarious obstacle courses.", listOf("Free2Play", "Platformer", "Party"), listOf("Steam", "Epic Games"), isF2P = true)
+        GameInfo(112, "Fall Guys", "A massively multiplayer party game with hilarious obstacle courses.", listOf("Free2Play", "Platformer", "Party"), listOf("Steam", "Epic Games"), isF2P = true),
+        // ═══ New 2024-2025 releases ═══
+        GameInfo(115, "Monster Hunter Wilds", "Hunt breathtaking monsters in expansive biomes that change with the weather.", listOf("Action", "RPG", "Co-op"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(116, "Clair Obscur: Expedition 33", "A stunning French RPG set in a surreal Art Deco world facing extinction.", listOf("RPG", "Turn-Based", "Adventure"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(117, "Kingdom Come: Deliverance 2", "Continue Henry's journey in a breathtaking medieval open world.", listOf("RPG", "Open World", "Adventure", "Action"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(118, "Warhammer 40K: Space Marine 2", "Don your power armor and fight the alien swarms threatening humanity.", listOf("Action", "TPS", "Co-op"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(119, "Silent Hill 2 Remake", "A faithful remake of the psychological horror masterpiece.", listOf("Horror", "Survival", "TPS"), listOf("Steam")),
+        GameInfo(120, "Dragon Age: The Veilguard", "Lead a crew of seven heroes to save the world of Thedas.", listOf("RPG", "Action", "Adventure"), listOf("Steam", "EA", "Epic Games")),
+        GameInfo(121, "Avowed", "Explore the Living Lands — a dark, magic-infused open world.", listOf("RPG", "FPS", "Action", "Open World"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(122, "The Elder Scrolls IV: Oblivion Remastered", "The iconic RPG classic rebuilt with stunning next-gen visuals.", listOf("RPG", "Open World", "Action", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(123, "Path of Exile 2", "A next-gen dark fantasy action RPG with deep build depth.", listOf("Action", "RPG"), listOf("Steam")),
+        GameInfo(124, "Helldivers 2", "Squad up and fight for democracy against overwhelming alien forces.", listOf("Action", "TPS", "Co-op"), listOf("Steam")),
+        GameInfo(125, "Doom: The Dark Ages", "Return to the roots of DOOM with medieval brutality and power fantasy.", listOf("FPS", "Action"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(126, "Age of Mythology: Retold", "The classic real-time strategy game reimagined with modern visuals.", listOf("Strategy", "RTS"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(127, "Like a Dragon: Pirate Yakuza in Hawaii", "Kiryu and Majima together in a swashbuckling Hawaiian adventure.", listOf("Action", "RPG", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(128, "Civilization VII", "Lead humanity from the ancient era to the modern age.", listOf("Strategy", "Turn-Based"), listOf("Steam", "Epic Games")),
+        GameInfo(129, "Assassin's Creed Shadows", "Live the fantasy of the shinobi and the samurai in feudal Japan.", listOf("Action", "Stealth", "Open World", "Adventure"), listOf("Steam", "Epic Games", "Xbox / Microsoft", "Ubisoft")),
+        GameInfo(130, "Balatro", "A hypnotic roguelike card game — poker meets Slay the Spire.", listOf("Roguelike", "Card Game", "Indie"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
+        GameInfo(131, "Hades II", "The sequel to the award-winning rogue-like dungeon crawler.", listOf("Roguelike", "Action", "Indie")),
+        // ═══ Classic popular games ═══
+        GameInfo(132, "Half-Life: Alyx", "Valve's VR return to the Half-Life universe — a masterpiece.", listOf("FPS", "VR", "Horror", "Action"), listOf("Steam")),
+        GameInfo(133, "Prey (2017)", "Explore a space station overrun by shapeshifting aliens in this immersive sim.", listOf("FPS", "Horror", "Action", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(134, "Dishonored 2", "Master Emily and Corvo's supernatural powers in a beautifully crafted steampunk world.", listOf("Action", "Stealth", "FPS", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(135, "Batman: Arkham Knight", "The epic conclusion to the Arkham trilogy — with the Batmobile.", listOf("Action", "Adventure", "TPS"), listOf("Steam")),
+        GameInfo(136, "Mass Effect Legendary Edition", "The complete legendary sci-fi trilogy remastered in 4K.", listOf("RPG", "Action", "Sci-fi", "Adventure"), listOf("Steam", "EA", "Xbox / Microsoft")),
+        GameInfo(137, "BioShock Remastered", "Descend into the underwater dystopia of Rapture.", listOf("FPS", "Horror", "Action", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
+        GameInfo(138, "Star Wars Jedi: Fallen Order", "Cal Kestis hunts for a Jedi holocron in this action-adventure.", listOf("Action", "Adventure", "TPS"), listOf("Steam", "Epic Games", "EA", "Xbox / Microsoft")),
+        GameInfo(139, "Titanfall 2", "Best-in-class FPS multiplayer and one of gaming's greatest single-player campaigns.", listOf("FPS", "Action"), listOf("Steam", "EA")),
+        GameInfo(140, "Warhammer 40K: Boltgun", "A love letter to classic arena shooters set in the 40K universe.", listOf("FPS", "Action", "Indie"), listOf("Steam", "Xbox / Microsoft"))
     )
 
     private val platforms = listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft", "EA", "Ubisoft", "Battle.net")
+
+    // GOG game URLs — game ID → direct product page URL.
+    // Slugs verified from the GOG catalog. Base URL: https://www.gog.com/en/game/{slug}
+    // These override the live API result to prevent wrong matches (e.g. The Witcher 3
+    // appearing as a promoted/sponsored item in unrelated search result sets).
+    private val gogGameUrls = mapOf(
+        2  to "https://www.gog.com/en/game/baldurs_gate_3",                          // Baldur's Gate 3
+        3  to "https://www.gog.com/en/game/the_witcher_3_wild_hunt_goty",            // The Witcher 3: Wild Hunt
+        4  to "https://www.gog.com/en/game/cyberpunk_2077",                          // Cyberpunk 2077
+        18 to "https://www.gog.com/en/game/horizon_zero_dawn_complete_edition",      // Horizon Zero Dawn
+        22 to "https://www.gog.com/en/game/persona_5_royal",                         // Persona 5 Royal
+        23 to "https://www.gog.com/en/game/metaphor_refantazio",                     // Metaphor: ReFantazio
+        28 to "https://www.gog.com/en/game/sekiro_shadows_die_twice",                // Sekiro: Shadows Die Twice
+        44 to "https://www.gog.com/en/game/control_ultimate_edition",                // Control Ultimate Edition (+ Xbox / Microsoft)
+        46 to "https://www.gog.com/en/game/lies_of_p",                               // Lies of P
+        60 to "https://www.gog.com/en/game/factorio",                                // Factorio
+        75 to "https://www.gog.com/en/game/the_talos_principle_2",                   // The Talos Principle 2
+        77 to "https://www.gog.com/en/game/celeste",                                  // Celeste
+        78 to "https://www.gog.com/en/game/hollow_knight",                            // Hollow Knight
+        79 to "https://www.gog.com/en/game/hades",                                   // Hades
+        80 to "https://www.gog.com/en/game/dead_cells",                              // Dead Cells
+        83 to "https://www.gog.com/en/game/slay_the_spire",                          // Slay the Spire
+        87 to "https://www.gog.com/en/game/stardew_valley",                          // Stardew Valley
+        88 to "https://www.gog.com/en/game/unpacking",                               // Unpacking
+        89 to "https://www.gog.com/en/game/spiritfarer_farewell_edition",            // Spiritfarer
+        90 to "https://www.gog.com/en/game/outer_wilds",                             // Outer Wilds
+        91 to "https://www.gog.com/en/game/what_remains_of_edith_finch",             // What Remains of Edith Finch
+        92 to "https://www.gog.com/en/game/firewatch",                               // Firewatch
+        95 to "https://www.gog.com/en/game/return_of_the_obra_dinn",                 // Return of the Obra Dinn
+        96 to "https://www.gog.com/en/game/disco_elysium_the_final_cut",             // Disco Elysium: The Final Cut
+        97 to "https://www.gog.com/en/game/divinity_original_sin_2_developers_cut",  // Divinity: Original Sin 2
+        98 to "https://www.gog.com/en/game/pillars_of_eternity_2_deadfire",          // Pillars of Eternity II
+        99 to "https://www.gog.com/en/game/hitman_world_of_assassination"            // Hitman: World of Assassination
+    )
+
+    // Epic Games Store page slugs — game catalog ID → verified Epic URL slug.
+    // These override the urlSlug returned by Epic's GraphQL API, which can sometimes
+    // return a UUID-like offer ID instead of the human-readable page slug.
+    // Verified against: https://store.epicgames.com/en-US/p/{slug}
+    private val epicSlugs = mapOf(
+        1  to "elden-ring",                        // Elden Ring
+        2  to "baldurs-gate-3",                    // Baldur's Gate 3
+        3  to "the-witcher-3-wild-hunt",           // The Witcher 3: Wild Hunt
+        4  to "cyberpunk-2077",                    // Cyberpunk 2077 ← link corregido
+        5  to "red-dead-redemption-2",             // Red Dead Redemption 2
+        6  to "god-of-war-ragnarok",               // God of War Ragnarök
+        9  to "alan-wake-2",                       // Alan Wake 2
+        10 to "hogwarts-legacy",                   // Hogwarts Legacy
+        11 to "resident-evil-4",                   // Resident Evil 4 Remake
+        12 to "death-stranding",                   // Death Stranding
+        15 to "ghost-of-tsushima",                 // Ghost of Tsushima
+        16 to "the-last-of-us-part-i",             // The Last of Us Part I
+        17 to "spider-man-remastered",             // Spider-Man Remastered
+        18 to "horizon-zero-dawn-remastered",      // Horizon Zero Dawn
+        21 to "final-fantasy-vii-rebirth",         // Final Fantasy VII Rebirth
+        22 to "persona-5-royal",                   // Persona 5 Royal
+        23 to "metaphor-refantazio",               // Metaphor: ReFantazio
+        24 to "palworld",                          // Palworld
+        25 to "black-myth-wukong",                 // Black Myth: Wukong
+        103 to "fortnite",                         // Fortnite (F2P)
+        107 to "genshin-impact",                   // Genshin Impact (F2P)
+        111 to "rocketleague",                     // Rocket League (F2P)
+        114 to "honkai-star-rail",                 // Honkai: Star Rail (F2P)
+        115 to "monster-hunter-wilds",             // Monster Hunter Wilds
+        116 to "clair-obscur-expedition-33",       // Clair Obscur: Expedition 33
+        117 to "kingdom-come-deliverance-2",       // Kingdom Come: Deliverance 2
+        124 to "helldivers-2",                     // Helldivers 2
+        125 to "doom-the-dark-ages",               // Doom: The Dark Ages
+        129 to "assassins-creed-shadows",          // Assassin's Creed Shadows
+        130 to "balatro",                          // Balatro
+        131 to "hades-ii"                          // Hades II
+    )
+
+    // Ubisoft Store AR URLs — game ID → direct product page URL.
+    // Format: https://store.ubisoft.com/ofertas/{slug}/{productId}.html?lang=es_AR
+    private val ubisoftUrls = mapOf(
+        40 to "https://store.ubisoft.com/ofertas/the-crew-motorfest/63bc67dbd406ab22f1174305.html?lang=es_AR",
+        129 to "https://store.ubisoft.com/ofertas/assassins-creed-shadows/660e5a03fbff4e2940488bcd.html?lang=es_AR"
+    )
+
+    // Xbox / Microsoft Store product IDs (game catalog ID → Xbox product ID).
+    // Extracted from official Xbox store product URLs:
+    // https://www.xbox.com/es-AR/games/store/{title-slug}/{productId}
+    private val xboxProductIds = mapOf(
+        7   to "BQ2VSWP8LLS1",  // Starfield
+        10  to "9NKX9X90NWSM",  // Hogwarts Legacy
+        14  to "9NFBWVSC88M5",  // Tekken 8
+        20  to "9MV0B2ZFQJQT",  // Like a Dragon: Infinite Wealth
+        22  to "9P7T5B0BWJKF",  // Persona 5 Royal
+        23  to "9PP9J5S3L1CK",  // Metaphor: ReFantazio
+        24  to "9MT4TQRJRP3W",  // Palworld
+        25  to "9P5X4QVZCG54",  // Black Myth: Wukong
+        26  to "9PDWD28DJCPR",  // S.T.A.L.K.E.R. 2
+        29  to "9NB37X38B8DL",  // Indiana Jones and the Great Circle
+        33  to "9N5TT8MXBZ5S",  // Armored Core VI
+        42  to "9NS4CZNTPD7G",  // Forza Motorsport
+        47  to "9PB9QMD8BWM6",  // Remnant II
+        53  to "9NF83PRZK6SR",  // Subnautica
+        62  to "9N3NLJ1QZQC2",  // Valheim
+        115 to "9P9N26ZBLQS3",  // Monster Hunter Wilds
+        116 to "9N3VP43FWX8F",  // Clair Obscur: Expedition 33
+        117 to "9NC8NX9MQX6N",  // Kingdom Come: Deliverance 2
+        118 to "9N25LB1TXSSS",  // Warhammer 40K: Space Marine 2
+        121 to "9MWLPPWMBL3G",  // Avowed
+        122 to "9NZQJPD3QFB9",  // Oblivion Remastered
+        125 to "9P59Q3QTCP54",  // Doom: The Dark Ages
+        129 to "9NBLGGH5K6VB",  // Assassin's Creed Shadows
+        138 to "c2csdtscbz0c"   // Star Wars Jedi: Fallen Order
+    )
+
+    // Xbox title hints — game catalog ID → localized title used in Argentine Xbox Store.
+    // Used when the English game name doesn't match the Spanish Xbox listing.
+    private val xboxTitleHints = mapOf(
+        138 to "Star Wars Jedi: La Orden Caída"
+    )
+
+    // EA App / Origin game URLs — game catalog ID → EA product page URL.
+    private val eaGameUrls = mapOf(
+        19  to "https://www.ea.com/es/games/dead-space",                     // Dead Space Remake
+        34  to "https://www.ea.com/es/games/starwars/jedi-survivor",         // Jedi: Survivor
+        35  to "https://www.ea.com/es/games/ea-sports-fc",                   // EA Sports FC 25
+        36  to "https://www.ea.com/es/games/madden-nfl",                     // Madden NFL 25
+        38  to "https://www.ea.com/es/games/f1/f1-24",                       // F1 24
+        41  to "https://www.ea.com/es/games/need-for-speed/need-for-speed-unbound", // NFS Unbound
+        71  to "https://www.ea.com/es/games/it-takes-two",                   // It Takes Two
+        72  to "https://www.ea.com/es/games/a-way-out",                      // A Way Out
+        120 to "https://www.ea.com/es/games/dragon-age/dragon-age-the-veilguard",  // Dragon Age: Veilguard
+        136 to "https://www.ea.com/es/games/mass-effect/mass-effect-legendary-edition", // ME Legendary
+        138 to "https://www.ea.com/es/games/starwars/jedi-fallen-order",     // Star Wars Jedi: Fallen Order
+        139 to "https://www.ea.com/es/games/titanfall/titanfall-2"           // Titanfall 2
+    )
 
     // Steam App IDs — ONLY for games that are actually on Steam.
     // Alan Wake 2, Valorant, Genshin Impact, Honkai: Star Rail are NOT on Steam.
@@ -170,7 +329,35 @@ object GameCatalog {
         96 to 632470, 97 to 435150, 98 to 560130, 99 to 1659040, 100 to 782330,
         // F2P games that ARE on Steam
         104 to 2767030, 105 to 570, 106 to 1172470,
-        108 to 730, 109 to 230410, 110 to 238960, 112 to 1097150
+        108 to 730, 109 to 230410, 110 to 238960, 112 to 1097150,
+        // 2024-2025 new releases
+        115 to 2246340, // Monster Hunter Wilds
+        116 to 1903340, // Clair Obscur: Expedition 33
+        117 to 1771300, // Kingdom Come: Deliverance 2
+        118 to 2183900, // Warhammer 40K: Space Marine 2
+        119 to 2124490, // Silent Hill 2 Remake
+        120 to 1845910, // Dragon Age: The Veilguard
+        121 to 2457220, // Avowed
+        122 to 2748220, // The Elder Scrolls IV: Oblivion Remastered
+        123 to 2694490, // Path of Exile 2
+        124 to 553850,  // Helldivers 2
+        125 to 3017860, // Doom: The Dark Ages
+        126 to 1934680, // Age of Mythology: Retold
+        127 to 3061810, // Like a Dragon: Pirate Yakuza in Hawaii
+        128 to 1295660, // Civilization VII (Sid Meier's)
+        129 to 3159330, // Assassin's Creed Shadows
+        130 to 2379780, // Balatro
+        131 to 1145350, // Hades II
+        // ═══ Classic popular games ═══
+        132 to 546560,  // Half-Life: Alyx
+        133 to 480490,  // Prey (2017)
+        134 to 403640,  // Dishonored 2
+        135 to 208650,  // Batman: Arkham Knight
+        136 to 1328670, // Mass Effect Legendary Edition
+        137 to 409710,  // BioShock Remastered
+        138 to 1172380, // Star Wars Jedi: Fallen Order
+        139 to 1237970, // Titanfall 2
+        140 to 1824580  // Warhammer 40K: Boltgun
     )
 
     // Games NOT on Steam — image will be fetched at runtime from their store API.
@@ -371,8 +558,36 @@ object GameCatalog {
         96 to 90,   // Disco Elysium: The Final Cut — 90%
         97 to 85,   // Divinity: Original Sin 2 — 85%
         98 to 80,   // Pillars of Eternity II — 80%
-        99 to 80,   // Hitman: World of Assassination — 80%
-        100 to 80   // Doom Eternal — 80%
+        99 to 80,    // Hitman: World of Assassination — 80%
+        100 to 80,   // Doom Eternal — 80%
+        // ── 2024-2025 new releases ──
+        115 to 0,    // Monster Hunter Wilds — too new
+        116 to 0,    // Clair Obscur: Expedition 33 — too new
+        117 to 20,   // Kingdom Come: Deliverance 2 — 20%
+        118 to 25,   // Warhammer 40K: Space Marine 2 — 25%
+        119 to 30,   // Silent Hill 2 Remake — 30%
+        120 to 40,   // Dragon Age: The Veilguard — 40%
+        121 to 20,   // Avowed — 20%
+        122 to 0,    // Oblivion Remastered — too new
+        123 to 0,    // Path of Exile 2 — Early Access
+        124 to 33,   // Helldivers 2 — 33%
+        125 to 0,    // Doom: The Dark Ages — too new
+        126 to 33,   // Age of Mythology: Retold — 33%
+        127 to 20,   // Like a Dragon: Pirate Yakuza in Hawaii — 20%
+        128 to 20,   // Civilization VII — 20%
+        129 to 20,   // Assassin's Creed Shadows — 20%
+        130 to 20,   // Balatro — 20%
+        131 to 0,    // Hades II — Early Access
+        // ── Classics ──
+        132 to 40,   // Half-Life: Alyx — 40%
+        133 to 90,   // Prey (2017) — 90%
+        134 to 90,   // Dishonored 2 — 90%
+        135 to 90,   // Batman: Arkham Knight — 90%
+        136 to 75,   // Mass Effect Legendary Edition — 75%
+        137 to 90,   // BioShock Remastered — 90%
+        138 to 90,   // Star Wars Jedi: Fallen Order — 90%
+        139 to 90,   // Titanfall 2 — 90%
+        140 to 60    // Warhammer 40K: Boltgun — 60%
     )
 
     /**
@@ -526,7 +741,35 @@ object GameCatalog {
         111 to 8.6,  // Rocket League — Metacritic 86
         112 to 8.0,  // Fall Guys — Metacritic 80
         113 to 7.6,  // Teamfight Tactics — Metacritic 76
-        114 to 8.6   // Honkai: Star Rail — Metacritic 86
+        114 to 8.6,  // Honkai: Star Rail — Metacritic 86
+        // ── 2024-2025 new releases ──
+        115 to 9.0,  // Monster Hunter Wilds — Metacritic 90
+        116 to 9.2,  // Clair Obscur: Expedition 33 — Metacritic 92
+        117 to 8.8,  // Kingdom Come: Deliverance 2 — Metacritic 88
+        118 to 8.2,  // Warhammer 40K: Space Marine 2 — Metacritic 82
+        119 to 8.8,  // Silent Hill 2 Remake — Metacritic 88
+        120 to 7.4,  // Dragon Age: The Veilguard — Metacritic 74
+        121 to 7.8,  // Avowed — Metacritic 78
+        122 to 9.0,  // The Elder Scrolls IV: Oblivion Remastered — Metacritic 90
+        123 to 8.5,  // Path of Exile 2 (EA) — Metacritic 85
+        124 to 8.8,  // Helldivers 2 — Metacritic 88
+        125 to 8.7,  // Doom: The Dark Ages — Metacritic 87
+        126 to 8.3,  // Age of Mythology: Retold — Metacritic 83
+        127 to 8.5,  // Like a Dragon: Pirate Yakuza in Hawaii — Metacritic 85
+        128 to 7.3,  // Civilization VII — Metacritic 73
+        129 to 8.0,  // Assassin's Creed Shadows — Metacritic 80
+        130 to 9.0,  // Balatro — Metacritic 90
+        131 to 9.3,  // Hades II (EA) — Metacritic 93
+        // ── Classics ──
+        132 to 9.7,  // Half-Life: Alyx — Metacritic 93 (PC VR)
+        133 to 8.5,  // Prey (2017) — Metacritic 85
+        134 to 8.6,  // Dishonored 2 — Metacritic 86
+        135 to 8.7,  // Batman: Arkham Knight — Metacritic 87
+        136 to 9.7,  // Mass Effect Legendary Edition — Metacritic 97
+        137 to 9.5,  // BioShock Remastered — Metacritic 97
+        138 to 8.3,  // Star Wars Jedi: Fallen Order — Metacritic 83
+        139 to 8.9,  // Titanfall 2 — Metacritic 89
+        140 to 8.1   // Warhammer 40K: Boltgun — Metacritic 81
     )
 
     /**
@@ -653,7 +896,35 @@ object GameCatalog {
         111 to "2015-07-07",  // Rocket League
         112 to "2020-08-04",  // Fall Guys
         113 to "2019-06-26",  // Teamfight Tactics
-        114 to "2023-04-26"   // Honkai: Star Rail
+        114 to "2023-04-26",  // Honkai: Star Rail
+        // ── 2024-2025 new releases ──
+        115 to "2025-02-28",  // Monster Hunter Wilds
+        116 to "2025-04-24",  // Clair Obscur: Expedition 33
+        117 to "2025-02-04",  // Kingdom Come: Deliverance 2
+        118 to "2024-09-09",  // Warhammer 40K: Space Marine 2
+        119 to "2024-10-08",  // Silent Hill 2 Remake
+        120 to "2024-10-31",  // Dragon Age: The Veilguard
+        121 to "2025-02-18",  // Avowed
+        122 to "2025-04-22",  // The Elder Scrolls IV: Oblivion Remastered
+        123 to "2024-12-06",  // Path of Exile 2 (Early Access)
+        124 to "2024-02-08",  // Helldivers 2
+        125 to "2025-05-15",  // Doom: The Dark Ages
+        126 to "2024-09-04",  // Age of Mythology: Retold
+        127 to "2025-02-21",  // Like a Dragon: Pirate Yakuza in Hawaii
+        128 to "2025-02-11",  // Civilization VII
+        129 to "2025-03-20",  // Assassin's Creed Shadows
+        130 to "2024-02-20",  // Balatro
+        131 to "2024-05-06",  // Hades II (Early Access)
+        // ── Classics ──
+        132 to "2020-03-23",  // Half-Life: Alyx
+        133 to "2017-05-05",  // Prey (2017)
+        134 to "2016-11-11",  // Dishonored 2
+        135 to "2015-06-23",  // Batman: Arkham Knight
+        136 to "2021-05-14",  // Mass Effect Legendary Edition
+        137 to "2016-09-16",  // BioShock Remastered
+        138 to "2019-11-15",  // Star Wars Jedi: Fallen Order
+        139 to "2016-10-28",  // Titanfall 2
+        140 to "2023-05-23"   // Warhammer 40K: Boltgun
     )
 
     private fun dlcImg(dlcId: Int): String {
@@ -663,20 +934,12 @@ object GameCatalog {
 
     private fun generateDLCsForGame(gameId: Int): List<DLC> {
         return dlcData.filter { it.gameId == gameId }.map { dlcInfo ->
-            // Get the parent game to know which platforms are valid
-            val parentGame = popularGames.firstOrNull { it.id == gameId }
-            val dlcPlatforms = parentGame?.platforms ?: listOf("Steam", "Epic Games", "GOG")
-            val basePrices = mapOf(
-                "Steam" to (14.99f + (dlcInfo.id % 10) * 0.5f),
-                "Epic Games" to (13.99f + (dlcInfo.id % 10) * 0.5f),
-                "GOG" to (12.99f + (dlcInfo.id % 10) * 0.5f)
-            ).filter { it.key in dlcPlatforms }
             DLC(
                 id = dlcInfo.id,
                 name = dlcInfo.name,
                 gameId = gameId,
                 imageUrl = dlcImg(dlcInfo.id),
-                currentPrices = basePrices,
+                currentPrices = emptyMap(), // Real DLC prices come from Steam API
                 historicalDiscount = dlcSteamDbHistoricalDiscount[dlcInfo.id] ?: 0,
                 releaseDate = "2024-${String.format("%02d", (dlcInfo.id % 12) + 1)}-15",
                 description = dlcInfo.desc
@@ -702,19 +965,9 @@ object GameCatalog {
                 steamAppId = steamAppIds[info.id] ?: 0
             )
         } else {
-            val allPrices = mapOf(
-                "Steam" to (29.99f + (info.id % 40) * 0.5f),
-                "Epic Games" to (29.99f + (info.id % 40) * 0.5f - 2f).coerceAtLeast(9.99f),
-                "GOG" to (27.99f + (info.id % 40) * 0.5f),
-                "Xbox / Microsoft" to (29.99f + (info.id % 35) * 0.4f),
-                "EA" to (24.99f + (info.id % 30) * 0.4f),
-                "Ubisoft" to (24.99f + (info.id % 30) * 0.4f),
-                "Battle.net" to (29.99f + (info.id % 35) * 0.3f)
-            )
-            // Only include prices for platforms where the game is actually available
-            val filteredPrices = allPrices.filter { it.key in info.platforms }
-            // Historical discount: use SteamDB data for Steam games, 0 for non-Steam
-            // (non-Steam games build their history from our own price_history DB)
+            // Real prices come from store APIs via PriceRefreshManager and are cached in Room.
+            // We never use placeholder/mock prices — currentPrices stays empty until the
+            // live API responds.
             val histDiscount = steamDbHistoricalDiscount[info.id] ?: 0
             Game(
                 id = info.id,
@@ -723,7 +976,7 @@ object GameCatalog {
                 releaseDate = releaseDates[info.id] ?: "",
                 imageUrl = steamImg(info.id),
                 rating = gameRatings[info.id] ?: 7.0,
-                currentPrices = filteredPrices,
+                currentPrices = emptyMap(),
                 historicalDiscount = histDiscount,
                 tags = info.tags,
                 dlcs = generateDLCsForGame(info.id),
@@ -737,11 +990,72 @@ object GameCatalog {
      * Get the Steam App IDs mapping (game catalog ID → Steam App ID).
      * Used by PriceRefreshManager for API lookups.
      */
+    /**
+     * Get the Ubisoft Store AR URL for a game, if available.
+     * Returns null if the game doesn't have a hardcoded Ubisoft URL.
+     */
+    fun getUbisoftUrl(gameId: Int): String? = ubisoftUrls[gameId]
+
+    /**
+     * Get the GOG Store URL for a game, if a verified slug is available.
+     * Returns null if the game doesn't have a hardcoded GOG URL (falls back to live API result).
+     */
+    fun getGogUrl(gameId: Int): String? = gogGameUrls[gameId]
+
+    /** Get the Xbox / Microsoft Store product ID for a game, if hardcoded. */
+    fun getXboxProductId(gameId: Int): String? = xboxProductIds[gameId]
+
+    /** Get the localized Xbox title hint for search matching, if available. */
+    fun getXboxTitleHint(gameId: Int): String? = xboxTitleHints[gameId]
+
+    /** Get the EA App product page URL for a game, if hardcoded. */
+    fun getEaUrl(gameId: Int): String? = eaGameUrls[gameId]
+
+    /**
+     * Get the Epic Games Store page URL for a game, if a verified slug is available.
+     * Returns null if the game doesn't have a hardcoded Epic slug (falls back to live API result).
+     */
+    fun getEpicUrl(gameId: Int): String? {
+        val slug = epicSlugs[gameId] ?: return null
+        return "https://store.epicgames.com/en-US/p/$slug"
+    }
+
     fun getSteamAppIdsByName(): Map<String, Int> {
         return popularGames.mapNotNull { info ->
             val steamId = steamAppIds[info.id] ?: return@mapNotNull null
             info.name to steamId
         }.toMap()
+    }
+
+    /**
+     * Get a map from game name → Xbox product ID for games with known IDs.
+     * Used by PriceRefreshManager to look up Xbox prices directly.
+     */
+    fun getXboxProductIdsByName(): Map<String, String> {
+        return popularGames.mapNotNull { info ->
+            val productId = xboxProductIds[info.id] ?: return@mapNotNull null
+            info.name to productId
+        }.toMap()
+    }
+
+    /**
+     * Get a map from game name → Xbox title hint (localized title for search).
+     */
+    fun getXboxTitleHintsByName(): Map<String, String> {
+        return popularGames.mapNotNull { info ->
+            val hint = xboxTitleHints[info.id] ?: return@mapNotNull null
+            info.name to hint
+        }.toMap()
+    }
+
+    /**
+     * Get the mapping from game name → list of available store platforms.
+     * Used by PriceRefreshManager to limit API calls to only the stores
+     * where each game is actually sold — prevents querying GOG for Steam-only
+     * games and Epic-only games from being queried on Battle.net, etc.
+     */
+    fun getGamePlatformsByName(): Map<String, List<String>> {
+        return popularGames.associate { info -> info.name to info.platforms }
     }
 
     fun generateNews(): List<News> {

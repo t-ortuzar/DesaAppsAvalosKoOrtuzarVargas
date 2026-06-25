@@ -6,9 +6,10 @@ import org.junit.Test
 class GameCatalogTest {
 
     @Test
-    fun `generateGames returns 114 games (100 paid + 14 F2P)`() {
+    fun `generateGames returns expected number of games`() {
         val games = GameCatalog.generateGames()
-        assertEquals(114, games.size)
+        // Catalog: 114 original + 17 new 2024-2025 releases + 9 classics = 140
+        assertEquals(140, games.size)
     }
 
     @Test
@@ -27,7 +28,8 @@ class GameCatalogTest {
             assertTrue("${it.name} has empty description", it.description.isNotEmpty())
             assertTrue("${it.name} has empty releaseDate", it.releaseDate.isNotEmpty())
             assertTrue("${it.name} has no rating", it.rating > 0)
-            assertTrue("${it.name} has no prices", it.currentPrices.isNotEmpty())
+            // currentPrices is intentionally empty — real prices come from store APIs
+            assertTrue("${it.name} should have empty prices (API-sourced)", it.currentPrices.isEmpty())
             assertTrue("${it.name} has no tags", it.tags.isNotEmpty())
             assertTrue("${it.name} has no platforms", it.availablePlatforms.isNotEmpty())
         }

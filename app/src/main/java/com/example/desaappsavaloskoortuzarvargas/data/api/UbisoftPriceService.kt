@@ -80,8 +80,13 @@ class UbisoftPriceService {
                     currency = currency,
                     isFree = currentPrice == 0f,
                     storeUrl = if (productUrl.isNotEmpty()) {
-                        "https://store.ubisoft.com$productUrl"
-                    } else "https://store.ubisoft.com"
+                        val link = if (productUrl.startsWith("http")) productUrl
+                                   else "https://store.ubisoft.com$productUrl"
+                        link
+                    } else {
+                        val encoded = URLEncoder.encode(title, "UTF-8")
+                        "https://store.ubisoft.com/search?q=$encoded"
+                    }
                 )
             } else null
         } catch (_: Exception) {

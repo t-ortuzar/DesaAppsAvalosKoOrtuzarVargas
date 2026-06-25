@@ -17,5 +17,6 @@ interface UserSettingsRepository {
     suspend fun markNotificationRead(notificationId: Int)
     suspend fun getUnreadNotificationCount(): Int
     suspend fun generateDiscountNotifications(favoriteGameIds: List<Int>)
+    suspend fun updateDarkMode(isDark: Boolean)
 }
 
