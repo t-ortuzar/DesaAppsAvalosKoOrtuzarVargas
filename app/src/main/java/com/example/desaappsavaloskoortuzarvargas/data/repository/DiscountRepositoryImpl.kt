@@ -2,6 +2,7 @@ package com.example.desaappsavaloskoortuzarvargas.data.repository
 
 import com.example.desaappsavaloskoortuzarvargas.data.api.PriceRefreshManager
 import com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog
+import com.example.desaappsavaloskoortuzarvargas.data.local.dao.GameImageDao
 import com.example.desaappsavaloskoortuzarvargas.data.local.dao.GamePriceDao
 import com.example.desaappsavaloskoortuzarvargas.data.local.entity.GamePriceEntity
 import com.example.desaappsavaloskoortuzarvargas.domain.model.DiscountedGame
@@ -14,7 +15,8 @@ import com.example.desaappsavaloskoortuzarvargas.domain.repository.DiscountRepos
  */
 class DiscountRepositoryImpl(
     private val gamePriceDao: GamePriceDao,
-    private val priceRefreshManager: PriceRefreshManager
+    private val priceRefreshManager: PriceRefreshManager,
+    private val gameImageDao: GameImageDao? = null   // Optional: fallback for non-Steam images
 ) : DiscountRepository {
 
     // Cache the game catalog for lookups
@@ -133,10 +135,18 @@ class DiscountRepositoryImpl(
             priceRefreshManager.isHistoricalLow(entity.gameName, entity.storeName, entity.currentPrice)
         } catch (_: Exception) { false }
 
+        // Use the catalog's Steam CDN URL when available.
+        // For non-Steam games (Epic/GOG exclusives) the catalog URL is empty —
+        // fall back to the image cached by GamesViewModel via GameImageDao.
+        val imageUrl = catalogGame.imageUrl.ifEmpty {
+            try { gameImageDao?.getImageForGame(catalogGame.id)?.imageUrl ?: "" }
+            catch (_: Exception) { "" }
+        }
+
         return DiscountedGame(
             gameId = catalogGame.id,
             gameName = entity.gameName,
-            imageUrl = catalogGame.imageUrl,
+            imageUrl = imageUrl,
             platform = entity.storeName,
             originalPrice = entity.retailPrice,
             currentPrice = entity.currentPrice,
@@ -152,7 +162,16 @@ class DiscountRepositoryImpl(
                 OfferType.SALE
             },
             endTimestamp = entity.discountEndTimestamp,
-            storeUrl = entity.dealUrl
+            // For GOG games, prefer the hardcoded catalog URL over the cached dealUrl.
+            // The live GOG search can match wrong products (e.g. The Witcher 3 appearing
+            // as a promoted result), so we always override with the known-good slug URL.
+            // For Epic Games, also prefer the hardcoded slug when the live urlSlug
+            // returned by Epic's API might be a UUID instead of a readable page slug.
+            storeUrl = when (entity.storeName) {
+                "GOG" -> GameCatalog.getGogUrl(catalogGame.id) ?: entity.dealUrl
+                "Epic Games" -> GameCatalog.getEpicUrl(catalogGame.id) ?: entity.dealUrl
+                else -> entity.dealUrl
+            }
         )
     }
 }

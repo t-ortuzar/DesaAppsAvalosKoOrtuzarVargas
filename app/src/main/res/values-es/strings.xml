@@ -6,6 +6,7 @@
     <string name="nav_news">Noticias</string>
     <string name="nav_settings">Ajustes</string>
     <string name="nav_favorites">Favoritos</string>
+    <string name="nav_notifications">Notificaciones</string>
 
     <string name="action_search">Buscar</string>
     <string name="action_save">Guardar</string>
@@ -142,5 +143,27 @@
     <string name="btn_buy_now">Comprar en la tienda</string>
     <string name="btn_get_free">Obtener gratis</string>
     <string name="btn_play_free">Jugar gratis</string>
+    <!-- Tab de notificaciones -->
+    <string name="tab_alerts">Alertas</string>
+    <string name="tab_favorites">Favoritos</string>
+    <string name="notifications_empty">Sin notificaciones. ¡Agregá favoritos para recibir alertas de precios!</string>
+    <string name="notifications_mark_all_read">Marcar todo como leído</string>
+    <string name="label_dark_mode">Modo oscuro</string>
+
+    <!-- Autenticación -->
+    <string name="auth_welcome">Bienvenido a ArgenGamer</string>
+    <string name="auth_subtitle">Iniciá sesión para sincronizar tus favoritos entre dispositivos</string>
+    <string name="auth_login">Iniciar sesión</string>
+    <string name="auth_register">Crear cuenta</string>
+    <string name="auth_username">Usuario</string>
+    <string name="auth_password">Contraseña</string>
+    <string name="auth_connecting">Conectando…</string>
+    <string name="auth_skip">Continuar sin cuenta</string>
+    <string name="auth_error_empty">Por favor ingresá usuario y contraseña</string>
+    <string name="auth_error_generic">Error de autenticación. Intentá de nuevo.</string>
+    <string name="auth_switch_to_register">¿No tenés cuenta? Registrate</string>
+    <string name="auth_switch_to_login">¿Ya tenés cuenta? Iniciá sesión</string>
+    <string name="auth_success_register">¡Cuenta creada!</string>
+    <string name="auth_success_login">¡Bienvenido de vuelta!</string>
 
 </resources>

@@ -53,6 +53,21 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            // MongoDB driver ships duplicate META-INF resources across its JARs
+            excludes += setOf(
+                "META-INF/native-image/**",
+                "META-INF/services/org.bson.codecs.configuration.CodecProvider",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.md",
+                "META-INF/NOTICE.txt",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE.txt"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -81,6 +96,10 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    // MongoDB Atlas — sync driver wrapped in coroutines for user auth + favorites sync
+    implementation("org.mongodb:mongodb-driver-sync:5.1.3")
+    implementation("org.mongodb:bson-kotlinx:5.1.3")
 
     testImplementation(libs.junit)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")

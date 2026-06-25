@@ -61,7 +61,8 @@ object ServiceLocator {
     val discountRepository: DiscountRepository by lazy {
         DiscountRepositoryImpl(
             gamePriceDao = database.gamePriceDao(),
-            priceRefreshManager = priceRefreshManager
+            priceRefreshManager = priceRefreshManager,
+            gameImageDao = database.gameImageDao()
         )
     }
     val userSettingsRepository: UserSettingsRepository by lazy {

@@ -155,13 +155,21 @@ class EpicPriceService {
                 }
             )
 
-            val url = URL("https://graphql.epicgames.com/graphql")
+            // graphql.epicgames.com/graphql was deprecated (404 as of 2025).
+            // The current endpoint is store.epicgames.com/graphql.
+            val url = URL("https://store.epicgames.com/graphql")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.connectTimeout = 10000
             conn.readTimeout = 10000
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("Origin", "https://store.epicgames.com")
+            conn.setRequestProperty("Referer", "https://store.epicgames.com/")
+            conn.setRequestProperty(
+                "User-Agent",
+                "Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
+            )
             conn.doOutput = true
             conn.outputStream.bufferedWriter().use { it.write(requestBody) }
 
@@ -170,11 +178,17 @@ class EpicPriceService {
                 val parsed = json.decodeFromString<EpicGraphQLResponse>(response)
                 val elements = parsed.data?.Catalog?.searchStore?.elements ?: return@withContext null
 
-                // Only use an exact title match — do NOT fall back to first result.
-                // Returning a wrong game (e.g. a Steam-exclusive) is worse than null.
-                val match = elements.firstOrNull { element ->
-                    element.title.equals(title, ignoreCase = true)
-                } ?: return@withContext null
+                // Normalise titles: lowercase, drop edition suffixes ("Standard Edition",
+                // "Complete Edition", etc.) so "Cyberpunk 2077" matches
+                // "Cyberpunk 2077 Standard Edition" if an exact match isn't found.
+                fun norm(t: String) = t.trim().lowercase()
+                    .replace(Regex("\\s*(standard|complete|ultimate|definitive|game of the year|goty|deluxe|premium)\\s*(edition)?\\s*$"), "")
+                    .trim()
+
+                val normTitle = norm(title)
+                val match = elements.firstOrNull { norm(it.title) == normTitle }
+                    ?: elements.firstOrNull { norm(it.title).startsWith(normTitle) }
+                    ?: return@withContext null
 
                 val totalPrice = match.price?.totalPrice ?: return@withContext null
 
@@ -205,14 +219,23 @@ class EpicPriceService {
                     } else null
                 } catch (_: Exception) { null }
 
-                // Build the store URL.  Epic does NOT support es-AR in the URL path;
-                // the correct format is /p/{slug} without a locale prefix.
-                // If urlSlug is empty, fall back to a search page.
-                val storeUrl = if (match.urlSlug.isNotEmpty()) {
-                    "https://store.epicgames.com/p/${match.urlSlug}"
+                // Build the store URL. The Epic Store requires a locale in the path;
+                // /p/{slug} without locale returns 404. Use /en-US/p/{slug}.
+                // Validate the slug: Epic's API sometimes returns a UUID-like offer ID
+                // (e.g. "2afe81b7bdb443e79f7b9d85b6e3024f") instead of a readable slug.
+                // If the slug looks like a UUID or contains path separators from the locale
+                // prefix (e.g. "en-US/p/cyberpunk-2077"), sanitise it.
+                val rawSlug = match.urlSlug.trim()
+                    .removePrefix("/").removePrefix("en-US/p/").removePrefix("p/")
+                    .trim('/')
+                // A UUID-like slug is 32 hex chars (no hyphens) or a standard UUID format.
+                // Such slugs do NOT work as Epic store page URLs — fall back to search.
+                val uuidPattern = Regex("^[0-9a-f]{32}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+                val storeUrl = if (rawSlug.isNotEmpty() && !uuidPattern.matches(rawSlug)) {
+                    "https://store.epicgames.com/en-US/p/$rawSlug"
                 } else {
                     val encoded = java.net.URLEncoder.encode(title, "UTF-8")
-                    "https://store.epicgames.com/browse?q=$encoded"
+                    "https://store.epicgames.com/en-US/browse?q=$encoded"
                 }
 
                 StorePrice(
@@ -272,13 +295,19 @@ class EpicPriceService {
                 }
             )
 
-            val url = URL("https://graphql.epicgames.com/graphql")
+            val url = URL("https://store.epicgames.com/graphql")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.connectTimeout = 10000
             conn.readTimeout = 10000
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("Origin", "https://store.epicgames.com")
+            conn.setRequestProperty("Referer", "https://store.epicgames.com/")
+            conn.setRequestProperty(
+                "User-Agent",
+                "Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
+            )
             conn.doOutput = true
             conn.outputStream.bufferedWriter().use { it.write(requestBody) }
 

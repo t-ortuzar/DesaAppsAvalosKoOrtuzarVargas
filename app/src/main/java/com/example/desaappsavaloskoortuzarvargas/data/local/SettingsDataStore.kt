@@ -16,5 +16,8 @@ object SettingsKeys {
     val COUNTRY_CODE = stringPreferencesKey("country_code")
     val LANGUAGE_CODE = stringPreferencesKey("language_code")
     val GLOBAL_NOTIFICATIONS = booleanPreferencesKey("global_notifications")
+    val DARK_MODE = booleanPreferencesKey("dark_mode")
+    // MongoDB auth session
+    val MONGO_USER_ID = stringPreferencesKey("mongo_user_id")
+    val MONGO_USERNAME = stringPreferencesKey("mongo_username")
 }
-
