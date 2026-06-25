@@ -126,14 +126,16 @@ class PriceRefreshManager(
     /**
      * Fetch fresh prices for a single game from all stores.
      * Saves to cache. Returns the fetched prices.
+     * [platforms] limits which stores are queried (null = all stores).
      */
     suspend fun fetchAndCachePrices(
         gameName: String,
-        steamAppId: Int? = null
+        steamAppId: Int? = null,
+        platforms: List<String>? = null
     ): List<StorePrice> {
         if (!(connectivityObserver.isConnected())) return emptyList()
 
-        val prices = fetchAllStorePrices(gameName, steamAppId)
+        val prices = fetchAllStorePrices(gameName, steamAppId, platforms)
         if (prices.isNotEmpty()) {
             savePricesToCache(gameName, prices)
         }
@@ -268,15 +270,19 @@ class PriceRefreshManager(
 
     /**
      * Fetch prices from all 7 stores in parallel for a single game.
+     * [platforms] filters which stores to query — only stores in this list are called.
+     * Null means "query all stores".
      */
     private suspend fun fetchAllStorePrices(
         gameName: String,
-        steamAppId: Int? = null
+        steamAppId: Int? = null,
+        platforms: List<String>? = null
     ): List<StorePrice> = kotlinx.coroutines.coroutineScope {
         val prices = mutableListOf<StorePrice>()
+        val callAll = platforms == null
 
         val steamJob = async {
-            if (steamAppId != null && steamAppId > 0) {
+            if ((callAll || "Steam" in platforms!!) && steamAppId != null && steamAppId > 0) {
                 try {
                     steamPriceService.getArgentinePrice(steamAppId)?.let { arPrice ->
                         StorePrice(
@@ -295,27 +301,39 @@ class PriceRefreshManager(
         }
 
         val epicJob = async {
-            try { epicPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "Epic Games" in platforms!!) {
+                try { epicPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val gogJob = async {
-            try { gogPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "GOG" in platforms!!) {
+                try { gogPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val xboxJob = async {
-            try { xboxPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "Xbox / Microsoft" in platforms!!) {
+                try { xboxPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val ubisoftJob = async {
-            try { ubisoftPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "Ubisoft" in platforms!!) {
+                try { ubisoftPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val battleNetJob = async {
-            try { battleNetPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "Battle.net" in platforms!!) {
+                try { battleNetPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         val eaJob = async {
-            try { eaPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            if (callAll || "EA" in platforms!!) {
+                try { eaPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
+            } else null
         }
 
         steamJob.await()?.let { prices.add(it) }

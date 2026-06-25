@@ -237,14 +237,7 @@ class GamesViewModel(
         _showDLCs.value = !_showDLCs.value
     }
 
-    /**
-     * Load prices for a game.
-     *
-     * - **Online**: ALWAYS fetch fresh prices from APIs. No stale-cache shortcut.
-     *   Only falls back to cache if the fetch returns empty or fails.
-     * - **Offline**: Show cached prices with a warning.
-     */
-    fun loadRealPrices(gameName: String, steamAppId: Int? = null) {
+    fun loadRealPrices(gameName: String, steamAppId: Int? = null, platforms: List<String>? = null) {
         val manager = priceRefreshManager ?: return
         viewModelScope.launch {
             _isLoadingPrices.value = true
@@ -254,31 +247,27 @@ class GamesViewModel(
             val online = _isOnline.value
 
             if (online) {
-                // Always fetch fresh data when online
+                // Always fetch fresh data when online, filtered by platforms
                 try {
-                    val fresh = manager.fetchAndCachePrices(gameName, steamAppId)
+                    val fresh = manager.fetchAndCachePrices(gameName, steamAppId, platforms)
                     if (fresh.isNotEmpty()) {
                         _storePrices.value = fresh
                         _pricesFromCache.value = false
-                        // Extract image URL from store results (for non-Steam games)
                         val img = fresh.firstNotNullOfOrNull {
                             it.imageUrl.takeIf { url -> url.isNotEmpty() }
                         }
                         if (img != null) _gameDetailImageUrl.value = img
                     } else {
-                        // API returned nothing — try cache silently (no warning)
                         val cached = manager.getCachedPrices(gameName)
                         _storePrices.value = cached
                         _pricesFromCache.value = false
                     }
                 } catch (_: Exception) {
-                    // Fetch failed — fall back to cache with warning
                     val cached = manager.getCachedPrices(gameName)
                     _storePrices.value = cached
                     _pricesFromCache.value = cached.isNotEmpty()
                 }
             } else {
-                // Offline — use cache and show warning
                 val cached = manager.getCachedPrices(gameName)
                 _storePrices.value = cached
                 _pricesFromCache.value = cached.isNotEmpty()

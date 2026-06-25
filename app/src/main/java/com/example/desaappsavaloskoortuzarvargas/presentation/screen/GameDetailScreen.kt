@@ -79,9 +79,9 @@ fun GameDetailScreen(
     // Use dynamic image from store API if available, otherwise game's static image
     val displayImageUrl = gameDetailImageUrl ?: game.imageUrl
 
-    // Load real prices when entering the screen
+    // Load real prices when entering the screen — only query stores the game is on
     LaunchedEffect(game.id) {
-        viewModel.loadRealPrices(game.name, game.steamAppId)
+        viewModel.loadRealPrices(game.name, game.steamAppId, game.availablePlatforms)
     }
 
     Column(
