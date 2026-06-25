@@ -1,6 +1,9 @@
 package com.example.desaappsavaloskoortuzarvargas.presentation.screen
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -364,6 +368,7 @@ fun GameDetailScreen(
 /**
  * Card showing a real store price for Argentina.
  * Respects the [showInArs] toggle to display in ARS or USD.
+ * Tapping opens the store product page directly.
  */
 @Composable
 private fun StorePriceCard(
@@ -372,8 +377,19 @@ private fun StorePriceCard(
     showInArs: Boolean,
     viewModel: GamesViewModel
 ) {
+    val context = LocalContext.current
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (price.storeUrl.isNotEmpty()) {
+                    Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(price.storeUrl))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
+                    }
+                } else Modifier
+            ),
         elevation = CardDefaults.cardElevation(2.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
@@ -494,6 +510,7 @@ private fun StorePriceCard(
 /**
  * Row showing a catalog reference price for a platform.
  * Displayed with slightly different styling to indicate it's a reference price.
+ * Tapping opens the platform's store page.
  */
 @Composable
 private fun CatalogPriceRow(
@@ -503,8 +520,28 @@ private fun CatalogPriceRow(
     showInArs: Boolean,
     viewModel: GamesViewModel
 ) {
+    val context = LocalContext.current
+    val storeUrl = when (platform) {
+        "Epic Games" -> "https://store.epicgames.com"
+        "GOG" -> "https://www.gog.com"
+        "Xbox / Microsoft" -> "https://www.xbox.com/games/store"
+        "EA" -> "https://www.ea.com/games"
+        "Ubisoft" -> "https://store.ubisoft.com"
+        "Battle.net" -> "https://www.blizzard.com"
+        else -> ""
+    }
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (storeUrl.isNotEmpty()) {
+                    Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(storeUrl))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
+                    }
+                } else Modifier
+            ),
         elevation = CardDefaults.cardElevation(1.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(

@@ -79,13 +79,18 @@ class GogPriceService {
                 val finalPrice = priceData.finalAmount.toFloatOrNull() ?: 0f
                 val basePrice = priceData.baseAmount.toFloatOrNull() ?: finalPrice
 
+                // If the API returns 0 and the game is NOT explicitly marked as free,
+                // it means GOG doesn't have ARS regional pricing — skip to avoid showing
+                // a paid game as "FREE".
+                if (finalPrice == 0f && !priceData.isFree) return@withContext null
+
                 StorePrice(
                     storeName = "GOG",
                     currentPrice = finalPrice,
                     originalPrice = basePrice,
                     discountPercent = priceData.discountPercentage,
                     currency = priceData.currency,
-                    isFree = priceData.isFree || finalPrice == 0f,
+                    isFree = priceData.isFree,
                     storeUrl = if (match.storeLink.isNotEmpty()) {
                         "https://www.gog.com${match.storeLink}"
                     } else {
