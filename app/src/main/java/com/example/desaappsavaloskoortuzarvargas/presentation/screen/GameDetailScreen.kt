@@ -283,6 +283,8 @@ fun GameDetailScreen(
                         catalogPrices.forEach { (platform, usdPrice) ->
                             CatalogPriceRow(
                                 platform = platform,
+                                gameName = game.name,
+                                steamAppId = game.steamAppId,
                                 usdPrice = usdPrice,
                                 dolarRate = dolarRate,
                                 showInArs = showInArs,
@@ -509,12 +511,13 @@ private fun StorePriceCard(
 
 /**
  * Row showing a catalog reference price for a platform.
- * Displayed with slightly different styling to indicate it's a reference price.
- * Tapping opens the platform's store page.
+ * Builds game-specific store URLs using the game name and Steam App ID.
  */
 @Composable
 private fun CatalogPriceRow(
     platform: String,
+    gameName: String,
+    steamAppId: Int,
     usdPrice: Float,
     dolarRate: Double?,
     showInArs: Boolean,
@@ -522,12 +525,27 @@ private fun CatalogPriceRow(
 ) {
     val context = LocalContext.current
     val storeUrl = when (platform) {
-        "Epic Games" -> "https://store.epicgames.com"
-        "GOG" -> "https://www.gog.com"
-        "Xbox / Microsoft" -> "https://www.xbox.com/games/store"
-        "EA" -> "https://www.ea.com/games"
-        "Ubisoft" -> "https://store.ubisoft.com"
-        "Battle.net" -> "https://www.blizzard.com"
+        "Steam" -> if (steamAppId > 0) "https://store.steampowered.com/app/$steamAppId" else ""
+        "GOG" -> {
+            val slug = gameName.lowercase()
+                .replace("'", "").replace("`", "").replace(".", "")
+                .replace(":", " ").replace("-", " ").trim()
+                .replace(Regex("\\s+"), "_")
+                .replace(Regex("[^a-z0-9_]"), "")
+                .replace(Regex("_+"), "_").trim('_')
+            if (slug.isNotEmpty()) "https://www.gog.com/game/$slug" else "https://www.gog.com"
+        }
+        "Epic Games" -> {
+            val slug = gameName.lowercase()
+                .replace("'", "").replace(":", "").trim()
+                .replace(Regex("\\s+"), "-")
+                .replace(Regex("[^a-z0-9-]"), "")
+            if (slug.isNotEmpty()) "https://store.epicgames.com/p/$slug" else ""
+        }
+        "Xbox / Microsoft" -> "https://www.xbox.com/games/store/search?q=${java.net.URLEncoder.encode(gameName, "UTF-8")}"
+        "EA" -> "https://www.ea.com/search#q=${java.net.URLEncoder.encode(gameName, "UTF-8")}"
+        "Ubisoft" -> "https://store.ubisoft.com/search?q=${java.net.URLEncoder.encode(gameName, "UTF-8")}"
+        "Battle.net" -> "https://us.shop.battle.net/es-ar"
         else -> ""
     }
     Card(

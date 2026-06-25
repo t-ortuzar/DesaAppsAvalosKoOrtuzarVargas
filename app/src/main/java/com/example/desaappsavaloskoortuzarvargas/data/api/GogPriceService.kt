@@ -2,88 +2,32 @@ package com.example.desaappsavaloskoortuzarvargas.data.api
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 
-// ── GOG Catalog API response models ──
-
-@Serializable
-data class GogCatalogResponse(
-    val products: List<GogProduct> = emptyList()
-)
-
-@Serializable
-data class GogProduct(
-    val id: Long = 0,
-    val title: String = "",
-    val slug: String = "",
-    val price: GogPriceData? = null,
-    val storeLink: String = ""
-)
-
-/**
- * GOG Catalog API v1 price object.
- *
- * The API returns fields named "final" and "base" (not "finalAmount"/"baseAmount").
- * discountPercentage is returned as a STRING, not an integer.
- * We also keep legacy field names as fallbacks for older API versions.
- */
-@Serializable
-data class GogPriceData(
-    // GOG catalog API v1 field names
-    @SerialName("final")
-    val finalPrice: String = "0",
-    @SerialName("base")
-    val basePrice: String = "0",
-    val discountPercentage: String = "0",   // returned as String by GOG API
-    val isFree: Boolean = false,
-    val currency: String = "USD",
-    // Legacy / alternate field names (some API versions or responses)
-    val amount: String = "0",
-    val baseAmount: String = "0",
-    val finalAmount: String = "0",
-    val isDiscounted: Boolean = false
-) {
-    /** Resolve the current sale price from whichever field is populated. */
-    fun resolvedFinalPrice(): Float =
-        finalPrice.toFloatOrNull()?.takeIf { it > 0f }
-            ?: finalAmount.toFloatOrNull()?.takeIf { it > 0f }
-            ?: amount.toFloatOrNull()
-            ?: 0f
-
-    /** Resolve the original/base price from whichever field is populated. */
-    fun resolvedBasePrice(): Float {
-        val final = resolvedFinalPrice()
-        return basePrice.toFloatOrNull()?.takeIf { it > 0f }
-            ?: baseAmount.toFloatOrNull()?.takeIf { it > 0f }
-            ?: final
-    }
-
-    /** Resolve the discount percentage, computing it from prices if the API returned 0. */
-    fun resolvedDiscountPct(): Int {
-        val fromApi = discountPercentage.toIntOrNull() ?: 0
-        if (fromApi > 0) return fromApi
-        val final = resolvedFinalPrice()
-        val base = resolvedBasePrice()
-        return if (base > final && base > 0f) ((1f - final / base) * 100).toInt() else 0
-    }
-}
-
 /**
  * Service to fetch REAL prices from GOG for Argentina.
  *
- * GOG uses their catalog API v1 with countryCode=AR and currencyCode=USD
- * (GOG does not support ARS regional pricing).
+ * Uses the GOG Catalog API v1 with dynamic JSON parsing to be resilient
+ * against field type variations (string vs number) across API versions.
+ *
+ * GOG does not support ARS regional pricing, so prices are returned in USD.
+ * The UI converts USD → ARS using the dólar tarjeta rate.
  *
  * Endpoint: https://catalog.gog.com/v1/catalog
  */
 class GogPriceService {
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
     suspend fun searchGamePrice(title: String): StorePrice? = withContext(Dispatchers.IO) {
         try {
@@ -97,52 +41,109 @@ class GogPriceService {
             conn.readTimeout = 10000
             conn.setRequestProperty("Accept", "application/json")
 
-            if (conn.responseCode == 200) {
-                val response = conn.inputStream.bufferedReader().readText()
-                val catalog = json.decodeFromString<GogCatalogResponse>(response)
+            if (conn.responseCode != 200) return@withContext null
 
-                if (catalog.products.isEmpty()) return@withContext null
+            val responseText = conn.inputStream.bufferedReader().readText()
+            val root = json.decodeFromString<JsonObject>(responseText)
+            val products = root["products"]?.jsonArray ?: return@withContext null
+            if (products.isEmpty()) return@withContext null
 
-                // Only accept an exact title match to avoid wrong-game results.
-                val match = catalog.products.firstOrNull { product ->
-                    product.title.equals(title, ignoreCase = true)
+            // Exact title match only — never fall back to first result
+            val match = products.mapNotNull { it as? JsonObject }
+                .firstOrNull { product ->
+                    val productTitle = product["title"]?.jsonPrimitive?.contentOrNull ?: ""
+                    productTitle.equals(title, ignoreCase = true)
                 } ?: return@withContext null
 
-                val priceData = match.price ?: return@withContext null
+            // ── Price extraction ──
+            // GOG API v1 uses field names "final" and "base" for prices.
+            // Values may come as strings OR numbers depending on the API version.
+            val priceObj = match["price"]?.jsonObject
+            val finalPrice = priceObj?.let { readPrice(it, "final", "finalAmount", "amount") } ?: 0f
+            val basePrice  = priceObj?.let { readPrice(it, "base",  "baseAmount")  } ?: finalPrice
+            val discountPctApi = priceObj?.let { readInt(it, "discountPercentage", "discount") } ?: 0
+            val discountPct = if (discountPctApi > 0) discountPctApi
+                              else if (basePrice > finalPrice && basePrice > 0f)
+                                  ((1f - finalPrice / basePrice) * 100).toInt()
+                              else 0
+            val isFree = priceObj?.get("isFree")?.jsonPrimitive?.booleanOrNull ?: false
 
-                val finalPrice = priceData.resolvedFinalPrice()
-                val basePrice  = priceData.resolvedBasePrice()
-                val discountPct = priceData.resolvedDiscountPct()
+            if (finalPrice == 0f && !isFree) return@withContext null
 
-                // Skip if price is 0 and the game isn't explicitly marked free.
-                if (finalPrice == 0f && !priceData.isFree) return@withContext null
+            // ── URL extraction ──
+            val storeLink = match["storeLink"]?.jsonPrimitive?.contentOrNull ?: ""
+            val apiSlug   = match["slug"]?.jsonPrimitive?.contentOrNull ?: ""
 
-                // Build the store URL.
-                // storeLink may be a full URL ("https://www.gog.com/en/game/slug"),
-                // a relative path ("/game/slug"), or empty.
-                // slug is the slug of the game page (e.g. "baldurs_gate_3").
-                val storeUrl = when {
-                    match.storeLink.startsWith("http") -> match.storeLink
-                    match.storeLink.isNotEmpty() -> {
-                        val link = if (match.storeLink.startsWith("/")) match.storeLink else "/${match.storeLink}"
-                        "https://www.gog.com$link"
-                    }
-                    match.slug.isNotEmpty() -> "https://www.gog.com/game/${match.slug}"
-                    else -> "https://www.gog.com/games?search=${URLEncoder.encode(title, "UTF-8")}"
+            val storeUrl = when {
+                storeLink.startsWith("http") -> storeLink      // Full URL from API
+                storeLink.isNotEmpty() -> {                    // Relative path from API
+                    val path = if (storeLink.startsWith("/")) storeLink else "/$storeLink"
+                    "https://www.gog.com$path"
                 }
+                apiSlug.isNotEmpty() -> "https://www.gog.com/game/$apiSlug"
+                else -> {
+                    // Derive slug from title: "Baldur's Gate 3" → "baldurs_gate_3"
+                    val derived = deriveGogSlug(title)
+                    if (derived.isNotEmpty()) "https://www.gog.com/game/$derived"
+                    else "https://www.gog.com/games?search=${URLEncoder.encode(title, "UTF-8")}"
+                }
+            }
 
-                StorePrice(
-                    storeName = "GOG",
-                    currentPrice = finalPrice,
-                    originalPrice = basePrice,
-                    discountPercent = discountPct,
-                    currency = priceData.currency.ifBlank { "USD" },
-                    isFree = priceData.isFree,
-                    storeUrl = storeUrl
-                )
-            } else null
+            StorePrice(
+                storeName = "GOG",
+                currentPrice = finalPrice,
+                originalPrice = basePrice,
+                discountPercent = discountPct,
+                currency = "USD",
+                isFree = isFree,
+                storeUrl = storeUrl
+            )
         } catch (_: Exception) {
             null
         }
     }
+
+    /**
+     * Read a price value from the price JSON object.
+     * Tries each candidate field name in order; handles both string and number JSON types.
+     */
+    private fun readPrice(priceObj: JsonObject, vararg fields: String): Float {
+        for (field in fields) {
+            val elem = priceObj[field]?.jsonPrimitive ?: continue
+            val v = elem.doubleOrNull?.toFloat()
+                ?: elem.contentOrNull?.toFloatOrNull()
+                ?: continue
+            if (v > 0f) return v
+        }
+        return 0f
+    }
+
+    /**
+     * Read an integer value (e.g., discountPercentage) that may be a JSON string or number.
+     */
+    private fun readInt(priceObj: JsonObject, vararg fields: String): Int {
+        for (field in fields) {
+            val elem = priceObj[field]?.jsonPrimitive ?: continue
+            val v = elem.doubleOrNull?.toInt()
+                ?: elem.contentOrNull?.toIntOrNull()
+                ?: continue
+            if (v > 0) return v
+        }
+        return 0
+    }
+
+    /**
+     * Derives a likely GOG slug from a game title.
+     * Examples: "Baldur's Gate 3" → "baldurs_gate_3"
+     *           "The Witcher 3: Wild Hunt" → "the_witcher_3_wild_hunt"
+     */
+    private fun deriveGogSlug(title: String): String =
+        title.lowercase()
+            .replace("'", "").replace("`", "").replace(".", "")
+            .replace(":", " ").replace("-", " ")
+            .trim()
+            .replace(Regex("\\s+"), "_")
+            .replace(Regex("[^a-z0-9_]"), "")
+            .replace(Regex("_+"), "_")
+            .trim('_')
 }
