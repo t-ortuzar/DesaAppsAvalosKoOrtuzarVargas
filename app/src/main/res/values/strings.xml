@@ -58,7 +58,7 @@
 
     <string name="offers_tab_price_drops">Price Drops</string>
     <string name="offers_no_price_drops">No permanent price drops detected yet. We track base price changes over time.</string>
-    <string name="badge_price_drop">💰 Price Drop</string>
+    <string name="badge_price_drop"> Price Drop</string>
     <string name="price_new_base">New price: $%1$.2f</string>
     <string name="offer_ended">Offer ended</string>
     <string name="offer_countdown_hours">%1$dh %2$dm remaining</string>
@@ -89,7 +89,7 @@
     <string name="game_historical_discount_short">Historical discount: %1$d%%</string>
     <string name="game_dlcs_available">%1$d DLC(s) available</string>
     <string name="game_price_platform">%1$s: $%2$.2f</string>
-    <string name="game_available_on">🆓 Available on %1$s</string>
+    <string name="game_available_on"> Available on %1$s</string>
     <string name="game_free_to_play_label">Free to Play</string>
 
     <string name="badge_f2p">F2P</string>
@@ -114,7 +114,7 @@
     <string name="offline_banner">You are offline. Prices may be outdated.</string>
     <string name="prices_from_cache">⚠ Prices loaded from cache (may be outdated)</string>
     <string name="label_coming_soon">coming soon</string>
-    <string name="dolar_tarjeta_rate">💳 Estimated price with Argentine card (rate: $%1$s)</string>
+    <string name="dolar_tarjeta_rate"> Estimated price with Argentine card (rate: $%1$s)</string>
     <string name="ars_price_disclaimer">Includes IVA and tax withholdings. Actual price may vary by card.</string>
     <string name="favorites_empty">No favorites yet. Explore games and add them to your list!</string>
     <string name="favorites_header">Your Games</string>
@@ -123,7 +123,7 @@
     <string name="prices_argentina_header">Prices in Argentina</string>
     <string name="prices_argentina_subtitle">Real prices fetched directly from each store for Argentina</string>
     <string name="steam_ar_regional_label">Regional price (publisher-set for Argentina)</string>
-    <string name="steam_ar_tax_note">💳 This is the base price. With card taxes (IVA + Ganancias) the final cost may be higher.</string>
+    <string name="steam_ar_tax_note"> This is the base price. With card taxes (IVA + Ganancias) the final cost may be higher.</string>
     <string name="steam_us_reference_label">US price (reference only)</string>
     <string name="international_prices_header">Other Stores (international prices)</string>
     <string name="international_prices_disclaimer">These are US/global prices in USD. The actual price in your region may differ.</string>
@@ -165,5 +165,19 @@
     <string name="auth_switch_to_login">Already have an account? Log in</string>
     <string name="auth_success_register">Account created!</string>
     <string name="auth_success_login">Welcome back!</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="sign_out_confirm_title">Sign out</string>
+    <string name="sign_out_confirm_message">Are you sure you want to sign out?</string>
+    <string name="action_confirm">Confirm</string>
+
+    <!-- Explore — store filter -->
+    <string name="filter_all_stores">All stores</string>
+
+    <!-- News — upcoming sales section -->
+    <string name="news_upcoming_sales_title">Upcoming &amp; Active Sales</string>
+    <string name="news_upcoming_sales_subtitle">Known sale events across major stores</string>
+    <string name="sale_status_active">ACTIVE</string>
+    <string name="sale_days_away">in %1$d days</string>
+    <string name="sale_duration_days">(%1$d days)</string>
 
 </resources>

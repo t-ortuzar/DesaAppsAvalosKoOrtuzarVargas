@@ -9,10 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -46,6 +51,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
+    onSignOut: () -> Unit = {},
+    isGuest: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val userSettings by settingsViewModel.userSettings.collectAsState()
@@ -61,6 +68,7 @@ fun SettingsScreen(
     var showLanguageDropdown by remember { mutableStateOf(false) }
     var showLanguageConfirm by remember { mutableStateOf(false) }
     var pendingLanguageCode by remember { mutableStateOf<String?>(null) }
+    var showSignOutConfirm by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -257,8 +265,54 @@ fun SettingsScreen(
         }
 
         item { Spacer(modifier = Modifier.height(32.dp)) }
+
+        // Sign out button — only shown for authenticated users, NOT for guests
+        if (!isGuest) {
+            item {
+                Button(
+                    onClick = { showSignOutConfirm = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ExitToApp,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(stringResource(R.string.action_sign_out))
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(32.dp)) }
     }
 
+
+    if (showSignOutConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirm = false },
+            title = { Text(stringResource(R.string.sign_out_confirm_title)) },
+            text = { Text(stringResource(R.string.sign_out_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSignOutConfirm = false
+                    onSignOut()
+                }) {
+                    Text(
+                        stringResource(R.string.action_confirm),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutConfirm = false }) {
+                    Text(stringResource(R.string.action_no_apply))
+                }
+            }
+        )
+    }
 
     if (showLanguageConfirm && pendingLanguageCode != null) {
         AlertDialog(

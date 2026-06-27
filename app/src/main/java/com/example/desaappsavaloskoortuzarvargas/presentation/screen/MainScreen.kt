@@ -77,7 +77,7 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.navigation.Navigat
 import com.example.desaappsavaloskoortuzarvargas.R
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onSignOut: () -> Unit = {}, isGuest: Boolean = false) {
     val navState = remember { NavigationStateManager() }
     val currentTab by navState.currentTab.collectAsState()
     val selectedGame by navState.selectedGame.collectAsState()
@@ -153,13 +153,23 @@ fun MainScreen() {
     val unreadCount by settingsViewModel.unreadCount.collectAsState()
     val isOnline    by gamesViewModel.isOnline.collectAsState()
 
-    // Start periodic background price refresh and populate all lookup maps
+    // Start periodic background price refresh and populate all lookup maps.
+    // Also reload user settings fresh from DataStore each time MainScreen enters composition —
+    // this ensures that after a sign-out + sign-in (or guest login), the SettingsViewModel
+    // shows the reset defaults ("Player", dark mode, etc.) rather than stale in-memory state
+    // from the previous user's session.
     LaunchedEffect(Unit) {
+        settingsViewModel.loadSettings()  // force fresh DataStore read on every MainScreen entry
         val catalog = com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog
         priceRefreshManager.setSteamAppIds(catalog.getSteamAppIdsByName())
         priceRefreshManager.setGamePlatforms(catalog.getGamePlatformsByName())
         priceRefreshManager.setXboxProductIds(catalog.getXboxProductIdsByName())
         priceRefreshManager.setXboxTitleHints(catalog.getXboxTitleHintsByName())
+        priceRefreshManager.setPerStoreSearchHints(catalog.getPerStoreSearchHintsByName())
+        priceRefreshManager.setEpicVerifiedUrls(catalog.getEpicUrlsByName())
+        priceRefreshManager.setEaGameUrls(catalog.getEaGameUrlsByName())
+        priceRefreshManager.setUbisoftVerifiedUrls(catalog.getUbisoftUrlsByName())
+        priceRefreshManager.setBattleNetSlugs(catalog.getBattleNetSlugsByName())
         priceRefreshManager.startPeriodicRefresh()
         val allNames = catalog.generateGames()
             .filter { !it.tags.contains("Free2Play") }
@@ -356,6 +366,8 @@ fun MainScreen() {
             )
             NavigationStateManager.TAB_SETTINGS -> SettingsScreen(
                 settingsViewModel = settingsViewModel,
+                onSignOut = onSignOut,
+                isGuest = isGuest,
                 modifier = Modifier.padding(paddingValues)
             )
         }

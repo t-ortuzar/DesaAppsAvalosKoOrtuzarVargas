@@ -151,13 +151,18 @@ fun GameDetailScreen(
 
             if (game.availablePlatforms.isNotEmpty()) {
                 item {
+                    // Always show the catalog's declared platforms as informational chips.
+                    // These chips mean "the game exists on this platform" — they are independent
+                    // of whether the price API returned data. Price cards below are separate:
+                    // they only appear when a store returns a live price.
+                    val availableOnPlatforms = game.availablePlatforms
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(stringResource(R.string.game_available_on_header), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                         Row(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            game.availablePlatforms.forEach { platform ->
+                            availableOnPlatforms.forEach { platform ->
                                 Text(
                                     text = platform,
                                     style = MaterialTheme.typography.labelSmall,
@@ -273,7 +278,10 @@ fun GameDetailScreen(
                                     price = price,
                                     dolarRate = dolarRate,
                                     showInArs = showInArs,
-                                    viewModel = viewModel
+                                    viewModel = viewModel,
+                                    gameName = game.name,
+                                    steamAppId = game.steamAppId,
+                                    gameId = game.id
                                 )
                             }
                         }
@@ -294,25 +302,8 @@ fun GameDetailScreen(
                             )
                         }
 
-                        // Fallback store-link cards for platforms in availablePlatforms
-                        // that are NOT covered by live prices OR catalog prices.
-                        // This guarantees that e.g. Battle.net (Diablo IV) or Xbox
-                        // always appear even when the price API call fails.
-                        if (!isLoadingPrices) {
-                            val coveredPlatforms = livePlatforms + catalogPrices.keys
-                            val uncoveredPlatforms = game.availablePlatforms
-                                .filter { it !in coveredPlatforms }
-                            uncoveredPlatforms.forEach { platform ->
-                                StoreLinkOnlyCard(
-                                    platform = platform,
-                                    gameName = game.name,
-                                    steamAppId = game.steamAppId,
-                                    gameId = game.id
-                                )
-                            }
-                        }
-
-                        // No prices at all
+                        // No prices at all — only shown after loading completes.
+                        // Platforms with no price are intentionally not shown (no price = link unverified).
                         if (storePrices.isEmpty() && catalogPrices.isEmpty() && !isLoadingPrices) {
                             Text(
                                 stringResource(R.string.game_no_live_data),
@@ -391,16 +382,25 @@ private fun StorePriceCard(
     price: StorePrice,
     dolarRate: Double?,
     showInArs: Boolean,
-    viewModel: GamesViewModel
+    viewModel: GamesViewModel,
+    gameName: String = "",
+    steamAppId: Int = 0,
+    gameId: Int = 0
 ) {
     val context = LocalContext.current
+    // Prefer the catalog-verified URL (epicSlugs, gogGameUrls, xboxProductIds, etc.)
+    // over the raw API URL which may contain UUID slugs or malformed paths.
+    val catalogUrl = if (gameId > 0 && gameName.isNotEmpty()) {
+        buildStoreUrl(price.storeName, gameName, steamAppId, gameId)
+    } else ""
+    val effectiveUrl = catalogUrl.takeIf { it.isNotEmpty() } ?: price.storeUrl
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .then(
-                if (price.storeUrl.isNotEmpty()) {
+                if (effectiveUrl.isNotEmpty()) {
                     Modifier.clickable {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(price.storeUrl))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(effectiveUrl))
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         context.startActivity(intent)
                     }
@@ -435,6 +435,15 @@ private fun StorePriceCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
+                if (price.isEaPlay) {
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = "✓ EA Play",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFFF6600),   // EA orange
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 if (price.isDiscounted) {
                     Text(
                         text = "-${price.discountPercent}%",
@@ -457,6 +466,34 @@ private fun StorePriceCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.Green
+                    )
+                } else if (price.isGamePass && price.currentPrice == 0f) {
+                    // Game Pass entry but no retail price available → link to store
+                    Text(
+                        text = "Ver precio en tienda →",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (price.isEaPlay && price.currentPrice == 0f) {
+                    // EA Play entry — included via subscription, no standalone purchase price
+                    Text(
+                        text = "Ver en EA App →",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFFFF6600)
+                    )
+                } else if (price.isVerifiedLink) {
+                    // Catalog-verified store link — price couldn't be fetched from live API.
+                    val storeLinkLabel = when (price.storeName) {
+                        "EA" -> "Ver precio en EA App →"
+                        "Ubisoft" -> "Ver precio en Ubisoft →"
+                        "Epic Games" -> "Ver precio en Epic Games →"
+                        "Battle.net" -> "Ver precio en Battle.net →"
+                        else -> "Ver precio en ${price.storeName} →"
+                    }
+                    Text(
+                        text = storeLinkLabel,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFFFF6600)
                     )
                 } else if (price.isArs) {
                     if (showInArs) {
@@ -532,62 +569,7 @@ private fun StorePriceCard(
     }
 }
 
-/**
- * Card shown for a platform listed in availablePlatforms when the price API
- * returned no data (e.g. Battle.net API failure). Provides a clickable link
- * to the store so the user can check the price manually.
- */
-@Composable
-private fun StoreLinkOnlyCard(
-    platform: String,
-    gameName: String,
-    steamAppId: Int,
-    gameId: Int = 0
-) {
-    val context = LocalContext.current
-    val storeUrl = buildStoreUrl(platform, gameName, steamAppId, gameId)
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                if (storeUrl.isNotEmpty()) {
-                    Modifier.clickable {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(storeUrl))
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(intent)
-                    }
-                } else Modifier
-            ),
-        elevation = CardDefaults.cardElevation(1.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = platform,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "Ver en tienda →",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
-/** Builds the store URL for a platform, shared by CatalogPriceRow and StoreLinkOnlyCard. */
+/** Builds the store URL for a platform, used by StorePriceCard and CatalogPriceRow. */
 private fun buildStoreUrl(
     platform: String,
     gameName: String,
@@ -626,7 +608,8 @@ private fun buildStoreUrl(
     "Xbox / Microsoft" -> {
         val productId = GameCatalog.getXboxProductId(gameId)
         if (productId != null) {
-            // Use the exact known product URL
+            // Use the exact known product URL — no /0010 suffix to avoid 404 on games
+            // where that specific SKU doesn't exist (console-only SKUs, etc.)
             val titleHint = GameCatalog.getXboxTitleHint(gameId)
             val slug = (titleHint ?: gameName).lowercase()
                 .replace("'", "").replace(":", "").replace(".", "")
@@ -642,8 +625,12 @@ private fun buildStoreUrl(
     "Ubisoft" -> GameCatalog.getUbisoftUrl(gameId)
         ?: "https://store.ubisoft.com/ofertas/games?lang=es_AR"
     "Battle.net" -> {
-        val encoded = java.net.URLEncoder.encode(gameName, "UTF-8")
-        "https://us.shop.battle.net/es-ar?q=$encoded"
+        val slug = GameCatalog.getBattleNetSlug(gameId)
+        if (slug != null) "https://us.shop.battle.net/es-ar/product/$slug"
+        else {
+            val encoded = java.net.URLEncoder.encode(gameName, "UTF-8")
+            "https://us.shop.battle.net/es-ar?q=$encoded"
+        }
     }
     else -> ""
 }

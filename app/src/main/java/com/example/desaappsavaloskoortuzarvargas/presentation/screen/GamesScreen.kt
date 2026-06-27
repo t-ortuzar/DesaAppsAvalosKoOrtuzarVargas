@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.example.desaappsavaloskoortuzarvargas.R
 import com.example.desaappsavaloskoortuzarvargas.domain.model.Game
 import com.example.desaappsavaloskoortuzarvargas.presentation.POPULAR_TAGS
+import com.example.desaappsavaloskoortuzarvargas.presentation.STORE_PLATFORMS
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.GameCard
 import com.example.desaappsavaloskoortuzarvargas.presentation.component.LoadingContent
 import com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel.GamesViewModel
@@ -55,7 +56,14 @@ fun GamesScreen(
     val allGames by viewModel.allGames.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedTag by viewModel.selectedTag.collectAsState()
+    val selectedStore by viewModel.selectedStore.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
+
+    // Apply store filter client-side on top of tag/search results
+    val displayedGames = remember(allGames, selectedStore) {
+        if (selectedStore == null) allGames
+        else allGames.filter { it.availablePlatforms.contains(selectedStore) }
+    }
 
     // Voice recognition launcher — uses Google's built-in speech-to-text
     val voiceLauncher = rememberLauncherForActivityResult(
@@ -114,7 +122,7 @@ fun GamesScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Tag filter chips
+        // Genre / tag filter chips
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -138,11 +146,34 @@ fun GamesScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Store filter chips
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            FilterChip(
+                onClick = { viewModel.clearStoreFilter() },
+                label = { Text(stringResource(R.string.filter_all_stores)) },
+                selected = selectedStore == null
+            )
+            STORE_PLATFORMS.forEach { store ->
+                FilterChip(
+                    onClick = { viewModel.filterByStore(store) },
+                    label = { Text(store) },
+                    selected = selectedStore == store
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
 
         LoadingContent(
             isLoading = isLoading,
-            items = allGames,
+            items = displayedGames,
             emptyMessage = stringResource(R.string.games_no_results)
         ) { games ->
             LazyColumn(

@@ -58,7 +58,7 @@
 
     <string name="offers_tab_price_drops">Bajó el precio</string>
     <string name="offers_no_price_drops">No se detectaron bajas permanentes de precio todavía. Rastreamos los cambios de precio base con el tiempo.</string>
-    <string name="badge_price_drop">💰 Bajó el precio</string>
+    <string name="badge_price_drop"> Bajó el precio</string>
     <string name="price_new_base">Nuevo precio: $%1$.2f</string>
     <string name="offer_ended">Oferta finalizada</string>
     <string name="offer_countdown_hours">%1$dh %2$dm restantes</string>
@@ -89,7 +89,7 @@
     <string name="game_historical_discount_short">Descuento histórico: %1$d%%</string>
     <string name="game_dlcs_available">%1$d DLC(s) disponibles</string>
     <string name="game_price_platform">%1$s: $%2$.2f</string>
-    <string name="game_available_on">🆓 Disponible en %1$s</string>
+    <string name="game_available_on"> Disponible en %1$s</string>
     <string name="game_free_to_play_label">Free to Play</string>
 
     <string name="badge_f2p">F2P</string>
@@ -114,7 +114,7 @@
     <string name="offline_banner">Estás sin conexión. Los precios pueden estar desactualizados.</string>
     <string name="prices_from_cache">⚠ Precios cargados desde caché (pueden estar desactualizados)</string>
     <string name="label_coming_soon">próximamente</string>
-    <string name="dolar_tarjeta_rate">💳 Precio estimado con tarjeta argentina (cotización: $%1$s)</string>
+    <string name="dolar_tarjeta_rate"> Precio estimado con tarjeta argentina (cotización: $%1$s)</string>
     <string name="ars_price_disclaimer">Incluye IVA y percepciones. El precio final puede variar según tu tarjeta.</string>
     <string name="favorites_empty">No tenés favoritos aún. ¡Explorá juegos y agregalos a tu lista!</string>
     <string name="favorites_header">Tus Juegos</string>
@@ -123,7 +123,7 @@
     <string name="prices_argentina_header">Precios en Argentina</string>
     <string name="prices_argentina_subtitle">Precios reales obtenidos de cada tienda para Argentina</string>
     <string name="steam_ar_regional_label">Precio regional (fijado por el publisher para Argentina)</string>
-    <string name="steam_ar_tax_note">💳 Este es el precio base. Con impuestos de tarjeta (IVA + Ganancias) el costo final puede ser mayor.</string>
+    <string name="steam_ar_tax_note"> Este es el precio base. Con impuestos de tarjeta (IVA + Ganancias) el costo final puede ser mayor.</string>
     <string name="steam_us_reference_label">Precio en EE.UU. (solo de referencia)</string>
     <string name="international_prices_header">Otras tiendas (precios internacionales)</string>
     <string name="international_prices_disclaimer">Estos son precios de EE.UU./globales en USD. El precio real en tu región puede ser diferente.</string>
@@ -164,6 +164,20 @@
     <string name="auth_switch_to_register">¿No tenés cuenta? Registrate</string>
     <string name="auth_switch_to_login">¿Ya tenés cuenta? Iniciá sesión</string>
     <string name="auth_success_register">¡Cuenta creada!</string>
-    <string name="auth_success_login">¡Bienvenido de vuelta!</string>
+    <string name="auth_success_login">Bienvenido de vuelta!</string>
+    <string name="action_sign_out">Cerrar sesión</string>
+    <string name="sign_out_confirm_title">Cerrar sesión</string>
+    <string name="sign_out_confirm_message">¿Estás seguro que querés cerrar sesión?</string>
+    <string name="action_confirm">Confirmar</string>
+
+    <!-- Explorar — filtro por tienda -->
+    <string name="filter_all_stores">Todas las tiendas</string>
+
+    <!-- Noticias — próximas ofertas -->
+    <string name="news_upcoming_sales_title">Ofertas activas y próximas</string>
+    <string name="news_upcoming_sales_subtitle">Eventos de descuento conocidos en las principales tiendas</string>
+    <string name="sale_status_active">ACTIVA</string>
+    <string name="sale_days_away">en %1$d días</string>
+    <string name="sale_duration_days">(%1$d días)</string>
 
 </resources>

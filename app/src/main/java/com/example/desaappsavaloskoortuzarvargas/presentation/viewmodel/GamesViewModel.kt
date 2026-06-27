@@ -58,6 +58,9 @@ class GamesViewModel(
     private val _selectedTag = MutableStateFlow<String?>(null)
     val selectedTag: StateFlow<String?> = _selectedTag.asStateFlow()
 
+    private val _selectedStore = MutableStateFlow<String?>(null)
+    val selectedStore: StateFlow<String?> = _selectedStore.asStateFlow()
+
     private val _showDLCs = MutableStateFlow(false)
     val showDLCs: StateFlow<Boolean> = _showDLCs.asStateFlow()
 
@@ -260,6 +263,14 @@ class GamesViewModel(
     fun clearTagFilter() {
         _selectedTag.value = null
         loadAllGames()
+    }
+
+    fun filterByStore(store: String) {
+        _selectedStore.value = if (_selectedStore.value == store) null else store
+    }
+
+    fun clearStoreFilter() {
+        _selectedStore.value = null
     }
 
     fun toggleShowDLCs() {

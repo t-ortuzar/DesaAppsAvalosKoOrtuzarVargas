@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "471648911770",
+    "project_id": "argengamer-4bc5f",
+    "storage_bucket": "argengamer-4bc5f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471648911770:android:be596bd6cf47094d5aba23",
+        "android_client_info": {
+          "package_name": "com.example.desaappsavaloskoortuzarvargas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwp1aRAhBYuf05kNTo_onG-HiS8k3mH4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

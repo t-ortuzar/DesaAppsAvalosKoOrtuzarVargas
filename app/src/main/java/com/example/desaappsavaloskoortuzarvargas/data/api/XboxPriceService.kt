@@ -68,9 +68,12 @@ data class MsSalePrice(
  * Service to fetch prices from the Xbox / Microsoft Store (PC games).
  *
  * Uses the Microsoft Store storeedgefd v9.0 search API.
- * URL format: https://www.xbox.com/es-ar/games/store/{slug}/{ProductId}/0010
+ * URL format: https://www.xbox.com/es-AR/games/store/{slug}/{ProductId}
+ * (No /0010 suffix — that specific SKU path causes 404 for some products)
  *
  * When a known Xbox product ID is provided, uses direct product lookup for accuracy.
+ * Always validates that the returned product is available on PC (Windows.Desktop),
+ * to prevent showing console-only Xbox games in this PC-focused app.
  */
 class XboxPriceService {
 
@@ -90,11 +93,84 @@ class XboxPriceService {
             .replace(Regex("\\s+(edition|upgrade)\\s*$"), "")
             .trim()
 
+    /**
+     * Parse a Microsoft Store formatted price string to a Float value.
+     * Handles Argentine format (e.g. "ARS$ 5.699,00") and US format ("5699.00").
+     */
+    private fun parseFormattedArsPrice(formatted: String): Float? {
+        if (formatted.isBlank()) return null
+        // Strip everything except digits, dots, and commas
+        val stripped = formatted.replace(Regex("[^0-9.,]"), "")
+        if (stripped.isEmpty()) return null
+        return try {
+            when {
+                // Argentine format: last separator is comma → comma = decimal, dot = thousands
+                // e.g. "5.699,00" → 5699.00
+                stripped.contains(',') &&
+                stripped.lastIndexOf(',') > stripped.lastIndexOf('.') ->
+                    stripped.replace(".", "").replace(",", ".").toFloat()
+                // US format: only dots → e.g. "5699.00"
+                stripped.contains('.') && !stripped.contains(',') ->
+                    stripped.toFloat()
+                // No separators
+                else -> stripped.replace(",", "").toFloat()
+            }
+        } catch (_: NumberFormatException) { null }
+    }
+
+    /**
+     * Validate that a game is PC-available by checking the Xbox website's PC-filtered search.
+     * URL: https://www.xbox.com/es-AR/search/results/games?q={query}&PlayWith=PC
+     *
+     * The Xbox website's server-side rendering includes the search results (product IDs) in
+     * __NEXT_DATA__ within the initial HTML. If the game's productId does NOT appear in the
+     * PC-filtered results, it is console-only and must not be shown in this PC-focused app.
+     *
+     * Returns true (permissive) on any network / parsing error.
+     */
+    private suspend fun validateXboxPcSearch(query: String, productId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val encoded = URLEncoder.encode(query, "UTF-8")
+                val url = URL(
+                    "https://www.xbox.com/es-AR/search/results/games?q=$encoded&PlayWith=PC"
+                )
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 8000
+                conn.readTimeout = 12000
+                conn.instanceFollowRedirects = true
+                conn.setRequestProperty(
+                    "User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                )
+                conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,*/*;q=0.8")
+                conn.setRequestProperty("Accept-Language", "es-AR,es;q=0.9,en;q=0.8")
+                if (conn.responseCode != 200) return@withContext true // Permissive on error
+
+                val html = conn.inputStream.bufferedReader().readText()
+
+                // If the response is suspiciously short (< 5 KB) the page likely didn't
+                // render its search results server-side — fall back to permissive.
+                if (html.length < 5000) return@withContext true
+
+                // The Xbox website embeds search results (including product IDs) in
+                // __NEXT_DATA__ and in data attributes in the SSR-rendered HTML.
+                // If the productId is absent from the PC-filtered results page, the game is
+                // console-only.
+                html.contains(productId, ignoreCase = true)
+            } catch (_: Exception) {
+                true // Permissive on network / IO error
+            }
+        }
+
     /** Extract a StorePrice from a known MsStoreCardModel result. */
     private fun extractPrice(match: MsStoreCardModel, slug: String): StorePrice? {
         if (match.productId.isEmpty()) return null
 
-        val storeUrl = "https://www.xbox.com/es-ar/games/store/$slug/${match.productId}/0010"
+        // URL without /0010 suffix — works for all products and avoids 404
+        // for games where the 0010 (standard edition) SKU doesn't exist.
+        val storeUrl = "https://www.xbox.com/es-AR/games/store/$slug/${match.productId}"
 
         val baseSku = match.skusSummary.firstOrNull { it.skuId == "0010" }
             ?: match.skusSummary.firstOrNull()
@@ -103,26 +179,41 @@ class XboxPriceService {
             ?.firstOrNull { it.badgeId == "default" }
             ?.price
 
-        // Retail price: prefer explicit sale price, then MSRP, then top-level price
+        // Game Pass detection: prefer explicit displayPrice text over price == 0.0 alone.
+        // Also treat price=0.0 WITH a strikethrough price as Game Pass (the struck-through
+        // value is the normal purchase price shown to the user in the store UI).
+        val isGamePass = match.displayPrice.contains("incluido", ignoreCase = true) ||
+            match.displayPrice.contains("included", ignoreCase = true) ||
+            match.displayPrice.contains("game pass", ignoreCase = true) ||
+            match.displayPrice.contains("gamepass", ignoreCase = true) ||
+            (match.price == 0.0 && match.strikethroughPrice.isNotEmpty())
+
+        // For Game Pass games, the strikethroughPrice is the standard purchase price that
+        // the store crosses out for subscribers — parse it as the retail price.
+        val strikethroughRetail = if (isGamePass && match.strikethroughPrice.isNotEmpty())
+            parseFormattedArsPrice(match.strikethroughPrice)
+        else null
+
+        // Retail price: prefer explicit sale price, then MSRP, then strikethrough, then top-level
         val retailPrice = when {
             defaultSalePrice != null && defaultSalePrice > 0.0 -> defaultSalePrice.toFloat()
-            baseSku != null && baseSku.msrp > 0.0 -> baseSku.msrp.toFloat()
-            match.price > 0.0 -> match.price.toFloat()
-            else -> 0f
+            baseSku != null && baseSku.msrp > 0.0               -> baseSku.msrp.toFloat()
+            strikethroughRetail != null && strikethroughRetail > 0f -> strikethroughRetail
+            match.price > 0.0                                    -> match.price.toFloat()
+            else                                                 -> 0f
         }
 
-        val msrp = (baseSku?.msrp?.toFloat() ?: retailPrice)
+        val msrp = baseSku?.msrp?.toFloat()?.takeIf { it > 0f } ?: retailPrice
 
-        val isGamePass = match.price == 0.0 ||
-            match.displayPrice.contains("incluido", ignoreCase = true) ||
-            match.displayPrice.contains("included", ignoreCase = true)
-
-        // Nothing useful to show — no price and not explicitly Game Pass
+        // Nothing useful to show — no price and not a Game Pass title
         if (retailPrice == 0f && !isGamePass) return null
 
         val discountPct = if (msrp > retailPrice && msrp > 0f)
             ((1f - retailPrice / msrp) * 100).toInt() else 0
 
+        // currentPrice = standard retail price (what the user pays to own the game).
+        // When isGamePass = true the UI also shows "✓ Xbox Game Pass" alongside the price,
+        // so the user knows it's included in their subscription but can also buy it outright.
         return StorePrice(
             storeName = "Xbox / Microsoft",
             currentPrice = retailPrice,
@@ -136,33 +227,106 @@ class XboxPriceService {
     }
 
     /**
-     * Fetch price for a game from Xbox Store by known product ID (direct lookup).
-     * More reliable than search — bypasses language/title matching issues.
+     * Fetch price for a game from Xbox Store by known product ID.
+     * Uses the Microsoft Display Catalog API for direct product lookup —
+     * much more reliable than text search since product IDs are not text-searchable.
+     *
+     * Endpoint: displaycatalog.mp.microsoft.com/v7.0/products?bigIds={id}&market=AR
      */
     suspend fun fetchProductPrice(productId: String, gameName: String): StorePrice? =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL(
-                    "https://storeedgefd.dsx.mp.microsoft.com/v9.0/search" +
-                    "?market=AR&locale=es-AR&query=${URLEncoder.encode(productId, "UTF-8")}&deviceFamily=Windows.Desktop"
+                // Primary: Display Catalog API — accepts product IDs directly
+                val catalogUrl = URL(
+                    "https://displaycatalog.mp.microsoft.com/v7.0/products" +
+                    "?bigIds=${URLEncoder.encode(productId, "UTF-8")}" +
+                    "&market=AR&languages=es-AR&MS-CV=DGU1mcuYo0WMMp"
                 )
-                val conn = url.openConnection() as HttpURLConnection
+                val conn = catalogUrl.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
                 conn.connectTimeout = 10000
                 conn.readTimeout = 10000
                 conn.setRequestProperty("Accept", "application/json")
                 conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-                if (conn.responseCode != 200) return@withContext null
+                if (conn.responseCode == 200) {
+                    val parsed = runCatching {
+                        json.decodeFromString<MsStoreSearchResponse>(
+                            conn.inputStream.bufferedReader().readText()
+                        )
+                    }.getOrNull()
+                    val product = parsed?.Products
+                        ?.firstOrNull { it.ProductId.equals(productId, ignoreCase = true) }
+                        ?: parsed?.Products?.firstOrNull()
+                    if (product != null) {
+                        // PC platform validation: only accept products available on Windows.Desktop.
+                        // This prevents console-only Xbox games from showing up in our PC-focused app.
+                        // If AllowedPlatforms is absent/empty for an availability, we accept it
+                        // (many PC games don't have explicit platform restrictions in the catalog).
+                        val isPcAvailable = product.DisplaySkuAvailabilities.any { sku ->
+                            sku.Availabilities.any { avail ->
+                                val platforms = avail.Conditions?.ClientConditions?.AllowedPlatforms
+                                platforms.isNullOrEmpty() ||
+                                platforms.any { p ->
+                                    val name = p.PlatformName.lowercase()
+                                    name.contains("windows.desktop") ||
+                                    name.contains("windows.pc") ||
+                                    name == "windows"
+                                }
+                            }
+                        }
+                        if (!isPcAvailable && product.DisplaySkuAvailabilities.any { sku ->
+                            sku.Availabilities.any { it.Conditions?.ClientConditions?.AllowedPlatforms?.isNotEmpty() == true }
+                        }) {
+                            // Product has explicit platform restrictions and none are PC → skip
+                            return@withContext null
+                        }
 
-                val parsed = runCatching {
+                        val priceData = product.DisplaySkuAvailabilities
+                            .asSequence()
+                            .flatMap { it.Availabilities.asSequence() }
+                            .mapNotNull { it.OrderManagementData?.Price }
+                            .firstOrNull { it.ListPrice > 0 }
+                        if (priceData != null) {
+                            val retailPrice = priceData.ListPrice.toFloat()
+                            val msrp = if (priceData.MSRP > 0) priceData.MSRP.toFloat() else retailPrice
+                            val currency = priceData.CurrencyCode.ifEmpty { "ARS" }
+                            val discountPct = if (msrp > retailPrice && msrp > 0f)
+                                ((1f - retailPrice / msrp) * 100).toInt() else 0
+                            val slug = titleSlug(gameName)
+                            // No /0010 suffix — avoids 404 for products without a standard SKU
+                            val storeUrl = "https://www.xbox.com/es-AR/games/store/$slug/$productId"
+                            return@withContext StorePrice(
+                                storeName = "Xbox / Microsoft",
+                                currentPrice = retailPrice,
+                                originalPrice = msrp,
+                                discountPercent = discountPct,
+                                currency = currency,
+                                isFree = false,
+                                storeUrl = storeUrl
+                            )
+                        }
+                    }
+                }
+
+                // Fallback: use the storeedgefd search API (less reliable for product IDs,
+                // but might work as a secondary attempt)
+                val searchUrl = URL(
+                    "https://storeedgefd.dsx.mp.microsoft.com/v9.0/search" +
+                    "?market=AR&locale=es-AR&query=${URLEncoder.encode(gameName, "UTF-8")}&deviceFamily=Windows.Desktop"
+                )
+                val conn2 = searchUrl.openConnection() as HttpURLConnection
+                conn2.requestMethod = "GET"
+                conn2.connectTimeout = 10000
+                conn2.readTimeout = 10000
+                conn2.setRequestProperty("Accept", "application/json")
+                conn2.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                if (conn2.responseCode != 200) return@withContext null
+                val parsed2 = runCatching {
                     json.decodeFromString<MsStoreApiResponse>(
-                        conn.inputStream.bufferedReader().readText()
+                        conn2.inputStream.bufferedReader().readText()
                     )
                 }.getOrNull() ?: return@withContext null
-
-                val results = parsed.payload?.searchResults ?: return@withContext null
-
-                // Find exact product ID match first, then fall back to first result
+                val results = parsed2.payload?.searchResults ?: return@withContext null
                 val match = results.firstOrNull { it.productId.equals(productId, ignoreCase = true) }
                     ?: results.firstOrNull()
                     ?: return@withContext null
@@ -205,17 +369,24 @@ class XboxPriceService {
 
                 val rawQuery = (titleHint ?: title).lowercase().trim()
 
+                // Normalize punctuation so "Star Wars Jedi Survivor" matches
+                // Xbox results titled "Star Wars Jedi: Survivor" (colon stripped).
+                fun normPunct(t: String) = t.lowercase().trim()
+                    .replace(Regex("[:'\"!?,.]"), " ")
+                    .replace(Regex("\\s+"), " ").trim()
+                val normQuery = normPunct(rawQuery)
+
                 // ── Title matching ──
-                var match = results.firstOrNull { it.title.lowercase().trim() == rawQuery }
+                var match = results.firstOrNull { normPunct(it.title) == normQuery }
 
                 if (match == null) {
-                    match = results.firstOrNull { stripEditionSuffix(it.title) == rawQuery }
+                    match = results.firstOrNull { normPunct(stripEditionSuffix(it.title)) == normQuery }
                 }
 
                 if (match == null) {
                     match = results.firstOrNull {
-                        it.title.lowercase().trim().startsWith(rawQuery) &&
-                        it.title.lowercase().trim() != rawQuery
+                        normPunct(it.title).startsWith(normQuery) &&
+                        normPunct(it.title) != normQuery
                     }
                 }
 
@@ -229,6 +400,18 @@ class XboxPriceService {
                 }
 
                 if (match == null) return@withContext null
+
+                // PC validation: verify via the Xbox website's PC-filtered search.
+                // The storeedgefd API with deviceFamily=Windows.Desktop does NOT reliably
+                // filter out console-only games (e.g. Baldur's Gate 3 appears in results
+                // even though it is Xbox Series X|S only — not on PC/Windows Store).
+                // We cross-check by fetching the Xbox website search with &PlayWith=PC:
+                // if the product ID is absent from the SSR-rendered page, the game is
+                // console-only and must be excluded.
+                if (match.productId.isNotEmpty()) {
+                    val isPcAvailable = validateXboxPcSearch(searchQuery, match.productId)
+                    if (!isPcAvailable) return@withContext null
+                }
 
                 extractPrice(match, titleSlug(title))
             } catch (_: Exception) {
