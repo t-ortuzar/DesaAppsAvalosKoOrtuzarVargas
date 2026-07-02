@@ -22,6 +22,8 @@ object GameCatalog {
 
     private val popularGames = listOf(
         GameInfo(1, "Elden Ring", "An action role-playing game developed by FromSoftware and published by Bandai Namco.", listOf("Action", "RPG", "Open World", "Souls-like")),
+        // Baldur's Gate 3 — available on Steam, GOG. The Xbox Series X|S version exists but
+        // is NOT available on PC through the Microsoft Store (it's console-only on Xbox).
         GameInfo(2, "Baldur's Gate 3", "A role-playing game based on the Dungeons & Dragons tabletop role-playing system.", listOf("RPG", "Adventure", "Strategy"), listOf("Steam", "GOG")),
         GameInfo(3, "The Witcher 3: Wild Hunt", "An open world action role-playing game set in a fantasy universe.", listOf("RPG", "Open World", "Action", "Adventure"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
         GameInfo(4, "Cyberpunk 2077", "An open world action-adventure RPG set in the megalopolis of Night City.", listOf("RPG", "FPS", "Open World", "Action"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
@@ -43,7 +45,7 @@ object GameCatalog {
         GameInfo(19, "Dead Space Remake", "A sci-fi survival horror classic rebuilt from the ground up.", listOf("Horror", "Survival", "Action", "TPS"), listOf("Steam", "EA")),
         GameInfo(20, "Like a Dragon: Infinite Wealth", "A globe-trotting action-adventure RPG.", listOf("RPG", "Action", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(21, "Final Fantasy VII Rebirth", "The next chapter in the FFVII remake trilogy.", listOf("RPG", "Action", "Adventure"), listOf("Steam", "Epic Games")),
-        GameInfo(22, "Persona 5 Royal", "Don the mask and join the Phantom Thieves of Hearts.", listOf("RPG", "Adventure"), listOf("Steam", "Epic Games", "GOG", "Xbox / Microsoft")),
+        GameInfo(22, "Persona 5 Royal", "Don the mask and join the Phantom Thieves of Hearts.", listOf("RPG", "Adventure"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(23, "Metaphor: ReFantazio", "A fantasy RPG from the creators of Persona.", listOf("RPG", "Strategy", "Adventure"), listOf("Steam", "GOG", "Xbox / Microsoft")),
         GameInfo(24, "Palworld", "A creature-collecting open-world survival crafting game.", listOf("Survival", "Open World", "Co-op", "Action"), listOf("Steam", "Xbox / Microsoft")),
         GameInfo(25, "Black Myth: Wukong", "An action RPG rooted in Chinese mythology.", listOf("Action", "RPG", "Souls-like"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
@@ -55,7 +57,7 @@ object GameCatalog {
         GameInfo(31, "Monster Hunter: World", "Hunt massive monsters in a living, breathing ecosystem.", listOf("Action", "RPG", "Co-op")),
         GameInfo(32, "Dark Souls III", "An action RPG set in a dark fantasy world.", listOf("Action", "RPG", "Souls-like")),
         GameInfo(33, "Armored Core VI", "Mech combat action from FromSoftware.", listOf("Action", "Simulation"), listOf("Steam", "Xbox / Microsoft")),
-        GameInfo(34, "Jedi: Survivor", "Continue Cal Kestis' journey in this action RPG.", listOf("Action", "Adventure", "RPG"), listOf("Steam", "Epic Games", "EA")),
+        GameInfo(34, "Star Wars Jedi: Survivor", "Continue Cal Kestis' journey in this action RPG.", listOf("Action", "Adventure", "RPG"), listOf("Steam", "Epic Games", "EA", "Xbox / Microsoft")),
         GameInfo(35, "EA Sports FC 25", "The latest football simulation game.", listOf("Sports", "Simulation"), listOf("Steam", "Epic Games", "EA")),
         GameInfo(36, "Madden NFL 25", "The premier American football simulation.", listOf("Sports", "Simulation"), listOf("Steam", "EA")),
         GameInfo(37, "NBA 2K25", "The definitive basketball simulation experience.", listOf("Sports", "Simulation")),
@@ -99,7 +101,8 @@ object GameCatalog {
         GameInfo(75, "The Talos Principle 2", "A philosophical first-person puzzle game.", listOf("Puzzle", "Adventure"), listOf("Steam", "GOG")),
         GameInfo(76, "Tetris Effect: Connected", "Tetris reimagined with stunning visuals.", listOf("Puzzle", "Indie"), listOf("Steam", "Epic Games", "Xbox / Microsoft")),
         GameInfo(77, "Celeste", "A challenging platformer about climbing a mountain.", listOf("Platformer", "Indie"), listOf("Steam", "Epic Games", "GOG")),
-        GameInfo(78, "Hollow Knight", "A challenging 2D action-adventure in a vast world.", listOf("Action", "Platformer", "Indie", "Souls-like"), listOf("Steam", "Epic Games", "GOG")),
+        // Hollow Knight — NOT on Epic Games Store (Team Cherry chose not to release there)
+        GameInfo(78, "Hollow Knight", "A challenging 2D action-adventure in a vast world.", listOf("Action", "Platformer", "Indie", "Souls-like"), listOf("Steam", "GOG")),
         GameInfo(79, "Hades", "A rogue-like dungeon crawler from Supergiant Games.", listOf("Roguelike", "Action", "Indie"), listOf("Steam", "Epic Games", "GOG")),
         GameInfo(80, "Dead Cells", "A rogue-lite action-platformer.", listOf("Roguelike", "Action", "Platformer", "Indie"), listOf("Steam", "Epic Games", "GOG")),
         GameInfo(81, "Risk of Rain 2", "A third-person roguelike shooter.", listOf("Roguelike", "TPS", "Co-op")),
@@ -178,11 +181,10 @@ object GameCatalog {
     // These override the live API result to prevent wrong matches (e.g. The Witcher 3
     // appearing as a promoted/sponsored item in unrelated search result sets).
     private val gogGameUrls = mapOf(
-        2  to "https://www.gog.com/en/game/baldurs_gate_3",                          // Baldur's Gate 3
-        3  to "https://www.gog.com/en/game/the_witcher_3_wild_hunt_goty",            // The Witcher 3: Wild Hunt
+        2  to "https://www.gog.com/en/game/baldurs_gate_iii",                         // Baldur's Gate 3
+        3  to "https://www.gog.com/en/game/the_witcher_3_wild_hunt",               // The Witcher 3: Wild Hunt
         4  to "https://www.gog.com/en/game/cyberpunk_2077",                          // Cyberpunk 2077
         18 to "https://www.gog.com/en/game/horizon_zero_dawn_complete_edition",      // Horizon Zero Dawn
-        22 to "https://www.gog.com/en/game/persona_5_royal",                         // Persona 5 Royal
         23 to "https://www.gog.com/en/game/metaphor_refantazio",                     // Metaphor: ReFantazio
         28 to "https://www.gog.com/en/game/sekiro_shadows_die_twice",                // Sekiro: Shadows Die Twice
         44 to "https://www.gog.com/en/game/control_ultimate_edition",                // Control Ultimate Edition (+ Xbox / Microsoft)
@@ -215,9 +217,9 @@ object GameCatalog {
         1  to "elden-ring",                        // Elden Ring
         2  to "baldurs-gate-3",                    // Baldur's Gate 3
         3  to "the-witcher-3-wild-hunt",           // The Witcher 3: Wild Hunt
-        4  to "cyberpunk-2077",                    // Cyberpunk 2077 ← link corregido
+        4  to "cyberpunk-2077",                    // Cyberpunk 2077
         5  to "red-dead-redemption-2",             // Red Dead Redemption 2
-        6  to "god-of-war-ragnarok",               // God of War Ragnarök
+        6  to "god-of-war-ragnarok-3ca641",         // God of War Ragnarök (verified slug)
         9  to "alan-wake-2",                       // Alan Wake 2
         10 to "hogwarts-legacy",                   // Hogwarts Legacy
         11 to "resident-evil-4",                   // Resident Evil 4 Remake
@@ -225,12 +227,25 @@ object GameCatalog {
         15 to "ghost-of-tsushima",                 // Ghost of Tsushima
         16 to "the-last-of-us-part-i",             // The Last of Us Part I
         17 to "spider-man-remastered",             // Spider-Man Remastered
-        18 to "horizon-zero-dawn-remastered",      // Horizon Zero Dawn
+        18 to "horizon-zero-dawn-remastered",      // Horizon Zero Dawn Remastered
         21 to "final-fantasy-vii-rebirth",         // Final Fantasy VII Rebirth
-        22 to "persona-5-royal",                   // Persona 5 Royal
-        23 to "metaphor-refantazio",               // Metaphor: ReFantazio
         24 to "palworld",                          // Palworld
-        25 to "black-myth-wukong",                 // Black Myth: Wukong
+        25 to "black-myth-wukong-87a72b",            // Black Myth: Wukong
+        34 to "star-wars-jedi-survivor",           // Star Wars Jedi: Survivor
+        35 to "ea-sports-fc-25",                   // EA Sports FC 25
+        38 to "f1-24",                             // F1 24
+        40 to "the-crew-motorfest",                // The Crew Motorfest
+        41 to "need-for-speed-unbound",            // Need for Speed Unbound
+        44 to "control",                           // Control Ultimate Edition
+        45 to "the-callisto-protocol",             // The Callisto Protocol
+        48 to "resident-evil-village",             // Resident Evil Village
+        49 to "outlast-trials",                    // Outlast Trials
+        53 to "subnautica",                        // Subnautica
+        59 to "satisfactory",                      // Satisfactory
+        69 to "stray",                             // Stray
+        70 to "kena-bridge-of-spirits",            // Kena: Bridge of Spirits
+        71 to "it-takes-two",                      // It Takes Two
+        76 to "tetris-effect-connected",           // Tetris Effect: Connected
         103 to "fortnite",                         // Fortnite (F2P)
         107 to "genshin-impact",                   // Genshin Impact (F2P)
         111 to "rocketleague",                     // Rocket League (F2P)
@@ -242,7 +257,24 @@ object GameCatalog {
         125 to "doom-the-dark-ages",               // Doom: The Dark Ages
         129 to "assassins-creed-shadows",          // Assassin's Creed Shadows
         130 to "balatro",                          // Balatro
-        131 to "hades-ii"                          // Hades II
+        131 to "hades-ii",                         // Hades II
+        // Classic / indie games
+        77  to "celeste",                          // Celeste
+        // 78 = Hollow Knight — NOT on Epic Games Store
+        79  to "hades",                            // Hades
+        80  to "dead-cells",                       // Dead Cells
+        83  to "slay-the-spire",                   // Slay the Spire
+        89  to "spiritfarer-farewell-edition",     // Spiritfarer
+        90  to "outer-wilds",                      // Outer Wilds
+        91  to "what-remains-of-edith-finch",      // What Remains of Edith Finch
+        93  to "the-stanley-parable-ultra-deluxe", // The Stanley Parable: Ultra Deluxe
+        97  to "divinity-original-sin-2-developers-cut", // Divinity: Original Sin 2
+        98  to "pillars-of-eternity-2-deadfire",   // Pillars of Eternity II
+        104 to "marvel-rivals",                    // Marvel Rivals (F2P)
+        112 to "fall-guys",                        // Fall Guys (F2P)
+        118 to "warhammer-40000-space-marine-2",   // Warhammer 40K: Space Marine 2
+        120 to "dragon-age-the-veilguard",         // Dragon Age: The Veilguard
+        138 to "star-wars-jedi-fallen-order"       // Star Wars Jedi: Fallen Order
     )
 
     // Ubisoft Store AR URLs — game ID → direct product page URL.
@@ -252,18 +284,27 @@ object GameCatalog {
         129 to "https://store.ubisoft.com/ofertas/assassins-creed-shadows/660e5a03fbff4e2940488bcd.html?lang=es_AR"
     )
 
+    // Battle.net / Blizzard Shop product slugs — game ID → slug used in Battle.net product URLs.
+    // URL format: https://us.shop.battle.net/es-ar/product/{slug}
+    private val battleNetSlugs = mapOf(
+        8   to "diablo-iv",     // Diablo IV
+        100 to "doom-eternal"   // Doom Eternal
+    )
+
     // Xbox / Microsoft Store product IDs (game catalog ID → Xbox product ID).
     // Extracted from official Xbox store product URLs:
     // https://www.xbox.com/es-AR/games/store/{title-slug}/{productId}
     private val xboxProductIds = mapOf(
-        7   to "BQ2VSWP8LLS1",  // Starfield
-        10  to "9NKX9X90NWSM",  // Hogwarts Legacy
+        // NOTE: BG3 (9ND58LQTG09T) removed — that ID is the console version, not PC.
+        // Letting search handle it with PC validation (deviceFamily=Windows.Desktop).
+        7   to "9NCJSXWZTP88",  // Starfield
+        10  to "9MT5NJ5W7B8Z",  // Hogwarts Legacy (verified PC product ID)
         14  to "9NFBWVSC88M5",  // Tekken 8
         20  to "9MV0B2ZFQJQT",  // Like a Dragon: Infinite Wealth
         22  to "9P7T5B0BWJKF",  // Persona 5 Royal
         23  to "9PP9J5S3L1CK",  // Metaphor: ReFantazio
         24  to "9MT4TQRJRP3W",  // Palworld
-        25  to "9P5X4QVZCG54",  // Black Myth: Wukong
+        25  to "9NWQ1Q1FR0C9",  // Black Myth: Wukong
         26  to "9PDWD28DJCPR",  // S.T.A.L.K.E.R. 2
         29  to "9NB37X38B8DL",  // Indiana Jones and the Great Circle
         33  to "9N5TT8MXBZ5S",  // Armored Core VI
@@ -279,13 +320,42 @@ object GameCatalog {
         122 to "9NZQJPD3QFB9",  // Oblivion Remastered
         125 to "9P59Q3QTCP54",  // Doom: The Dark Ages
         129 to "9NBLGGH5K6VB",  // Assassin's Creed Shadows
+        34  to "9PGC82V0DXFS",  // Star Wars Jedi: Survivor
         138 to "c2csdtscbz0c"   // Star Wars Jedi: Fallen Order
+        // NOTE: Dead Space Remake (9NBLGGH4NPX9) removed — Xbox Series X|S console-only, not on PC
     )
 
-    // Xbox title hints — game catalog ID → localized title used in Argentine Xbox Store.
-    // Used when the English game name doesn't match the Spanish Xbox listing.
-    private val xboxTitleHints = mapOf(
-        138 to "Star Wars Jedi: La Orden Caída"
+    /**
+     * Per-store search title overrides.
+     * Maps game catalog ID → store name → search title to use when querying that store's API.
+     *
+     * This is needed when the same game has different names across stores, e.g.:
+     *   - "Dead Space Remake" (our name) is listed as "Dead Space" on EA and Xbox
+     *   - Search hints allow each store to find the game using its preferred title
+     *
+     * Year disambiguation: when a game has an original and a remake (e.g. Dead Space 2008 vs 2023),
+     * the search hint should be precise enough that the correct version is the top result.
+     * On Xbox Series X|S, only the 2023 remake exists, so "Dead Space" finds it correctly.
+     */
+    private val perStoreSearchHints: Map<Int, Map<String, String>> = mapOf(
+        // Dead Space Remake (2023): EA App lists it as "Dead Space" without "Remake".
+        19 to mapOf(
+            "EA" to "Dead Space"
+        ),
+        // Star Wars Jedi: Survivor — strip the colon so API searches work correctly
+        34 to mapOf(
+            "EA"               to "Star Wars Jedi Survivor",
+            "Xbox / Microsoft" to "Star Wars Jedi Survivor",
+            "Epic Games"       to "Star Wars Jedi Survivor"
+        ),
+        // Star Wars Jedi: Fallen Order — Xbox Argentina uses the Spanish title
+        138 to mapOf(
+            "Xbox / Microsoft" to "Star Wars Jedi: La Orden Caída"
+        ),
+        // Indiana Jones: Xbox may not match "and the Great Circle" substring
+        29 to mapOf(
+            "Xbox / Microsoft" to "Indiana Jones Great Circle"
+        )
     )
 
     // EA App / Origin game URLs — game catalog ID → EA product page URL.
@@ -996,6 +1066,32 @@ object GameCatalog {
      */
     fun getUbisoftUrl(gameId: Int): String? = ubisoftUrls[gameId]
 
+    /** Get the Battle.net product slug for a game, if available. */
+    fun getBattleNetSlug(gameId: Int): String? = battleNetSlugs[gameId]
+
+    /**
+     * Get a map from game name → Battle.net product slug.
+     * Used by PriceRefreshManager to pass verified product URLs to BattleNetPriceService.
+     */
+    fun getBattleNetSlugsByName(): Map<String, String> {
+        return popularGames.mapNotNull { info ->
+            val slug = battleNetSlugs[info.id] ?: return@mapNotNull null
+            info.name to slug
+        }.toMap()
+    }
+
+    /**
+     * Get a map from game name → Ubisoft Store AR URL.
+     * Used by PriceRefreshManager to pass verified store URLs to UbisoftPriceService,
+     * enabling a link-only fallback when the search API fails.
+     */
+    fun getUbisoftUrlsByName(): Map<String, String> {
+        return popularGames.mapNotNull { info ->
+            val url = ubisoftUrls[info.id] ?: return@mapNotNull null
+            info.name to url
+        }.toMap()
+    }
+
     /**
      * Get the GOG Store URL for a game, if a verified slug is available.
      * Returns null if the game doesn't have a hardcoded GOG URL (falls back to live API result).
@@ -1005,11 +1101,26 @@ object GameCatalog {
     /** Get the Xbox / Microsoft Store product ID for a game, if hardcoded. */
     fun getXboxProductId(gameId: Int): String? = xboxProductIds[gameId]
 
-    /** Get the localized Xbox title hint for search matching, if available. */
-    fun getXboxTitleHint(gameId: Int): String? = xboxTitleHints[gameId]
+    /**
+     * Get the Xbox-specific search title hint for a game (from perStoreSearchHints).
+     * Used by buildStoreUrl for URL slug construction and by PriceRefreshManager for search.
+     */
+    fun getXboxTitleHint(gameId: Int): String? = perStoreSearchHints[gameId]?.get("Xbox / Microsoft")
 
     /** Get the EA App product page URL for a game, if hardcoded. */
     fun getEaUrl(gameId: Int): String? = eaGameUrls[gameId]
+
+    /**
+     * Get a map from game name → EA game page URL.
+     * Used by PriceRefreshManager to pass the direct page URL to EAPriceService,
+     * enabling page scraping instead of the unreliable Origin search API.
+     */
+    fun getEaGameUrlsByName(): Map<String, String> {
+        return popularGames.mapNotNull { info ->
+            val url = eaGameUrls[info.id] ?: return@mapNotNull null
+            info.name to url
+        }.toMap()
+    }
 
     /**
      * Get the Epic Games Store page URL for a game, if a verified slug is available.
@@ -1018,6 +1129,19 @@ object GameCatalog {
     fun getEpicUrl(gameId: Int): String? {
         val slug = epicSlugs[gameId] ?: return null
         return "https://store.epicgames.com/en-US/p/$slug"
+    }
+
+    /**
+     * Get a map from game name → verified Epic Games Store URL.
+     * Used by PriceRefreshManager to override the URL returned by the Epic GraphQL API,
+     * which sometimes returns incomplete or outdated slugs (e.g. "black-myth-wukong"
+     * instead of the actual page slug "black-myth-wukong-87a72b").
+     */
+    fun getEpicUrlsByName(): Map<String, String> {
+        return popularGames.mapNotNull { info ->
+            val slug = epicSlugs[info.id] ?: return@mapNotNull null
+            info.name to "https://store.epicgames.com/en-US/p/$slug"
+        }.toMap()
     }
 
     fun getSteamAppIdsByName(): Map<String, Int> {
@@ -1040,11 +1164,25 @@ object GameCatalog {
 
     /**
      * Get a map from game name → Xbox title hint (localized title for search).
+     * Backward-compatible wrapper — pulls from perStoreSearchHints["Xbox / Microsoft"].
      */
     fun getXboxTitleHintsByName(): Map<String, String> {
         return popularGames.mapNotNull { info ->
-            val hint = xboxTitleHints[info.id] ?: return@mapNotNull null
+            val hint = perStoreSearchHints[info.id]?.get("Xbox / Microsoft") ?: return@mapNotNull null
             info.name to hint
+        }.toMap()
+    }
+
+    /**
+     * Get a map from game name → per-store search title overrides.
+     * When a game has different names on different stores (e.g. "Dead Space Remake" is listed
+     * as "Dead Space" on EA and Xbox), this map provides the correct search title per store.
+     * Format: gameName → Map<storeName, searchTitle>
+     */
+    fun getPerStoreSearchHintsByName(): Map<String, Map<String, String>> {
+        return popularGames.mapNotNull { info ->
+            val hints = perStoreSearchHints[info.id] ?: return@mapNotNull null
+            info.name to hints
         }.toMap()
     }
 

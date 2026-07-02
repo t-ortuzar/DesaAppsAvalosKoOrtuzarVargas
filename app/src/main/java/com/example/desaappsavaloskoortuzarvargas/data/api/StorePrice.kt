@@ -17,7 +17,10 @@ data class StorePrice(
     val formattedOriginal: String = "",  // Pre-formatted original price
     val imageUrl: String = "",           // Game image from this store's CDN (landscape preferred)
     val discountEndTimestamp: Long? = null,  // Epoch millis when the discount/free period ends (null = unknown)
-    val isGamePass: Boolean = false      // True when included in Xbox Game Pass (price shown is standalone purchase price)
+    val isGamePass: Boolean = false,     // True when included in Xbox Game Pass
+    val isEaPlay: Boolean = false,       // True when included in EA Play subscription (shown as free on Steam)
+    val isVerifiedLink: Boolean = false  // True when store link is catalog-verified but no live price available.
+                                         // These entries are shown as "Ver en [store] →" and are NOT cached in DB.
 ) {
     val isDiscounted: Boolean get() = discountPercent > 0
     val isArs: Boolean get() = currency == "ARS"

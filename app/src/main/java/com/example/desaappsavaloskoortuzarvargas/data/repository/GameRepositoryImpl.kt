@@ -54,4 +54,10 @@ class GameRepositoryImpl : GameRepository {
     override suspend fun isFavorite(gameId: Int): Result<Boolean> = try {
         Result.success(gameId in favoriteIds)
     } catch (e: Exception) { Result.failure(e) }
+
+    override suspend fun initializeFavorites(ids: Set<Int>): Result<Unit> = try {
+        favoriteIds.clear()
+        favoriteIds.addAll(ids)
+        Result.success(Unit)
+    } catch (e: Exception) { Result.failure(e) }
 }

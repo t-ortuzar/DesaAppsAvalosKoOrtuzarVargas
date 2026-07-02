@@ -77,7 +77,14 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.navigation.Navigat
 import com.example.desaappsavaloskoortuzarvargas.R
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onSignOut: () -> Unit = {},
+    onLoginRequest: () -> Unit = {},
+    isGuest: Boolean = false,
+    syncVersion: Int = 0,
+    onPreferencesChanged: () -> Unit = {},
+    onRefreshFromFirebase: () -> Unit = {}
+) {
     val navState = remember { NavigationStateManager() }
     val currentTab by navState.currentTab.collectAsState()
     val selectedGame by navState.selectedGame.collectAsState()
@@ -153,13 +160,27 @@ fun MainScreen() {
     val unreadCount by settingsViewModel.unreadCount.collectAsState()
     val isOnline    by gamesViewModel.isOnline.collectAsState()
 
-    // Start periodic background price refresh and populate all lookup maps
+    // Start periodic background price refresh and populate all lookup maps.
+    // Also reload user settings fresh from DataStore each time MainScreen enters composition —
+    // this ensures that after a sign-out + sign-in (or guest login), the SettingsViewModel
+    // shows the reset defaults ("Player", dark mode, etc.) rather than stale in-memory state
+    // from the previous user's session.
     LaunchedEffect(Unit) {
+        // Wire Firebase sync callbacks
+        gamesViewModel.onPreferencesChanged    = onPreferencesChanged
+        settingsViewModel.onPreferencesChanged = onPreferencesChanged
+
+        settingsViewModel.loadSettings()
         val catalog = com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog
         priceRefreshManager.setSteamAppIds(catalog.getSteamAppIdsByName())
         priceRefreshManager.setGamePlatforms(catalog.getGamePlatformsByName())
         priceRefreshManager.setXboxProductIds(catalog.getXboxProductIdsByName())
         priceRefreshManager.setXboxTitleHints(catalog.getXboxTitleHintsByName())
+        priceRefreshManager.setPerStoreSearchHints(catalog.getPerStoreSearchHintsByName())
+        priceRefreshManager.setEpicVerifiedUrls(catalog.getEpicUrlsByName())
+        priceRefreshManager.setEaGameUrls(catalog.getEaGameUrlsByName())
+        priceRefreshManager.setUbisoftVerifiedUrls(catalog.getUbisoftUrlsByName())
+        priceRefreshManager.setBattleNetSlugs(catalog.getBattleNetSlugsByName())
         priceRefreshManager.startPeriodicRefresh()
         val allNames = catalog.generateGames()
             .filter { !it.tags.contains("Free2Play") }
@@ -170,6 +191,15 @@ fun MainScreen() {
         }
         offersViewModel.loadCurrentDiscounts()
         offersViewModel.loadFreeGames()
+    }
+
+    // When Firestore sync completes (login, session restore, or ON_RESUME refresh),
+    // reload favorites and settings from the freshly-applied local state.
+    LaunchedEffect(syncVersion) {
+        if (syncVersion > 0) {
+            gamesViewModel.loadFavorites()
+            settingsViewModel.loadSettings()
+        }
     }
 
     val catalogListState = rememberLazyListState()
@@ -356,6 +386,9 @@ fun MainScreen() {
             )
             NavigationStateManager.TAB_SETTINGS -> SettingsScreen(
                 settingsViewModel = settingsViewModel,
+                onSignOut = onSignOut,
+                onLoginRequest = onLoginRequest,
+                isGuest = isGuest,
                 modifier = Modifier.padding(paddingValues)
             )
         }

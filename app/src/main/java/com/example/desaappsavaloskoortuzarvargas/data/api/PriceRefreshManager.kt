@@ -78,6 +78,42 @@ class PriceRefreshManager(
     private var xboxTitleHintMap: Map<String, String> = emptyMap()
 
     /**
+     * Per-store search title overrides (game name → store name → search title).
+     * When a game has different names on different stores (e.g. "Dead Space Remake" is listed
+     * as "Dead Space" on EA and Xbox), the hint tells each service what title to search for.
+     * perStoreHintMap takes priority over xboxTitleHintMap for Xbox.
+     */
+    private var perStoreHintMap: Map<String, Map<String, String>> = emptyMap()
+
+    /**
+     * Verified Epic Games Store URLs per game (name → full URL).
+     * When set, overrides the URL returned by the Epic GraphQL API, which sometimes
+     * returns outdated/short slugs that resolve to 404 pages.
+     * The price itself is always taken from the API; only the URL is overridden.
+     */
+    private var epicVerifiedUrlMap: Map<String, String> = emptyMap()
+
+    /**
+     * EA game page URLs per game (name → EA store URL).
+     * When set, EAPriceService scrapes the page directly instead of using the
+     * unreliable Origin search API. Much higher success rate for known games.
+     */
+    private var eaGameUrlMap: Map<String, String> = emptyMap()
+
+    /**
+     * Ubisoft Store verified URLs per game (name → Ubisoft store URL).
+     * When set and the Ubisoft search API fails, a link-only card is shown so
+     * users can still navigate to the store page.
+     */
+    private var ubiVerifiedUrlMap: Map<String, String> = emptyMap()
+
+    /**
+     * Battle.net product slugs per game (name → slug used in Battle.net product URLs).
+     * Enables direct product page lookup: us.shop.battle.net/es-ar/product/{slug}
+     */
+    private var battleNetSlugMap: Map<String, String> = emptyMap()
+
+    /**
      * Set the mapping from game name → Steam App ID.
      * Called once when the game catalog is loaded.
      */
@@ -102,6 +138,52 @@ class PriceRefreshManager(
     /** Set the mapping from game name → localized Xbox title hint for better search matching. */
     fun setXboxTitleHints(map: Map<String, String>) {
         xboxTitleHintMap = map
+    }
+
+    /**
+     * Set per-store search title overrides (game name → store name → search title).
+     * These hints allow each store to be searched with the title it recognizes, even when
+     * our catalog uses a different name (e.g. "Dead Space Remake" vs "Dead Space" on EA/Xbox).
+     */
+    fun setPerStoreSearchHints(map: Map<String, Map<String, String>>) {
+        perStoreHintMap = map
+    }
+
+    /**
+     * Set the mapping from game name → verified Epic Games Store URL.
+     * When set, overrides the storeUrl from the Epic GraphQL API response so the
+     * user is always directed to the correct page (the API sometimes returns slugs
+     * that resolve to 404 pages, e.g. "black-myth-wukong" vs "black-myth-wukong-87a72b").
+     */
+    fun setEpicVerifiedUrls(map: Map<String, String>) {
+        epicVerifiedUrlMap = map
+    }
+
+    /**
+     * Set the mapping from game name → EA game page URL.
+     * When set, EAPriceService will scrape the page directly rather than using
+     * the Origin search API, which is unreliable for Argentina pricing.
+     */
+    fun setEaGameUrls(map: Map<String, String>) {
+        eaGameUrlMap = map
+    }
+
+    /**
+     * Set the mapping from game name → Ubisoft Store AR URL.
+     * When set and the Ubisoft search API returns no result, a link-only
+     * price card is shown so users can still open the store page.
+     */
+    fun setUbisoftVerifiedUrls(map: Map<String, String>) {
+        ubiVerifiedUrlMap = map
+    }
+
+    /**
+     * Set the mapping from game name → Battle.net product slug.
+     * When set, BattleNetPriceService can scrape the product page directly instead of
+     * relying on the search API, which is less reliable.
+     */
+    fun setBattleNetSlugs(map: Map<String, String>) {
+        battleNetSlugMap = map
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -301,9 +383,14 @@ class PriceRefreshManager(
     }
 
     /**
-     * Fetch prices from all 7 stores in parallel for a single game.
-     * [platforms] filters which stores to query — only stores in this list are called.
-     * Null means "query all stores".
+     * Fetch prices from all stores in parallel for a single game.
+     *
+     * The [platforms] parameter is respected: each store is only queried if the game
+     * is listed on that platform in the catalog. This prevents false positives such as
+     * a game appearing on Epic when it's actually only on Steam/GOG.
+     *
+     * Steam is always skipped when no [steamAppId] is provided (no reliable text-search).
+     * If [platforms] is null all stores are queried (backwards-compatible fallback).
      */
     private suspend fun fetchAllStorePrices(
         gameName: String,
@@ -311,71 +398,167 @@ class PriceRefreshManager(
         platforms: List<String>? = null
     ): List<StorePrice> = kotlinx.coroutines.coroutineScope {
         val prices = mutableListOf<StorePrice>()
-        val callAll = platforms == null
 
+        // Per-platform flags — if platforms list is null, query everything (safe fallback)
+        val queryEpic      = platforms == null || "Epic Games"        in platforms
+        val queryGog       = platforms == null || "GOG"               in platforms
+        val queryXbox      = platforms == null || "Xbox / Microsoft"  in platforms
+        val queryUbisoft   = platforms == null || "Ubisoft"           in platforms
+        val queryBattleNet = platforms == null || "Battle.net"        in platforms
+        val queryEa        = platforms == null || "EA"                in platforms
+
+        // Steam: requires known App ID — no reliable text search alternative
         val steamJob = async {
-            if ((callAll || "Steam" in platforms!!) && steamAppId != null && steamAppId > 0) {
+            if (steamAppId != null && steamAppId > 0) {
                 try {
                     steamPriceService.getArgentinePrice(steamAppId)?.let { arPrice ->
+                        // Detect EA Play: Steam marks some EA games as free (is_free=true) or
+                        // shows no AR pricing (price_overview=null → price=0) because
+                        // they're only available via EA Play subscription on Steam.
+                        // We detect this when price=0 on Steam AND the game is on the EA platform.
+                        // F2P games are excluded from the price-fetch loop, so any 0-price
+                        // EA game reaching here is an EA Play subscription title.
+                        val isEaPlay = arPrice.price == 0f &&
+                            gamePlatformsMap[gameName]?.contains("EA") == true
                         StorePrice(
                             storeName = "Steam",
                             currentPrice = arPrice.price,
                             originalPrice = arPrice.retailPrice,
                             discountPercent = arPrice.discountPercent,
                             currency = arPrice.currency,
-                            isFree = arPrice.isFree,
+                            // Don't mark as "free" if it's an EA Play subscription entry
+                            isFree = arPrice.isFree && !isEaPlay,
                             storeUrl = "https://store.steampowered.com/app/$steamAppId",
-                            discountEndTimestamp = arPrice.discountEndTimestamp
+                            discountEndTimestamp = arPrice.discountEndTimestamp,
+                            isEaPlay = isEaPlay
                         )
                     }
                 } catch (_: Exception) { null }
             } else null
         }
 
+        // Epic: page scrape first (ensures base edition price), then GraphQL search fallback
+        // The isVerifiedLink fallback is created OUTSIDE the try-catch so it always fires
+        // even if an exception escapes the price-fetch attempts.
         val epicJob = async {
-            if (callAll || "Epic Games" in platforms!!) {
-                try { epicPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
-            } else null
+            if (!queryEpic) return@async null
+            val epicTitle = perStoreHintMap[gameName]?.get("Epic Games") ?: gameName
+            val verifiedUrl = epicVerifiedUrlMap[gameName]
+
+            var result: StorePrice? = runCatching {
+                var r: StorePrice? = null
+
+                // Attempt 1: scrape the verified product page directly.
+                // This guarantees we get the BASE GAME edition price (not Gold/Ultimate which
+                // can rank higher in GraphQL search results for some titles like AC Shadows).
+                if (verifiedUrl != null) {
+                    r = epicPriceService.fetchPriceFromProductPage(verifiedUrl, gameName)
+                }
+
+                // Attempt 2: GraphQL search with the hint title (colon stripped etc.)
+                if (r == null) {
+                    r = epicPriceService.searchGamePrice(epicTitle)
+                }
+
+                // Attempt 3: if hint search failed and hint differs from original, try original name
+                if (r == null && epicTitle != gameName) {
+                    r = epicPriceService.searchGamePrice(gameName)
+                }
+
+                // Handle EA Play on Epic: some games (e.g. Jedi Survivor) are available via
+                // EA Play Pro subscription on Epic, which can make them appear as price=0/free
+                // in the GraphQL results. Both EpicPriceService and the page scraper already try
+                // to prefer the non-zero standalone purchase price (see EpicPriceService).
+                // If after all attempts the result is still isFree=true AND the game is on the EA
+                // platform, we invalidate it — it means the real standalone price was not found
+                // and we should show an isVerifiedLink card instead of showing "$0 / FREE".
+                if (r != null && r.isFree && r.currentPrice == 0f &&
+                    gamePlatformsMap[gameName]?.contains("EA") == true) {
+                    r = null  // EA Play subscription price — standalone purchase price not found
+                }
+
+                r
+            }.getOrNull()
+
+            // Attempt 4: if we still have nothing but have a verified URL, show link-only card
+            // so the user can at least navigate to the Epic store page.
+            // This runs OUTSIDE runCatching so it always fires even if an exception occurred above.
+            if (result == null && verifiedUrl != null) {
+                result = StorePrice(
+                    storeName = "Epic Games",
+                    currentPrice = 0f,
+                    originalPrice = 0f,
+                    discountPercent = 0,
+                    currency = "USD",
+                    isFree = false,
+                    storeUrl = verifiedUrl,
+                    isVerifiedLink = true
+                )
+            }
+
+            if (result != null && verifiedUrl != null && !result.isVerifiedLink)
+                result.copy(storeUrl = verifiedUrl)
+            else result
         }
 
+        // GOG: text search with 4-pass bidirectional matching
         val gogJob = async {
-            if (callAll || "GOG" in platforms!!) {
-                try { gogPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
-            } else null
+            if (!queryGog) return@async null
+            try {
+                val gogTitle = perStoreHintMap[gameName]?.get("GOG") ?: gameName
+                gogPriceService.searchGamePrice(gogTitle)
+            } catch (_: Exception) { null }
         }
 
+        // Xbox: direct product ID lookup (most reliable) → title search fallback
+        // NOTE: if a known product ID is provided, we trust the PC-validation result from
+        // fetchProductPrice and do NOT fall back to searchGamePrice on null — a null result
+        // means the product was confirmed console-only (e.g. a game only on Xbox Series X|S).
+        // We only fall back to text search when NO product ID is known.
         val xboxJob = async {
-            if (callAll || "Xbox / Microsoft" in platforms!!) {
-                try {
-                    val productId = xboxProductIdMap[gameName]
-                    val titleHint = xboxTitleHintMap[gameName]
-                    if (productId != null) {
-                        // Direct product lookup by known ID — most accurate
-                        xboxPriceService.fetchProductPrice(productId, gameName)
-                            ?: xboxPriceService.searchGamePrice(gameName, titleHint)
-                    } else {
-                        xboxPriceService.searchGamePrice(gameName, titleHint)
-                    }
-                } catch (_: Exception) { null }
-            } else null
+            if (!queryXbox) return@async null
+            try {
+                val productId = xboxProductIdMap[gameName]
+                val titleHint = perStoreHintMap[gameName]?.get("Xbox / Microsoft")
+                    ?: xboxTitleHintMap[gameName]
+                if (productId != null) {
+                    // Direct product lookup — trust null result (console-only or not found)
+                    xboxPriceService.fetchProductPrice(productId, gameName)
+                } else {
+                    // No known product ID → text search (includes PC platform validation)
+                    xboxPriceService.searchGamePrice(gameName, titleHint)
+                }
+            } catch (_: Exception) { null }
         }
 
+        // Ubisoft: page scrape with catalog URL → Demandware search API → isVerifiedLink
         val ubisoftJob = async {
-            if (callAll || "Ubisoft" in platforms!!) {
-                try { ubisoftPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
-            } else null
+            if (!queryUbisoft) return@async null
+            try {
+                val ubisoftTitle = perStoreHintMap[gameName]?.get("Ubisoft") ?: gameName
+                val verifiedUrl = ubiVerifiedUrlMap[gameName]
+                ubisoftPriceService.searchGamePrice(ubisoftTitle, verifiedUrl)
+            } catch (_: Exception) { null }
         }
 
+        // Battle.net: product page scraping → API search → isVerifiedLink
         val battleNetJob = async {
-            if (callAll || "Battle.net" in platforms!!) {
-                try { battleNetPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
-            } else null
+            if (!queryBattleNet) return@async null
+            try {
+                val battleNetTitle = perStoreHintMap[gameName]?.get("Battle.net") ?: gameName
+                val productSlug = battleNetSlugMap[gameName]
+                battleNetPriceService.searchGamePrice(battleNetTitle, productSlug)
+            } catch (_: Exception) { null }
         }
 
+        // EA (Origin): page scrape with catalog URL → Origin API fallback → isVerifiedLink
         val eaJob = async {
-            if (callAll || "EA" in platforms!!) {
-                try { eaPriceService.searchGamePrice(gameName) } catch (_: Exception) { null }
-            } else null
+            if (!queryEa) return@async null
+            try {
+                val eaTitle = perStoreHintMap[gameName]?.get("EA") ?: gameName
+                val eaPageUrl = eaGameUrlMap[gameName]
+                eaPriceService.searchGamePrice(eaTitle, eaPageUrl)
+            } catch (_: Exception) { null }
         }
 
         steamJob.await()?.let { prices.add(it) }
@@ -391,8 +574,16 @@ class PriceRefreshManager(
 
     private suspend fun savePricesToCache(gameName: String, prices: List<StorePrice>) {
         try {
+            // Never cache "verified link" entries — they have no real price and get re-created
+            // on every live fetch. Caching them would persist a $0 entry with no useful data.
+            val cacheable = prices.filter { !it.isVerifiedLink }
+            if (cacheable.isEmpty() && prices.any { it.isVerifiedLink }) {
+                // All results were link-only — clear any stale prices but write nothing new
+                gamePriceDao.deletePricesForGameByName(gameName)
+                return
+            }
             gamePriceDao.deletePricesForGameByName(gameName)
-            gamePriceDao.insertAll(prices.map { price ->
+            gamePriceDao.insertAll(cacheable.map { price ->
                 GamePriceEntity(
                     gameId = 0,
                     gameName = gameName,
@@ -402,12 +593,14 @@ class PriceRefreshManager(
                     savings = price.discountPercent.toFloat(),
                     dealUrl = price.storeUrl,
                     currency = price.currency,
-                    discountEndTimestamp = price.discountEndTimestamp
+                    discountEndTimestamp = price.discountEndTimestamp,
+                    isGamePass = price.isGamePass,
+                    isEaPlay = price.isEaPlay
                 )
             })
-            // Record price history snapshot for historical tracking
+            // Record price history snapshot — skip link-only entries (no real price data)
             val now = System.currentTimeMillis()
-            priceHistoryDao.insertAll(prices.map { price ->
+            priceHistoryDao.insertAll(cacheable.map { price ->
                 PriceHistoryEntity(
                     gameName = gameName,
                     storeName = price.storeName,
@@ -427,9 +620,11 @@ class PriceRefreshManager(
         originalPrice = retailPrice,
         discountPercent = savings.toInt(),
         currency = currency,
-        isFree = currentPrice == 0f,
+        isFree = currentPrice == 0f && !isGamePass && !isEaPlay,  // Don't mark as "free" if it's a subscription entry
         storeUrl = dealUrl,
-        discountEndTimestamp = discountEndTimestamp
+        discountEndTimestamp = discountEndTimestamp,
+        isGamePass = isGamePass,
+        isEaPlay = isEaPlay
     )
 }
 

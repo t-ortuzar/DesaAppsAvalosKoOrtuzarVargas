@@ -30,5 +30,9 @@ interface FavoriteGameDao {
 
     @Query("SELECT COUNT(*) FROM favorite_games")
     suspend fun getFavoriteCount(): Int
+
+    /** Remove ALL favorites — called on sign-out / guest login to reset user data. */
+    @Query("DELETE FROM favorite_games")
+    suspend fun clearAllFavorites()
 }
 

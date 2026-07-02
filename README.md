@@ -1,159 +1,234 @@
-# Game Tracker App
+# ArgenGamer
 
 Una aplicación Android moderna para trackear precios de videojuegos en múltiples tiendas digitales, con precios reales para Argentina y soporte para juegos Free-to-Play.
 
 ## 🎮 Características Principales
 
 ### 1. **Catálogo de Juegos**
-- **114 juegos**: 100 juegos pagos + 14 Free-to-Play (League of Legends, Valorant, Fortnite, CS2, Dota 2, etc.)
+- **140 juegos**: pagos + Free-to-Play (League of Legends, Valorant, Fortnite, CS2, Dota 2, Genshin Impact, etc.)
 - Imágenes reales vía **Steam CDN** para juegos en Steam
-- **Imágenes dinámicas desde Epic Games Store** (GraphQL `keyImages`) para juegos no disponibles en Steam (ej. Alan Wake 2)
-- Búsqueda por nombre y filtro por tags (Action, RPG, Horror, Free2Play, etc.)
-- Sistema de favoritos
+- **Imágenes dinámicas desde Epic Games Store** (GraphQL `keyImages`) para juegos exclusivos de Epic (ej. Alan Wake 2)
+- **Búsqueda por nombre** y **búsqueda por voz** (micrófono con Speech-to-Text de Android)
+- Filtro por tags (Action, RPG, Horror, Free2Play, etc.) y por tienda
+- **Sistema de favoritos sincronizado con Firebase** (persiste entre dispositivos y reinicios)
 - Tags: 27+ categorías incluyendo Free2Play, MOBA, Battle Royale
+- Plataformas correctamente mapeadas por juego: cada juego sólo consulta las tiendas donde realmente está disponible
+- **Banner offline**: aviso visual cuando no hay conexión a internet
 
 ### 2. **Precios Reales para Argentina 🇦🇷**
-- **Steam Store API** (`cc=ar`): Precios regionales en ARS fijados por publishers
-- **Epic Games Store GraphQL API** (`country=AR`): Precios en ARS
+- **Steam Store API** (`cc=ar`): Precios regionales en ARS con detección de EA Play (precio=0 vía suscripción)
+- **Epic Games Store GraphQL API** (`country=AR`): Precios en ARS con filtro por edición base (evita ediciones Gold/Ultimate)
+- **Epic page scraping** (`__NEXT_DATA__` SSR): Fallback cuando el GraphQL falla; prefiere precio de compra standalone sobre precio EA Play ($0)
 - **GOG Catalog API** (`countryCode=AR`): Precios en USD/ARS
-- **Xbox/Microsoft displaycatalog API** (`market=AR`): Precios en ARS
-- **EA Origin API** (`AR/es_AR`): Precios regionales
-- **Ubisoft Store API** (`es_AR`): Precios regionales
-- **Battle.net Shop API** (`country=AR`): Precios regionales
+- **Xbox/Microsoft storeedgefd API** (`market=AR`, `deviceFamily=Windows.Desktop`): Precios en ARS, validación PC via Xbox website `PlayWith=PC`
+- **EA App page scraping** (`ea.com/es/games/...`): Scraping de `__NEXT_DATA__` con estrategia `_next/data` de Next.js
+- **Ubisoft Store** (Demandware Product API + scraping): Precio directo via endpoint `Product-Variation?pid={id}&format=ajax`
+- **Battle.net Shop** (scraping + `_next/data` API): Precios vía slug de producto con cookies AR
 
 ### 3. **Conversión de Moneda**
 - **DolarAPI** (`dolarapi.com/v1/dolares/tarjeta`): Cotización del dólar tarjeta en tiempo real
-- Toggle **ARS 🇦🇷 / USD 🇺🇸** dentro de cada juego para alternar la moneda de visualización
+- Toggle **ARS 🇦🇷 / USD 🇺🇸** dentro de cada juego
 - Conversión USD→ARS usando dólar tarjeta (incluye IVA + Ganancias)
-- Los precios de Steam/Epic ya vienen en ARS regional (no requieren conversión)
 
 ### 4. **Sección de Ofertas**
-- **Descuentos**: 50+ descuentos de juegos pagos
-- **F2P**: 23 juegos Free-to-Play permanentes
-- **Gratis temporal**: 20 juegos temporalmente gratis (con fecha de expiración)
-- **Mínimos históricos**: Descuentos ≥70%
-- **Favoritos en descuento**: Solo descuentos de juegos favoritos
+- **5 tabs**: Descuentos activos, Favoritos en descuento, Mínimos históricos, Juegos gratuitos (temporales y F2P), **Price Drops** (juegos cuyo precio bajó recientemente)
 
 ### 5. **Detalle de Juego**
-- Imagen a ancho completo (sin recorte)
-- **Fondo oscuro** consistente con el tema de la app
-- **Sección de precios unificada** (💰 Precios): precios live de APIs + precios de referencia del catálogo, todo bajo una sola categoría
-- Toggle ARS/USD con cotización del dólar tarjeta
-- DLCs & Expansiones con precios que respetan el toggle de moneda
-- Plataformas disponibles, tags, rating, descripción
+- Imagen a ancho completo, sección de precios unificada (💰 Precios), toggle ARS/USD, DLCs
+- Cards de precio con etiquetas especiales: **✓ Xbox Game Pass**, **✓ EA Play**, countdown de ofertas
+- Cards `isVerifiedLink` para tiendas donde el precio no pudo obtenerse (link directo a la tienda)
 
-### 6. **Juegos Free-to-Play**
-- 14 juegos F2P en el catálogo principal (no solo en ofertas)
-- Muestran "Disponible en [plataforma]" en vez de precios
-- Plataformas específicas: Riot Games, Epic Games, Steam, HoYoverse, EA
+### 6. **Autenticación y Sesión**
+- Registro e inicio de sesión con usuario + contraseña
+- **Firebase Authentication** (backend en la nube, Android-compatible)
+- **Firebase Firestore** para sincronización completa de preferencias entre dispositivos (ver sección de Sincronización)
+- Modo invitado disponible (sin cuenta) — muestra botón "Iniciar sesión" en Configuración
+- **Reset de datos al cerrar sesión**: al hacer sign-out (con diálogo de confirmación) o entrar como invitado, se borran favoritos, se resetean todas las preferencias (nombre → "Player", tema → oscuro) y no se cargan datos del usuario anterior
 
-### 7. **Noticias**
-- 60 noticias sobre descuentos, actualizaciones y eventos
-- Filtro por categoría y por favoritos
-- Detalle de noticia con fondo oscuro
+### 7. **Sincronización de Preferencias con Firebase 🔄**
+- **Todas las preferencias persisten en Firestore** y se sincronizan entre dispositivos:
+  - Lista de favoritos
+  - Nombre de usuario (displayName)
+  - Email
+  - Tema (oscuro/claro)
+  - Idioma (en/es)
+  - País y código de país
+  - Notificaciones globales
+- **Al iniciar sesión**: Firestore descarga todas las preferencias y las aplica localmente (DataStore + GameRepository en memoria)
+- **Al volver la app al frente (ON_RESUME)**: se re-descarga Firestore para mantener ambos dispositivos sincronizados automáticamente
+- **Ante cualquier cambio de preferencia o favorito**: se sube todo a Firestore en un único write atómico (`set + merge`)
 
-### 8. **Configuración**
-- Nombre de usuario y email editables
-- Selector de país con banderas emoji (Argentina por defecto)
-- Soporte **multi-idioma** (English / Español) con cambio dinámico
-- Notificaciones globales y por juego favorito
+### 8. **Notificaciones y Favoritos**
+- Pantalla unificada con **2 tabs**: Alertas (notificaciones de precio) y Gestión de favoritos
+- **Preferencias de notificación por juego**: toggle individual de Ofertas / Noticias / Mínimo histórico para cada juego favorito
+- **Badge de no leídas** en el tab con contador de notificaciones pendientes
+- Notificaciones de tipo: precio en oferta, mínimo histórico, noticias de juego
+
+### 9. **Noticias**
+- **Steam News API**: noticias reales y actualizadas sobre los juegos del catálogo, con filtro por categoría y favoritos
+- **Calendario de ventas próximas**: eventos de descuentos futuros (Steam Summer Sale, etc.) con fecha y descripción
+
+### 10. **Configuración**
+- Nombre de usuario, email, selector de país, soporte multi-idioma (English / Español), modo oscuro/claro, notificaciones globales
+- **Todas las preferencias se persisten en Firebase Firestore** y se sincronizan entre dispositivos
+- Al cerrar sesión o usar modo invitado, todo vuelve a los valores por defecto
+- En modo invitado: botón "Iniciar sesión" que redirige al Login
+
+---
 
 ## 🌐 APIs Integradas
 
-| API | Uso | Endpoint |
-|-----|-----|----------|
-| **Steam Store** | Precios regionales AR + imágenes | `store.steampowered.com/api/appdetails` |
-| **Epic Games GraphQL** | Precios AR + imágenes (`keyImages`) | `graphql.epicgames.com/graphql` |
-| **GOG Catalog** | Precios AR/USD | `catalog.gog.com/v1/catalog` |
-| **Xbox/Microsoft** | Precios AR para PC | `displaycatalog.mp.microsoft.com/v7.0/products` |
-| **EA Origin** | Precios AR | `api2.origin.com/ecommerce2/public/supercat/AR` |
-| **Ubisoft Store** | Precios AR | `store.ubisoft.com/.../es_AR/Search-GetSuggestions` |
-| **Battle.net** | Precios AR | `us.shop.battle.net/api/catalog?country=AR` |
+| API | Uso | Endpoint principal |
+|-----|-----|--------------------|
+| **Steam Store** | Precios AR + imágenes | `store.steampowered.com/api/appdetails?appids={id}&cc=ar` |
+| **Steam News** | Noticias reales de juegos | `api.steampowered.com/ISteamNews/GetNewsForApp/v0002/` |
+| **Epic Games GraphQL** | Precios AR + imágenes | `store.epicgames.com/graphql` |
+| **Epic product page** | Precios AR (fallback scraping) | `store.epicgames.com/p/{slug}` (`__NEXT_DATA__`) |
+| **GOG Catalog** | Precios AR/USD | `catalog.gog.com/v1/catalog?countryCode=AR` |
+| **Xbox storeedgefd** | Búsqueda PC + precios AR | `storeedgefd.dsx.mp.microsoft.com/v9.0/search?deviceFamily=Windows.Desktop` |
+| **Xbox Display Catalog** | Precios directos por product ID | `displaycatalog.mp.microsoft.com/v7.0/products?bigIds={id}&market=AR` |
+| **Xbox PC filter** | Validación disponibilidad en PC | `xbox.com/es-AR/search/results/games?q={q}&PlayWith=PC` |
+| **EA App** | Precios AR (Next.js scraping) | `ea.com/es/games/...` + `/_next/data/{buildId}/...json` |
+| **Ubisoft Demandware** | Precios AR (API directa) | `store.ubisoft.com/.../Product-Variation?pid={id}&format=ajax` |
+| **Battle.net** | Precios AR (scraping + API) | `us.shop.battle.net/es-ar/product/{slug}` + `_next/data` |
 | **DolarAPI** | Cotización dólar tarjeta | `dolarapi.com/v1/dolares/tarjeta` |
-| **Steam CDN** | Imágenes de juegos | `cdn.akamai.steamstatic.com/steam/apps/{id}/header.jpg` |
+| **SalesCalendarService** | Calendario de ventas próximas | Curado internamente con fechas de eventos de tiendas |
+| **Firebase Auth** | Registro / Login | Firebase Authentication SDK |
+| **Firebase Firestore** | Todas las preferencias de usuario | Firebase Firestore SDK (`users/{uid}`) |
+
+---
 
 ## 🏗️ Arquitectura (Clean Architecture + MVVM)
 
 ### Capa de Presentación
-- **Screens**: `GamesScreen`, `GameDetailScreen`, `OffersScreen`, `NewsScreen`, `NewsDetailScreen`, `FavoritesScreen`, `SettingsScreen`, `MainScreen`
-- **Components**: `GameCard`, `DiscountCard`, `NewsCard`, `SharedComponents` (9 componentes reutilizables)
-- **ViewModels**: `GamesViewModel`, `OffersViewModel`, `NewsViewModel`, `SettingsViewModel`
+- **Screens**: `GamesScreen`, `GameDetailScreen`, `OffersScreen`, `NewsScreen`, `NewsDetailScreen`, `NotificationsScreen`, `SettingsScreen`, `LoginScreen`, `MainScreen`
+- **ViewModels**: `GamesViewModel`, `OffersViewModel`, `NewsViewModel`, `SettingsViewModel`, `AuthViewModel`
+- **Components**: `StorePriceCard`, `OfferCountdown`, `TagChips`, `SectionHeader`, `LabeledSwitchRow`, `GameCard`, `DiscountCard`, `NewsCard`, `UpcomingSaleCard`, `LoadingContent`, `CardHeaderImage`
 
 ### Capa de Dominio
-- **Models**: `Game`, `DLC`, `DiscountedGame`, `News`, `PriceHistory`, `UserSettings`, `InAppNotification`
-- **Use Cases**: `GetAllGamesUseCase`, `SearchGamesUseCase`, `GetFavoritesUseCase`, `GetCurrentDiscountsUseCase`, etc.
-- **Repositories** (interfaces): `GameRepository`, `NewsRepository`, `DiscountRepository`, `UserSettingsRepository`
+- **Models**: `Game`, `DLC`, `DiscountedGame`, `News`, `PriceHistory`, `UserSettings`, `AppUser`, `StorePrice`, `InAppNotification`, `GameNotificationPref`
+- **Use Cases**: `GetAllGamesUseCase`, `SearchGamesUseCase`, `GetFavoritesUseCase`, `GetCurrentDiscountsUseCase`, `GetPriceDropsUseCase`, `GetInAppNotificationsUseCase`, `GetUnreadNotificationCountUseCase`, `MarkNotificationReadUseCase`, `GenerateDiscountNotificationsUseCase`, `UpdateGameNotificationPrefUseCase`, etc.
 
 ### Capa de Datos
 - **Price Services**: `SteamPriceService`, `EpicPriceService`, `GogPriceService`, `XboxPriceService`, `UbisoftPriceService`, `BattleNetPriceService`, `EAPriceService`
-- **DolarService**: Cotización del dólar tarjeta desde DolarAPI
-- **ArgentineTaxCalculator**: Conversión USD→ARS con dólar tarjeta
-- **PriceRefreshManager**: Gestión de cache de precios con Room + refresh periódico
-- **ConnectivityObserver**: Detección de conectividad para estrategia online/offline
-- **Room Database**: Cache de precios, imágenes, favoritos
-- **DataStore**: Persistencia de configuración de usuario
-- **GameCatalog**: Catálogo curado de 114 juegos con metadata
+- **Other Services**: `SteamNewsService`, `SalesCalendarService`, `DolarService`, `ArgentineTaxCalculator`
+- **FirebaseAuthService**: Registro, login, sincronización de **todas** las preferencias via Firestore (`syncAllUserData`, `getUserById`)
+- **PriceRefreshManager**: Orquesta todas las consultas de precios, cache con Room, filtrado por plataforma, fallbacks `isVerifiedLink`
+- **Room Database** (v12): Cache de precios, imágenes, favoritos locales, historial de precios
+- **DataStore**: Preferencias de usuario locales (espejo del estado Firestore, recargado en cada resume)
+- **GameCatalog**: Catálogo curado de 140 juegos con metadata, slugs verificados, product IDs, URLs por tienda
+
+---
+
+## 🔄 Flujo de Sincronización Firebase
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        FIRESTORE (users/{uid})                  │
+│  displayName · email · favorites · darkMode · languageCode      │
+│  country · countryCode · globalNotifications                    │
+└────────────────────┬────────────────────┬───────────────────────┘
+                     │ download            │ upload
+          ┌──────────▼──────────┐  ┌──────▼──────────────────┐
+          │  Al iniciar sesión  │  │  Al cambiar cualquier   │
+          │  Al volver al frente│  │  preferencia o favorito │
+          │  (ON_RESUME)        │  │  → syncAll() en un único│
+          └──────────┬──────────┘  │    write atómico        │
+                     │             └─────────────────────────┘
+          ┌──────────▼──────────────────────────────────────┐
+          │         DataStore + GameRepository (local)       │
+          │  → settingsViewModel.loadSettings()              │
+          │  → gamesViewModel.loadFavorites()                │
+          └─────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔍 Estrategia de Fetch de Precios por Tienda
+
+### Epic Games
+1. **Page scrape** de la URL verificada del catálogo (`__NEXT_DATA__` SSR) — garantiza edición base
+2. **GraphQL search** con `category: "games/edition/base"` — evita ediciones Gold/Ultimate
+3. **GraphQL search** sin filtro de categoría — fallback amplio
+4. **`isVerifiedLink`** — si todo falla pero el slug es conocido, muestra link directo
+- Detección EA Play en Epic: si el resultado tiene `originalPrice=0` Y el juego está en plataforma EA, se descarta y se muestra el link (para que el usuario vea el precio de compra, no de suscripción)
+- Preferencia de precio no-cero: `findEpicTotalPriceFiltered` busca primero un `totalPrice` con `originalPrice > 0` antes de aceptar un precio cero
+- Fallback `isVerifiedLink` garantizado: movido fuera del try/catch para que siempre se ejecute aunque ocurra una excepción en los intentos anteriores
+
+### Xbox / Microsoft Store
+- Búsqueda via `storeedgefd` con `deviceFamily=Windows.Desktop`
+- **Validación PC obligatoria**: cross-check contra `xbox.com/es-AR/search?PlayWith=PC` — si el product ID no aparece en la página SSR del buscador con filtro PC, el juego es exclusivo de consola y se descarta
+- Para juegos con product ID conocido: consulta directa a `displaycatalog.mp.microsoft.com`
+- URLs sin sufijo `/0010` (evita 404 para productos sin ese SKU)
+
+### EA App
+- Scraping de `ea.com/es/games/{slug}` con extracción de `__NEXT_DATA__` vía string search
+- Estrategia `_next/data`: intenta 4 variantes de URL (`es-ar/buy`, `es/buy`, `es-ar`, `es`)
+- Fallback `isVerifiedLink` con URL verificada del catálogo
+
+### Ubisoft
+- **Demandware Product API**: extrae el ID de 24 caracteres de la URL del catálogo, llama a `Product-Variation?pid={id}&format=ajax`
+- Fallback: scraping de meta tags, JSON-LD, scripts en la página
+- Fallback final: `isVerifiedLink`
+
+### Battle.net
+- Scraping de `us.shop.battle.net/es-ar/product/{slug}` con cookies AR
+- Estrategia `_next/data` con buildId dinámico
+- Fallback `isVerifiedLink`
+
+---
 
 ## 📁 Estructura del Proyecto
 
 ```
-app/src/main/java/com/example/desaappsavaloskoortuzarvargas/
+app/src/main/java/.../
 ├── data/
-│   ├── api/
-│   │   ├── SteamPriceService.kt         # Steam Store API (precios AR)
-│   │   ├── EpicPriceService.kt          # Epic GraphQL API (precios + imágenes)
-│   │   ├── GogPriceService.kt           # GOG Catalog API
-│   │   ├── XboxPriceService.kt          # Microsoft Store API
-│   │   ├── EAPriceService.kt            # EA/Origin API
-│   │   ├── UbisoftPriceService.kt       # Ubisoft Store API
-│   │   ├── BattleNetPriceService.kt     # Battle.net Shop API
-│   │   ├── DolarService.kt             # DolarAPI (cotización)
-│   │   ├── ArgentineTaxCalculator.kt    # Conversión USD→ARS
-│   │   ├── PriceRefreshManager.kt       # Cache + refresh periódico
-│   │   └── StorePrice.kt               # Modelo unificado de precio
-│   ├── catalog/
-│   │   └── GameCatalog.kt              # 114 juegos con metadata
-│   ├── local/
-│   │   ├── GameTrackerDatabase.kt       # Room DB
-│   │   ├── ConnectivityObserver.kt      # Estado de red
-│   │   ├── SettingsDataStore.kt         # Preferencias de usuario
-│   │   ├── dao/                         # DAOs
-│   │   └── entity/                      # Room entities
-│   └── repository/                      # Implementaciones de repositorios
+│   ├── api/              # 7 price services + DolarService + SteamNewsService + SalesCalendarService + PriceRefreshManager + ArgentineTaxCalculator
+│   ├── catalog/          # GameCatalog.kt (140 juegos: slugs, product IDs, URLs verificadas)
+│   ├── local/            # Room DB v12 (precios, imágenes, favoritos, historial) + DataStore
+│   ├── remote/
+│   │   └── FirebaseAuthService.kt   # Firebase Auth + Firestore (todas las preferencias)
+│   └── repository/       # Implementaciones de repositorios
 ├── domain/
-│   ├── model/                           # Entidades de dominio
-│   ├── repository/                      # Interfaces
-│   └── usecase/                         # Casos de uso
+│   ├── model/            # Game, AppUser, StorePrice, DiscountedGame, News, InAppNotification, GameNotificationPref, ...
+│   ├── repository/       # Interfaces
+│   └── usecase/          # Casos de uso
 ├── presentation/
-│   ├── component/                       # Componentes UI reutilizables
-│   ├── screen/                          # 8 pantallas
-│   ├── viewmodel/                       # 4 ViewModels
-│   └── Constants.kt                     # Colores y constantes
-├── di/
-│   └── ServiceLocator.kt               # Inyección de dependencias
-├── ui/theme/                            # Material 3 Dark Theme
-├── MainActivity.kt
+│   ├── screen/           # 9 pantallas (GamesScreen, OffersScreen, NotificationsScreen, NewsScreen, SettingsScreen, GameDetailScreen, NewsDetailScreen, LoginScreen, MainScreen)
+│   ├── viewmodel/        # GamesViewModel, AuthViewModel, SettingsViewModel, OffersViewModel, NewsViewModel
+│   └── component/        # Componentes reutilizables
+├── ui/theme/             # Material 3 Dark Theme
+├── MainActivity.kt       # Entrada: auth state → MainScreen o LoginScreen; lifecycle observer ON_RESUME → refreshFromFirebase()
 └── GameTrackerApp.kt
 ```
 
-## 🎨 Diseño
-
-- **Tema oscuro** en toda la app (incluyendo pantallas de detalle)
-- **Material Design 3** con `darkColorScheme`
-- Fondo `#121212`, superficie `#1E1E1E`, texto blanco
-- Navegación inferior con 4 tabs + badge de notificaciones
-- Multi-idioma: English / Español
+---
 
 ## 🛠️ Tecnologías
 
 - **Kotlin** + **Jetpack Compose**
-- **Room** (cache de precios e imágenes)
-- **DataStore** (preferencias de usuario)
-- **Coil** (carga de imágenes)
+- **Firebase Authentication** (login/registro en la nube)
+- **Firebase Firestore** (sync completo de preferencias entre dispositivos: favoritos, tema, nombre, idioma, país, notificaciones)
+- **Room** v12 (cache local de precios, imágenes, favoritos, historial)
+- **DataStore** (espejo local de preferencias Firestore; se recarga en cada resume y login)
+- **Coil** (carga de imágenes desde Steam CDN y Epic Store)
 - **Kotlinx Serialization** (JSON parsing)
-- **HttpURLConnection** (API calls)
+- **HttpURLConnection** (API calls a tiendas, scraping de páginas Next.js)
 - **Material Design 3** (dark theme)
-- **Coroutines + StateFlow** (MVVM reactivo)
+- **Coroutines + StateFlow** (MVVM reactivo, fetch de precios en paralelo con `async`)
+- **Android Speech-to-Text** (búsqueda por voz en el catálogo)
+
+---
+
+## 🔧 Cómo Ejecutar
+
+1. Clonar el repositorio
+2. Abrir en Android Studio
+3. Colocar `google-services.json` en la carpeta `app/` (obtener desde [Firebase Console](https://console.firebase.google.com) → proyecto ArgenGamer → configuración Android)
+4. En Firebase Console: activar **Authentication → Email/Password** y crear **Firestore Database** con nombre `argengamer`
+5. `Gradle Sync` → Conectar dispositivo o emulador → Ejecutar
+
+---
 
 ## 🧪 Tests
 
@@ -161,38 +236,20 @@ app/src/main/java/com/example/desaappsavaloskoortuzarvargas/
 ./gradlew testDebugUnitTest
 ```
 
-### Tests Incluidos
-- **StorePriceTest**: StorePrice, SteamGamePrice (ARS, USD, free, imageUrl)
-- **ArgentineTaxCalculatorTest**: usdToArs, formatArs, calculateBreakdown
-- **EpicDataClassesTest**: EpicKeyImage, EpicElement, EpicTotalPrice, response chain
-- **GameCatalogTest**: 114 juegos, F2P defaults, images, DLCs, discounts, news, price history
-- **GameModelTest, DiscountModelTest, NewsModelTest, UserSettingsTest**: Modelos de dominio
-- **GameUseCaseTest, DiscountUseCaseTest, NewsUseCaseTest, SettingsUseCaseTest**: Use cases
-- **GameRepositoryImplTest, DiscountRepositoryImplTest, NewsRepositoryImplTest**: Repositorios
-- **GamesViewModelTest, OffersViewModelTest, NewsViewModelTest, SettingsViewModelTest**: ViewModels
-- **ConstantsTest**: Constantes de la app
+Tests incluidos: StorePrice, ArgentineTaxCalculator, EpicDataClasses, GameCatalog, domain models, use cases, repositorios, ViewModels.
 
-## 📊 Estrategia de Precios
+---
 
-1. **Online**: Siempre busca precios frescos de las APIs (sin shortcut de cache stale)
-2. **Offline**: Muestra precios cacheados con warning visual
-3. **Fallback**: Si la API falla, usa cache sin warning
-4. **Refresh periódico**: Ofertas cada 30min, catálogo cada 2h, en batches de 5 juegos
+## 📊 Estrategia de Caché y Refresh
 
-## 🖼️ Estrategia de Imágenes
+1. **On demand** (al abrir un juego): siempre busca precios frescos online; cache si offline
+2. **Background batch**: cada 15min para ofertas, cada 1h para catálogo general (batches de 5 juegos)
+3. **Filtrado por plataforma**: cada juego sólo consulta las tiendas donde está disponible (reduce llamadas innecesarias y evita falsos positivos)
+4. **`isVerifiedLink`**: cuando el precio no puede obtenerse pero la URL es conocida, se muestra un card con link directo a la tienda (no se cachea en DB)
+5. **Detección EA Play**: Steam precio=0 + plataforma EA → marcado como `isEaPlay` (muestra "✓ EA Play" en lugar de "$0")
+6. **Detección Game Pass**: Xbox precio=0 con strikethrough → marcado como `isGamePass` (muestra "✓ Xbox Game Pass")
 
-1. **Juegos en Steam** → Steam CDN usando Steam App ID (prioridad)
-2. **Juegos no en Steam** → Imagen dinámica desde Epic Games Store GraphQL API (`keyImages`)
-3. **Juegos Riot** → DDragon CDN
-4. **Fallback estático** → URLs hardcodeadas en `alternativeImages`
-
-## 🔧 Cómo Ejecutar
-
-1. Clona el repositorio
-2. Abre en Android Studio
-3. `Gradle Sync`
-4. Conecta dispositivo o emulador
-5. Ejecuta la app
+---
 
 ## 👨‍💻 Equipo
 
@@ -200,5 +257,5 @@ Avalos, Ko, Ortuzar, Vargas
 
 ---
 
-**Versión**: 4.0
-**Última actualización**: Mayo 2026
+**Versión**: 7.0
+**Última actualización**: Julio 2026

@@ -58,6 +58,9 @@ class GamesViewModel(
     private val _selectedTag = MutableStateFlow<String?>(null)
     val selectedTag: StateFlow<String?> = _selectedTag.asStateFlow()
 
+    private val _selectedStore = MutableStateFlow<String?>(null)
+    val selectedStore: StateFlow<String?> = _selectedStore.asStateFlow()
+
     private val _showDLCs = MutableStateFlow(false)
     val showDLCs: StateFlow<Boolean> = _showDLCs.asStateFlow()
 
@@ -88,6 +91,11 @@ class GamesViewModel(
     // Populated by fetchMissingImages() and applied to search/filter results so that
     // non-Steam games (e.g. Alan Wake 2) always display their image in the catalog list.
     private val _imageCache = mutableMapOf<Int, String>()
+
+    /**
+     * Called after any favorite toggle. Set by MainScreen → calls AuthViewModel.syncAll().
+     */
+    var onPreferencesChanged: (() -> Unit)? = null
 
     init {
         loadAllGames()
@@ -262,6 +270,14 @@ class GamesViewModel(
         loadAllGames()
     }
 
+    fun filterByStore(store: String) {
+        _selectedStore.value = if (_selectedStore.value == store) null else store
+    }
+
+    fun clearStoreFilter() {
+        _selectedStore.value = null
+    }
+
     fun toggleShowDLCs() {
         _showDLCs.value = !_showDLCs.value
     }
@@ -319,11 +335,13 @@ class GamesViewModel(
                 removeFromFavoritesUseCase(game.id).onSuccess {
                     refreshGames()
                     loadFavorites()
+                    onPreferencesChanged?.invoke()
                 }.onFailure { _error.value = it.message }
             } else {
                 addToFavoritesUseCase(game).onSuccess {
                     refreshGames()
                     loadFavorites()
+                    onPreferencesChanged?.invoke()
                 }.onFailure { _error.value = it.message }
             }
         }
