@@ -2,6 +2,8 @@ package com.example.desaappsavaloskoortuzarvargas.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.desaappsavaloskoortuzarvargas.data.api.SalesCalendarService
+import com.example.desaappsavaloskoortuzarvargas.data.api.UpcomingSaleEvent
 import com.example.desaappsavaloskoortuzarvargas.domain.model.News
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetAllNewsUseCase
 import com.example.desaappsavaloskoortuzarvargas.domain.usecase.GetNewsByGameIdUseCase
@@ -28,6 +30,8 @@ class NewsViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _upcomingSales = MutableStateFlow<List<UpcomingSaleEvent>>(emptyList())
+    val upcomingSales: StateFlow<List<UpcomingSaleEvent>> = _upcomingSales.asStateFlow()
 
     private val _filterType = MutableStateFlow<FilterType>(FilterType.ALL)
     val filterType: StateFlow<FilterType> = _filterType.asStateFlow()
@@ -38,6 +42,11 @@ class NewsViewModel(
 
     init {
         loadAllNews()
+        loadUpcomingSales()
+    }
+
+    fun loadUpcomingSales() {
+        _upcomingSales.value = SalesCalendarService.getUpcomingEvents()
     }
 
     fun loadAllNews() {

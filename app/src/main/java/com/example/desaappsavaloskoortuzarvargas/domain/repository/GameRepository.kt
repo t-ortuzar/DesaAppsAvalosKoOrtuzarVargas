@@ -13,4 +13,6 @@ interface GameRepository {
     suspend fun removeFromFavorites(gameId: Int): Result<Unit>
     suspend fun getFavorites(): Result<List<Game>>
     suspend fun isFavorite(gameId: Int): Result<Boolean>
+    /** Bulk-initialize the in-memory favorites set (called on login / session restore from Firestore). */
+    suspend fun initializeFavorites(ids: Set<Int>): Result<Unit>
 }

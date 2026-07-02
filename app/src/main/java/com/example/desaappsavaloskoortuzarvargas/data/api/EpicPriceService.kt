@@ -4,6 +4,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -93,70 +97,68 @@ class EpicPriceService {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val searchQuery = """
-        query searchStoreQuery(${'$'}country: String!, ${'$'}keywords: String!, ${'$'}count: Int) {
-            Catalog {
-                searchStore(
-                    country: ${'$'}country,
-                    keywords: ${'$'}keywords,
-                    count: ${'$'}count,
-                    category: "games/edition/base",
-                    sortBy: "relevancy",
-                    sortDir: "DESC"
-                ) {
-                    elements {
-                        title
-                        urlSlug
-                        keyImages {
-                            type
-                            url
-                        }
-                        price(country: ${'$'}country) {
-                            totalPrice {
-                                originalPrice
-                                discountPrice
-                                discount
-                                currencyCode
-                                fmtPrice(locale: "es-AR") {
-                                    originalPrice
-                                    discountPrice
+    /**
+     * Search for a game on the Epic Games Store and return the Argentine price.
+     * First searches with category="games/edition/base" to get the standard edition.
+     * Falls back to an unfiltered search (catches games without a "base" category).
+     */
+    suspend fun searchGamePrice(title: String): StorePrice? =
+        searchWithTerm(title, useBaseFilter = true)
+            ?: searchWithTerm(title, useBaseFilter = false)
+
+    private suspend fun searchWithTerm(title: String, useBaseFilter: Boolean): StorePrice? = withContext(Dispatchers.IO) {
+        try {
+            val categoryLine = if (useBaseFilter) """category: "games/edition/base",""" else ""
+            val query = """
+                query searchStoreQuery(${'$'}country: String!, ${'$'}keywords: String!, ${'$'}count: Int) {
+                    Catalog {
+                        searchStore(
+                            country: ${'$'}country,
+                            keywords: ${'$'}keywords,
+                            count: ${'$'}count,
+                            $categoryLine
+                            sortBy: "relevancy",
+                            sortDir: "DESC"
+                        ) {
+                            elements {
+                                title
+                                urlSlug
+                                keyImages { type url }
+                                price(country: ${'$'}country) {
+                                    totalPrice {
+                                        originalPrice
+                                        discountPrice
+                                        discount
+                                        currencyCode
+                                        fmtPrice(locale: "es-AR") {
+                                            originalPrice
+                                            discountPrice
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                        promotions {
-                            promotionalOffers {
-                                promotionalOffers {
-                                    startDate
-                                    endDate
+                                promotions {
+                                    promotionalOffers {
+                                        promotionalOffers { startDate endDate }
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        }
-    """.trimIndent()
+            """.trimIndent()
 
-    /**
-     * Search for a game on the Epic Games Store and return the Argentine price.
-     * Returns null if the game is not found or an error occurs.
-     */
-    suspend fun searchGamePrice(title: String): StorePrice? = withContext(Dispatchers.IO) {
-        try {
             val requestBody = json.encodeToString(
                 kotlinx.serialization.json.JsonObject.serializer(),
                 kotlinx.serialization.json.buildJsonObject {
-                    put("query", kotlinx.serialization.json.JsonPrimitive(searchQuery))
+                    put("query", kotlinx.serialization.json.JsonPrimitive(query))
                     put("variables", kotlinx.serialization.json.buildJsonObject {
                         put("country", kotlinx.serialization.json.JsonPrimitive("AR"))
                         put("keywords", kotlinx.serialization.json.JsonPrimitive(title))
-                        put("count", kotlinx.serialization.json.JsonPrimitive(3))
+                        put("count", kotlinx.serialization.json.JsonPrimitive(10))
                     })
                 }
             )
 
-            // graphql.epicgames.com/graphql was deprecated (404 as of 2025).
-            // The current endpoint is store.epicgames.com/graphql.
             val url = URL("https://store.epicgames.com/graphql")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
@@ -173,24 +175,66 @@ class EpicPriceService {
             conn.doOutput = true
             conn.outputStream.bufferedWriter().use { it.write(requestBody) }
 
-            if (conn.responseCode == 200) {
-                val response = conn.inputStream.bufferedReader().readText()
-                val parsed = json.decodeFromString<EpicGraphQLResponse>(response)
-                val elements = parsed.data?.Catalog?.searchStore?.elements ?: return@withContext null
+            if (conn.responseCode != 200) return@withContext null
+            val response = conn.inputStream.bufferedReader().readText()
+            val parsed = json.decodeFromString<EpicGraphQLResponse>(response)
+            val elements = parsed.data?.Catalog?.searchStore?.elements ?: return@withContext null
+            if (elements.isEmpty()) return@withContext null
 
-                // Normalise titles: lowercase, drop edition suffixes ("Standard Edition",
-                // "Complete Edition", etc.) so "Cyberpunk 2077" matches
-                // "Cyberpunk 2077 Standard Edition" if an exact match isn't found.
-                fun norm(t: String) = t.trim().lowercase()
-                    .replace(Regex("\\s*(standard|complete|ultimate|definitive|game of the year|goty|deluxe|premium)\\s*(edition)?\\s*$"), "")
-                    .trim()
+            // Normalise titles: lowercase, strip punctuation (colons, apostrophes, etc.),
+            // then drop edition suffixes so "Star Wars Jedi Survivor" matches
+            // "Star Wars Jedi: Survivor" and "Cyberpunk 2077" matches
+            // "Cyberpunk 2077 Standard Edition".
+            fun norm(t: String) = t.trim().lowercase()
+                .replace(Regex("[:'\"!?,.]"), " ")   // normalize punctuation → spaces
+                .replace(Regex("\\s*(standard|complete|ultimate|definitive|game of the year|goty|deluxe|premium)\\s*(edition)?\\s*$"), "")
+                .replace(Regex("\\s+"), " ")
+                .trim()
 
-                val normTitle = norm(title)
-                val match = elements.firstOrNull { norm(it.title) == normTitle }
-                    ?: elements.firstOrNull { norm(it.title).startsWith(normTitle) }
-                    ?: return@withContext null
+            val normTitle = norm(title)
 
-                val totalPrice = match.price?.totalPrice ?: return@withContext null
+            // Pass 1: exact norm match
+            var match = elements.firstOrNull { norm(it.title) == normTitle }
+            // Pass 2: result title starts with our normalized title
+            if (match == null) {
+                match = elements.firstOrNull { norm(it.title).startsWith(normTitle) }
+            }
+            // Pass 3: our normalized title starts with result (title is a substring)
+            if (match == null) {
+                match = elements.firstOrNull { normTitle.startsWith(norm(it.title)) && norm(it.title).length > 5 }
+            }
+            // Pass 4: lenient — all significant words in our title appear in the result title
+            if (match == null) {
+                val titleWords = normTitle.split(" ").filter { it.length > 4 }.toSet()
+                if (titleWords.size >= 2) {
+                    match = elements.firstOrNull { candidate ->
+                        val cWords = norm(candidate.title).split(" ").filter { it.length > 4 }.toSet()
+                        titleWords.intersect(cWords).size >= titleWords.size - 1
+                    }
+                }
+            }
+            if (match == null) return@withContext null
+
+            // Prefer a match with a real purchase price (originalPrice > 0) over an EA Play
+            // subscription entry that shows the game as free (originalPrice = 0).
+            // Some games like Jedi Survivor appear on Epic both via EA Play (price=0) and as
+            // a standalone purchase. We want the standalone price, not the subscription price.
+            val matchedOriginalPrice = match.price?.totalPrice?.originalPrice ?: 0
+            if (matchedOriginalPrice == 0) {
+                // The matched element has no purchase price — look for another element in the
+                // results that has the same (or similar) title AND has a non-zero price.
+                val betterMatch = elements.firstOrNull { elem ->
+                    val ep = elem.price?.totalPrice ?: return@firstOrNull false
+                    ep.originalPrice > 0 && (
+                        norm(elem.title) == normTitle ||
+                        norm(elem.title).startsWith(normTitle) ||
+                        normTitle.startsWith(norm(elem.title))
+                    )
+                }
+                if (betterMatch != null) match = betterMatch
+            }
+
+            val totalPrice = match.price?.totalPrice ?: return@withContext null
 
                 // Extract a landscape image from Epic's keyImages
                 val epicImageUrl = match.keyImages.firstOrNull {
@@ -251,7 +295,6 @@ class EpicPriceService {
                     imageUrl = epicImageUrl,
                     discountEndTimestamp = promoEndTs
                 )
-            } else null
         } catch (_: Exception) {
             null
         }
@@ -328,6 +371,134 @@ class EpicPriceService {
             } else null
         } catch (_: Exception) {
             null
+        }
+    }
+
+    /**
+     * Fallback: scrape the Epic Store product page directly to extract pricing.
+     * Epic uses Next.js SSR — the initial HTML contains __NEXT_DATA__ with all page props
+     * including the price, so this works even when the GraphQL search returns no matches.
+     *
+     * Tries multiple URL formats to maximise the chance of getting ARS prices:
+     *   1. /p/{slug}          — no locale prefix (simplest, clearest for cookies)
+     *   2. /es-MX/p/{slug}    — Spanish locale (user-confirmed working format)
+     *   3. original pageUrl   — as provided by the catalog
+     *
+     * Used when the GraphQL search fails for a game that has a known verified URL.
+     */
+    suspend fun fetchPriceFromProductPage(pageUrl: String, gameName: String): StorePrice? =
+        withContext(Dispatchers.IO) {
+            try {
+                // Extract the bare slug from whatever URL format we received
+                val slug = pageUrl
+                    .removePrefix("https://store.epicgames.com/")
+                    .removePrefix("en-US/p/").removePrefix("es-MX/p/").removePrefix("p/")
+                    .substringBefore("?").trim('/')
+
+                val urlsToTry = listOf(
+                    "https://store.epicgames.com/p/$slug",
+                    "https://store.epicgames.com/es-MX/p/$slug",
+                    pageUrl.substringBefore("?")
+                ).distinct()
+
+                for (url in urlsToTry) {
+                    fetchFromSingleEpicPage(url, gameName)?.let { return@withContext it }
+                }
+                null
+            } catch (_: Exception) { null }
+        }
+
+    /** Fetch and parse a single Epic product page URL. Returns null if price not found. */
+    private suspend fun fetchFromSingleEpicPage(pageUrl: String, gameName: String): StorePrice? =
+        withContext(Dispatchers.IO) {
+            try {
+                val url = URL(pageUrl)
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 10000
+                conn.readTimeout = 10000
+                conn.instanceFollowRedirects = true
+                conn.setRequestProperty("Accept", "text/html,application/json,*/*;q=0.9")
+                conn.setRequestProperty("Accept-Language", "es-AR,es;q=0.9,en;q=0.8")
+                conn.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                conn.setRequestProperty("Cookie", "EPIC_COUNTRY=AR; EPIC_LOCALE_COOKIE=es-AR")
+                if (conn.responseCode != 200) return@withContext null
+
+                val html = conn.inputStream.bufferedReader().readText()
+
+                // Find __NEXT_DATA__ using a simple string search — more reliable than regex
+                // because the regex lazy quantifier can fail on large nested JSON objects.
+                val markerIdx = html.indexOf("""id="__NEXT_DATA__"""")
+                if (markerIdx < 0) return@withContext null
+                val contentStart = html.indexOf('>', markerIdx) + 1
+                val contentEnd   = html.indexOf("</script>", contentStart)
+                if (contentEnd <= contentStart) return@withContext null
+                val jsonStr = html.substring(contentStart, contentEnd).trim()
+
+                val root = json.parseToJsonElement(jsonStr)
+                // Recursively search for Epic's price structure:
+                // {"totalPrice": {"discountPrice": N, "originalPrice": N, "currencyCode": "ARS"}}
+                val priceObj = findEpicTotalPrice(root, 0) ?: return@withContext null
+
+                val discountPrice  = priceObj["discountPrice"]?.jsonPrimitive?.content?.toIntOrNull() ?: return@withContext null
+                val originalPrice  = priceObj["originalPrice"]?.jsonPrimitive?.content?.toIntOrNull() ?: discountPrice
+                val currency       = priceObj["currencyCode"]?.jsonPrimitive?.content ?: "ARS"
+                val discountPct    = if (originalPrice > 0 && discountPrice < originalPrice)
+                    ((1f - discountPrice.toFloat() / originalPrice) * 100).toInt() else 0
+
+                StorePrice(
+                    storeName = "Epic Games",
+                    currentPrice = discountPrice / 100f,
+                    originalPrice = originalPrice / 100f,
+                    discountPercent = discountPct,
+                    currency = currency,
+                    isFree = discountPrice == 0 && originalPrice == 0,
+                    storeUrl = pageUrl
+                )
+            } catch (_: Exception) { null }
+        }
+
+    /**
+     * Recursively walk a JSON tree looking for an Epic "totalPrice" object with discountPrice.
+     * First pass: prefer non-zero prices (originalPrice > 0) — this avoids picking up the
+     * EA Play subscription price ($0) for games like Jedi Survivor that also have a standalone
+     * purchase price.
+     * Second pass: accept any price object (zero prices) as a last resort.
+     */
+    private fun findEpicTotalPrice(element: JsonElement, depth: Int): JsonObject? =
+        findEpicTotalPriceFiltered(element, depth, requireNonZero = true)
+            ?: findEpicTotalPriceFiltered(element, depth, requireNonZero = false)
+
+    private fun findEpicTotalPriceFiltered(element: JsonElement, depth: Int, requireNonZero: Boolean): JsonObject? {
+        if (depth > 50) return null
+        return when (element) {
+            is JsonObject -> {
+                // Check if this object IS the totalPrice object
+                if (element["discountPrice"] != null && element["originalPrice"] != null
+                    && element["currencyCode"] != null) {
+                    val orig = element["originalPrice"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
+                    if (!requireNonZero || orig > 0) return element
+                }
+                // Check for a "totalPrice" key
+                val totalPrice = element["totalPrice"]
+                if (totalPrice is JsonObject && totalPrice["discountPrice"] != null) {
+                    val orig = totalPrice["originalPrice"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
+                    if (!requireNonZero || orig > 0) return totalPrice
+                }
+                // Recurse into children
+                for ((_, child) in element) {
+                    findEpicTotalPriceFiltered(child, depth + 1, requireNonZero)?.let { return it }
+                }
+                null
+            }
+            is JsonArray -> {
+                for (item in element) {
+                    findEpicTotalPriceFiltered(item, depth + 1, requireNonZero)?.let { return it }
+                }
+                null
+            }
+            else -> null
         }
     }
 }

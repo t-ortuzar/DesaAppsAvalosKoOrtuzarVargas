@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Cached game price from store APIs (Steam, Epic, GOG).
+ * Cached game price from store APIs (Steam, Epic, GOG, Xbox, etc.).
  */
 @Entity(tableName = "game_prices")
 data class GamePriceEntity(
@@ -19,5 +19,7 @@ data class GamePriceEntity(
     val dealUrl: String,
     val currency: String = "ARS",
     val lastUpdated: Long = System.currentTimeMillis(),
-    val discountEndTimestamp: Long? = null  // Epoch millis when the discount ends (from store API)
+    val discountEndTimestamp: Long? = null,  // Epoch millis when the discount ends (from store API)
+    val isGamePass: Boolean = false,         // True when included in Xbox Game Pass
+    val isEaPlay: Boolean = false            // True when included in EA Play subscription (e.g. free on Steam via EA Play)
 )
