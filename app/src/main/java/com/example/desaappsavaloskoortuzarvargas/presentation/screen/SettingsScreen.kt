@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -52,6 +53,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     onSignOut: () -> Unit = {},
+    onLoginRequest: () -> Unit = {},
     isGuest: Boolean = false,
     modifier: Modifier = Modifier
 ) {
@@ -282,6 +284,24 @@ fun SettingsScreen(
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(stringResource(R.string.action_sign_out))
+                }
+            }
+        } else {
+            // Guest mode — show "Iniciar sesión" button
+            item {
+                Button(
+                    onClick = { onLoginRequest() },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Iniciar sesión")
                 }
             }
         }

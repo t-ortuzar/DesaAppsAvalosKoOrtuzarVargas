@@ -92,6 +92,11 @@ class GamesViewModel(
     // non-Steam games (e.g. Alan Wake 2) always display their image in the catalog list.
     private val _imageCache = mutableMapOf<Int, String>()
 
+    /**
+     * Called after any favorite toggle. Set by MainScreen → calls AuthViewModel.syncAll().
+     */
+    var onPreferencesChanged: (() -> Unit)? = null
+
     init {
         loadAllGames()
         observeConnectivity()
@@ -330,11 +335,13 @@ class GamesViewModel(
                 removeFromFavoritesUseCase(game.id).onSuccess {
                     refreshGames()
                     loadFavorites()
+                    onPreferencesChanged?.invoke()
                 }.onFailure { _error.value = it.message }
             } else {
                 addToFavoritesUseCase(game).onSuccess {
                     refreshGames()
                     loadFavorites()
+                    onPreferencesChanged?.invoke()
                 }.onFailure { _error.value = it.message }
             }
         }

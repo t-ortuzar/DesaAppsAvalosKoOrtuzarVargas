@@ -9,6 +9,7 @@ import com.example.desaappsavaloskoortuzarvargas.data.local.SettingsKeys
 import com.example.desaappsavaloskoortuzarvargas.data.local.settingsDataStore
 import com.example.desaappsavaloskoortuzarvargas.data.remote.FirebaseAuthService
 import com.example.desaappsavaloskoortuzarvargas.domain.model.AppUser
+import com.example.desaappsavaloskoortuzarvargas.domain.repository.GameRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +28,8 @@ sealed class AuthState {
 class AuthViewModel(
     private val authService: FirebaseAuthService,
     private val context: Context,
-    private val database: GameTrackerDatabase? = null
+    private val database: GameTrackerDatabase? = null,
+    private val gameRepository: GameRepository? = null
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -36,25 +38,59 @@ class AuthViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /**
+     * Increments every time a Firestore → local sync completes.
+     * Observed by MainScreen to trigger UI reloads (favorites, settings).
+     */
+    private val _syncVersion = MutableStateFlow(0)
+    val syncVersion: StateFlow<Int> = _syncVersion.asStateFlow()
+
     init {
         checkExistingSession()
     }
 
-    /** Check Firebase Auth state — Firebase already persists the login token locally,
-     *  so no network call is needed. The user stays logged in until they sign out. */
     private fun checkExistingSession() {
         val currentUser = Firebase.auth.currentUser
         if (currentUser != null) {
-            // Firebase has a valid cached session — restore immediately, no network needed
             val username = currentUser.email
                 ?.removeSuffix("@argengamer.app") ?: currentUser.uid
             _authState.value = AuthState.Authenticated(
                 AppUser(id = currentUser.uid, username = username)
             )
+            // Async: download full profile from Firestore and apply locally
+            viewModelScope.launch {
+                applyFirestoreProfile(currentUser.uid)
+            }
         } else {
             _authState.value = AuthState.Unauthenticated
         }
         _isLoading.value = false
+    }
+
+    /** Download Firestore profile → apply ALL preferences to DataStore + GameRepository. */
+    private suspend fun applyFirestoreProfile(userId: String) {
+        authService.getUserById(userId).onSuccess { user ->
+            applyUserLocally(user)
+            _authState.value = AuthState.Authenticated(user)
+            _syncVersion.value += 1
+        }.onFailure {
+            // Non-fatal — continue with whatever is in DataStore
+            _syncVersion.value += 1
+        }
+    }
+
+    /** Apply a downloaded AppUser to local DataStore and in-memory GameRepository. */
+    private suspend fun applyUserLocally(user: AppUser) {
+        context.settingsDataStore.edit { prefs ->
+            if (user.displayName.isNotEmpty()) prefs[SettingsKeys.USER_NAME] = user.displayName
+            if (user.email.isNotEmpty())       prefs[SettingsKeys.EMAIL]     = user.email
+            prefs[SettingsKeys.DARK_MODE]           = user.darkMode
+            prefs[SettingsKeys.LANGUAGE_CODE]       = user.languageCode
+            prefs[SettingsKeys.COUNTRY]             = user.country
+            prefs[SettingsKeys.COUNTRY_CODE]        = user.countryCode
+            prefs[SettingsKeys.GLOBAL_NOTIFICATIONS] = user.globalNotifications
+        }
+        gameRepository?.initializeFavorites(user.favoriteGameIds.toSet())
     }
 
     fun register(username: String, password: String) {
@@ -65,11 +101,11 @@ class AuthViewModel(
             if (result.isSuccess) {
                 val user = result.getOrThrow()
                 saveSession(user)
+                _syncVersion.value += 1
                 _authState.value = AuthState.Authenticated(user)
             } else {
-                val err = result.exceptionOrNull()
                 _authState.value = AuthState.Error(
-                    FirebaseAuthService.friendlyError(err ?: Exception("Registration failed"))
+                    FirebaseAuthService.friendlyError(result.exceptionOrNull() ?: Exception("Registration failed"))
                 )
             }
             _isLoading.value = false
@@ -84,38 +120,65 @@ class AuthViewModel(
             if (result.isSuccess) {
                 val user = result.getOrThrow()
                 saveSession(user)
+                applyUserLocally(user)
+                _syncVersion.value += 1
                 _authState.value = AuthState.Authenticated(user)
             } else {
-                val err = result.exceptionOrNull()
                 _authState.value = AuthState.Error(
-                    FirebaseAuthService.friendlyError(err ?: Exception("Login failed"))
+                    FirebaseAuthService.friendlyError(result.exceptionOrNull() ?: Exception("Login failed"))
                 )
             }
             _isLoading.value = false
         }
     }
 
-    /** Continue without account — resets all user data to defaults then enters as guest. */
     fun skipAuth() {
         viewModelScope.launch {
             resetUserData()
+            _syncVersion.value += 1
             _authState.value = AuthState.Authenticated(AppUser(id = "guest", username = "guest"))
         }
     }
 
-    /** Sign out — clears Firebase Auth session, resets all user data to defaults. */
     fun signOut() {
         Firebase.auth.signOut()
         viewModelScope.launch { resetUserData() }
         _authState.value = AuthState.Unauthenticated
     }
 
-    /** Push local favourites to Firebase Firestore. */
-    fun syncFavorites(favoriteGameIds: List<Int>) {
+    /**
+     * Re-download ALL preferences from Firestore and apply locally.
+     * Call on app resume so both devices stay in sync.
+     */
+    fun refreshFromFirebase() {
         val state = _authState.value
         if (state !is AuthState.Authenticated || state.user.id == "guest") return
         viewModelScope.launch {
-            authService.syncFavorites(state.user.id, favoriteGameIds)
+            applyFirestoreProfile(state.user.id)
+        }
+    }
+
+    /**
+     * Upload ALL current local preferences + favorites to Firestore in one call.
+     * Call after any preference change so other devices pick it up on next resume.
+     */
+    fun syncAll() {
+        val state = _authState.value
+        if (state !is AuthState.Authenticated || state.user.id == "guest") return
+        viewModelScope.launch {
+            val prefs       = context.settingsDataStore.data.first()
+            val favoriteIds = gameRepository?.getFavorites()?.getOrDefault(emptyList())?.map { it.id } ?: emptyList()
+            authService.syncAllUserData(
+                userId             = state.user.id,
+                displayName        = prefs[SettingsKeys.USER_NAME] ?: "Player",
+                email              = prefs[SettingsKeys.EMAIL] ?: "",
+                favoriteGameIds    = favoriteIds,
+                darkMode           = prefs[SettingsKeys.DARK_MODE] ?: true,
+                languageCode       = prefs[SettingsKeys.LANGUAGE_CODE] ?: "en",
+                country            = prefs[SettingsKeys.COUNTRY] ?: "Argentina",
+                countryCode        = prefs[SettingsKeys.COUNTRY_CODE] ?: "AR",
+                globalNotifications = prefs[SettingsKeys.GLOBAL_NOTIFICATIONS] ?: true
+            )
         }
     }
 
@@ -126,39 +189,24 @@ class AuthViewModel(
         }
     }
 
-    /**
-     * Reset all user-specific data to defaults.
-     * Called on sign-out and on guest/anonymous login so that:
-     *  - The next session always starts clean (no previous user's data leaks through)
-     *  - Favorites list is cleared from the Room database
-     *  - Display name resets to "Player", dark mode resets to true (dark), etc.
-     */
     private suspend fun resetUserData() {
-        // 1. Clear DataStore — remove session tokens + reset all user preferences to defaults
         context.settingsDataStore.edit { prefs ->
             prefs.remove(SettingsKeys.MONGO_USER_ID)
             prefs.remove(SettingsKeys.MONGO_USERNAME)
-            prefs.remove(SettingsKeys.USER_NAME)      // resets to "Player" (default in repository)
+            prefs.remove(SettingsKeys.USER_NAME)
             prefs.remove(SettingsKeys.EMAIL)
             prefs.remove(SettingsKeys.LANGUAGE_CODE)
             prefs.remove(SettingsKeys.COUNTRY)
             prefs.remove(SettingsKeys.COUNTRY_CODE)
             prefs.remove(SettingsKeys.GLOBAL_NOTIFICATIONS)
-            // Explicitly set dark mode back to default (dark = true)
             prefs[SettingsKeys.DARK_MODE] = true
         }
-        // 2. Clear all favorites from the Room database
-        try {
-            database?.favoriteGameDao()?.clearAllFavorites()
-        } catch (_: Exception) { /* non-critical — ignore DB errors during sign-out */ }
+        gameRepository?.initializeFavorites(emptySet())
+        try { database?.favoriteGameDao()?.clearAllFavorites() } catch (_: Exception) { }
     }
-
-    /** @deprecated Use resetUserData() instead. Kept for compatibility. */
-    private suspend fun clearSession() = resetUserData()
 
     override fun onCleared() {
         super.onCleared()
         authService.close()
     }
 }
-

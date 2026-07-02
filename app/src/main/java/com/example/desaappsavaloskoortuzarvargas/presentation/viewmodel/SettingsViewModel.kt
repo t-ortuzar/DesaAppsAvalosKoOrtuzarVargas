@@ -48,6 +48,11 @@ class SettingsViewModel(
     private val _unreadCount = MutableStateFlow(0)
     val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
 
+    /**
+     * Called after any preference change. Set by MainScreen → calls AuthViewModel.syncAll().
+     */
+    var onPreferencesChanged: (() -> Unit)? = null
+
     init {
         loadSettings()
         refreshNotifications()
@@ -63,6 +68,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             updateUserNameUseCase(name)
             _userSettings.value = getUserSettingsUseCase()
+            onPreferencesChanged?.invoke()
         }
     }
 
@@ -70,6 +76,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             updateEmailUseCase(email)
             _userSettings.value = getUserSettingsUseCase()
+            onPreferencesChanged?.invoke()
         }
     }
 
@@ -77,18 +84,21 @@ class SettingsViewModel(
         viewModelScope.launch {
             updateCountryUseCase(country, countryCode)
             _userSettings.value = getUserSettingsUseCase()
+            onPreferencesChanged?.invoke()
         }
     }
 
     suspend fun updateLanguage(languageCode: String) {
         updateLanguageUseCase(languageCode)
         _userSettings.value = getUserSettingsUseCase()
+        onPreferencesChanged?.invoke()
     }
 
     fun setGlobalNotifications(enabled: Boolean) {
         viewModelScope.launch {
             setGlobalNotificationsUseCase(enabled)
             _userSettings.value = getUserSettingsUseCase()
+            onPreferencesChanged?.invoke()
         }
     }
 
@@ -96,6 +106,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             updateDarkModeUseCase?.invoke(isDark)
             _userSettings.value = _userSettings.value.copy(darkMode = isDark)
+            onPreferencesChanged?.invoke()
         }
     }
 

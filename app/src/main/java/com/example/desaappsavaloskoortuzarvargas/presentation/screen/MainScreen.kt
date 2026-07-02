@@ -77,7 +77,14 @@ import com.example.desaappsavaloskoortuzarvargas.presentation.navigation.Navigat
 import com.example.desaappsavaloskoortuzarvargas.R
 
 @Composable
-fun MainScreen(onSignOut: () -> Unit = {}, isGuest: Boolean = false) {
+fun MainScreen(
+    onSignOut: () -> Unit = {},
+    onLoginRequest: () -> Unit = {},
+    isGuest: Boolean = false,
+    syncVersion: Int = 0,
+    onPreferencesChanged: () -> Unit = {},
+    onRefreshFromFirebase: () -> Unit = {}
+) {
     val navState = remember { NavigationStateManager() }
     val currentTab by navState.currentTab.collectAsState()
     val selectedGame by navState.selectedGame.collectAsState()
@@ -159,7 +166,11 @@ fun MainScreen(onSignOut: () -> Unit = {}, isGuest: Boolean = false) {
     // shows the reset defaults ("Player", dark mode, etc.) rather than stale in-memory state
     // from the previous user's session.
     LaunchedEffect(Unit) {
-        settingsViewModel.loadSettings()  // force fresh DataStore read on every MainScreen entry
+        // Wire Firebase sync callbacks
+        gamesViewModel.onPreferencesChanged    = onPreferencesChanged
+        settingsViewModel.onPreferencesChanged = onPreferencesChanged
+
+        settingsViewModel.loadSettings()
         val catalog = com.example.desaappsavaloskoortuzarvargas.data.catalog.GameCatalog
         priceRefreshManager.setSteamAppIds(catalog.getSteamAppIdsByName())
         priceRefreshManager.setGamePlatforms(catalog.getGamePlatformsByName())
@@ -180,6 +191,15 @@ fun MainScreen(onSignOut: () -> Unit = {}, isGuest: Boolean = false) {
         }
         offersViewModel.loadCurrentDiscounts()
         offersViewModel.loadFreeGames()
+    }
+
+    // When Firestore sync completes (login, session restore, or ON_RESUME refresh),
+    // reload favorites and settings from the freshly-applied local state.
+    LaunchedEffect(syncVersion) {
+        if (syncVersion > 0) {
+            gamesViewModel.loadFavorites()
+            settingsViewModel.loadSettings()
+        }
     }
 
     val catalogListState = rememberLazyListState()
@@ -367,6 +387,7 @@ fun MainScreen(onSignOut: () -> Unit = {}, isGuest: Boolean = false) {
             NavigationStateManager.TAB_SETTINGS -> SettingsScreen(
                 settingsViewModel = settingsViewModel,
                 onSignOut = onSignOut,
+                onLoginRequest = onLoginRequest,
                 isGuest = isGuest,
                 modifier = Modifier.padding(paddingValues)
             )
